@@ -132,6 +132,107 @@ function drawChart(canvas, datasets) {
     chartMeta.set(canvas, { datasets, pad, plotW, plotH, yMin, yMax, maxLen, w: rect.width, h: rect.height, dropRegions });
 }
 
+function drawCrosshairOnChart(canvas, idx) {
+    const meta = chartMeta.get(canvas);
+    if (!meta || idx < 0 || idx >= meta.maxLen) return;
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cx = meta.pad.left + (idx / (meta.maxLen - 1)) * meta.plotW;
+    ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3, 3]);
+    ctx.beginPath(); ctx.moveTo(cx, meta.pad.top); ctx.lineTo(cx, meta.pad.top + meta.plotH); ctx.stroke();
+    ctx.setLineDash([]);
+    for (const ds of meta.datasets) {
+        const val = ds.data[idx];
+        if (val === undefined) continue;
+        const cy = meta.pad.top + (1 - (val - meta.yMin) / (meta.yMax - meta.yMin)) * meta.plotH;
+        ctx.fillStyle = ds.color;
+        ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function showTooltipOnChart(canvas, idx, frac) {
+    const meta = chartMeta.get(canvas);
+    const tooltip = canvas.parentElement.querySelector('.chart-tooltip');
+    if (!meta || !tooltip || idx < 0 || idx >= meta.maxLen) {
+        if (tooltip) tooltip.style.opacity = '0';
+        return;
+    }
+
+    const cx = meta.pad.left + frac * meta.plotW;
+    let inDrop = null;
+    if (meta.dropRegions) {
+        for (const r of meta.dropRegions) {
+            if (cx >= r.x0 && cx <= r.x1) { inDrop = r; break; }
+        }
+    }
+
+    const startIdx = Math.floor(viewStart * allRecords.length);
+    let rows;
+    if (inDrop) {
+        const prev = allRecords[inDrop.di - 1];
+        const curr = allRecords[inDrop.di];
+        const gap = curr.Tick - prev.Tick;
+        const medianDelta = getMedianDelta();
+        const missed = Math.round(gap / medianDelta) - 1;
+        rows = '<div class="tt-drop">DROPPED ' + missed + ' sample' + (missed !== 1 ? 's' : '') + ' · gap ' + gap + ' ms</div>';
+    } else {
+        const rec = allRecords[startIdx + idx];
+        const tickStr = rec && rec.Tick !== undefined ? ' · ' + ((rec.Tick - allRecords[0].Tick) / 1000).toFixed(2) + 's' : '';
+        rows = '<div class="tt-sample">#' + (startIdx + idx) + tickStr + '</div>';
+        const labels = meta.datasets.length === 3 ? ['X', 'Y', 'Z'] : null;
+        for (let d = 0; d < meta.datasets.length; d++) {
+            const ds = meta.datasets[d];
+            const val = ds.data[idx];
+            if (val === undefined) continue;
+            const label = labels ? labels[d] : '';
+            rows += `<div class="tt-row"><span class="tt-dot" style="background:${ds.color}"></span>${label ? label + ': ' : ''}${formatNum(val)}</div>`;
+        }
+    }
+    tooltip.innerHTML = rows;
+    tooltip.style.opacity = '1';
+    let tx = cx + 12;
+    const tw = tooltip.offsetWidth;
+    if (tx + tw > meta.w - 4) tx = cx - tw - 12;
+    let ty = meta.pad.top + 4;
+    tooltip.style.left = tx + 'px';
+    tooltip.style.top = ty + 'px';
+}
+
+function syncCrosshair(frac) {
+    const allCanvases = document.querySelectorAll('#charts canvas[data-key]');
+    for (const c of allCanvases) {
+        const m = chartMeta.get(c);
+        if (!m) continue;
+        const idx = Math.round(frac * (m.maxLen - 1));
+        drawChart(c, m.datasets);
+
+        const cx = m.pad.left + frac * m.plotW;
+        let inDrop = false;
+        if (m.dropRegions) {
+            for (const r of m.dropRegions) {
+                if (cx >= r.x0 && cx <= r.x1) { inDrop = true; break; }
+            }
+        }
+        if (!inDrop) drawCrosshairOnChart(c, idx);
+        showTooltipOnChart(c, idx, frac);
+    }
+}
+
+function clearCrosshair() {
+    const allCanvases = document.querySelectorAll('#charts canvas[data-key]');
+    for (const c of allCanvases) {
+        const m = chartMeta.get(c);
+        if (m) drawChart(c, m.datasets);
+        const tt = c.parentElement.querySelector('.chart-tooltip');
+        if (tt) tt.style.opacity = '0';
+    }
+}
+
 function drawMinimap() {
     const canvas = document.getElementById('minimapCanvas');
     const dpr = window.devicePixelRatio || 1;
@@ -263,82 +364,14 @@ function renderCharts() {
             if (!meta) return;
             const rect = canvas.getBoundingClientRect();
             const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top;
-            if (mx < meta.pad.left || mx > meta.w - meta.pad.right) { tooltip.style.opacity = '0'; return; }
+            if (mx < meta.pad.left || mx > meta.w - meta.pad.right) { clearCrosshair(); return; }
             const frac = (mx - meta.pad.left) / meta.plotW;
-            let idx = Math.round(frac * (meta.maxLen - 1));
-            if (idx < 0 || idx >= meta.maxLen) { tooltip.style.opacity = '0'; return; }
-
-            const startIdx = Math.floor(viewStart * allRecords.length);
-
-            let inDrop = null;
-            if (meta.dropRegions) {
-                for (const r of meta.dropRegions) {
-                    if (mx >= r.x0 && mx <= r.x1) { inDrop = r; break; }
-                }
-            }
-
-            let rows;
-            if (inDrop) {
-                const prev = allRecords[inDrop.di - 1];
-                const curr = allRecords[inDrop.di];
-                const gap = curr.Tick - prev.Tick;
-                const medianDelta = getMedianDelta();
-                const missed = Math.round(gap / medianDelta) - 1;
-                rows = '<div class="tt-drop">DROPPED ' + missed + ' sample' + (missed !== 1 ? 's' : '') + ' · gap ' + gap + ' ms</div>';
-            } else {
-                const rec = allRecords[startIdx + idx];
-                const tickStr = rec && rec.Tick !== undefined ? ' · ' + ((rec.Tick - allRecords[0].Tick) / 1000).toFixed(2) + 's' : '';
-                rows = '<div class="tt-sample">#' + (startIdx + idx) + tickStr + '</div>';
-                const labels = meta.datasets.length === 3 ? ['X', 'Y', 'Z'] : null;
-                for (let d = 0; d < meta.datasets.length; d++) {
-                    const ds = meta.datasets[d];
-                    const val = ds.data[idx];
-                    if (val === undefined) continue;
-                    const label = labels ? labels[d] : '';
-                    rows += `<div class="tt-row"><span class="tt-dot" style="background:${ds.color}"></span>${label ? label + ': ' : ''}${formatNum(val)}</div>`;
-                }
-            }
-            tooltip.innerHTML = rows;
-            tooltip.style.opacity = '1';
-
-            let tx = mx + 12;
-            let ty = my - 10;
-            const tw = tooltip.offsetWidth;
-            const th = tooltip.offsetHeight;
-            if (tx + tw > rect.width - 4) tx = mx - tw - 12;
-            if (ty + th > rect.height - 4) ty = rect.height - th - 4;
-            if (ty < 0) ty = 4;
-            tooltip.style.left = tx + 'px';
-            tooltip.style.top = ty + 'px';
-
-            const ctx = canvas.getContext('2d');
-            const dpr = window.devicePixelRatio || 1;
-            drawChart(canvas, meta.datasets);
-            if (!inDrop) {
-                ctx.save();
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-                const cx = meta.pad.left + (idx / (meta.maxLen - 1)) * meta.plotW;
-                ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--text-dim').trim();
-                ctx.lineWidth = 1;
-                ctx.setLineDash([3, 3]);
-                ctx.beginPath(); ctx.moveTo(cx, meta.pad.top); ctx.lineTo(cx, meta.pad.top + meta.plotH); ctx.stroke();
-                ctx.setLineDash([]);
-                for (const ds of meta.datasets) {
-                    const val = ds.data[idx];
-                    if (val === undefined) continue;
-                    const cy = meta.pad.top + (1 - (val - meta.yMin) / (meta.yMax - meta.yMin)) * meta.plotH;
-                    ctx.fillStyle = ds.color;
-                    ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
-                }
-                ctx.restore();
-            }
+            if (frac < 0 || frac > 1) { clearCrosshair(); return; }
+            syncCrosshair(frac);
         });
 
         canvas.addEventListener('mouseleave', () => {
-            tooltip.style.opacity = '0';
-            const meta = chartMeta.get(canvas);
-            if (meta) drawChart(canvas, meta.datasets);
+            clearCrosshair();
         });
 
         chartsDiv.appendChild(container);
