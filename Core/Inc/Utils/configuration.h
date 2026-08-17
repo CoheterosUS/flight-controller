@@ -8,11 +8,11 @@
 #define PACKET_HEADER_MSB  	((PACKET_HEADER >> 8) & 0xFF)
 #define PACKET_FOOTER		0xBE
 
-#define HIL_MODE                    1
+#define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
-#define AUTO_START_CALIBRATION		0
+#define AUTO_START_CALIBRATION		1
 
-#define BUZZER_SILENT				0
+#define BUZZER_SILENT				1
 
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f

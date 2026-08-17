@@ -23,8 +23,8 @@ void PyroFire(PyroChannel_t Channel) {
     const PyroChannelConfig_t *Config = &Channels[Channel];
     HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_SET);
-    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
-    HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_RESET);
+//    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
+//    HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_RESET);
     RelayState |= (1u << Channel);
 }
 
@@ -32,8 +32,8 @@ void PyroSafe(PyroChannel_t Channel) {
     const PyroChannelConfig_t *Config = &Channels[Channel];
     HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_SET);
-    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
-    HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
+//    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
+//    HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
     RelayState &= ~(1u << Channel);
 }
 
