@@ -92,6 +92,11 @@ body {
     background: var(--accent-dim); padding: 0.2rem 0.5rem; border-radius: 3px;
 }
 
+.header .header-link {
+    font-size: 0.75rem; color: var(--accent); text-decoration: none; font-weight: 500;
+}
+.header .header-link:hover { text-decoration: underline; }
+
 .header .file-info {
     margin-left: auto; font-size: 0.8rem; color: var(--text-dim);
     font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;

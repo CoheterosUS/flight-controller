@@ -1,0 +1,199 @@
+.header .header-link { margin-left: auto; }
+
+.protocol-content {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+}
+
+.proto-section {
+    margin-bottom: 2rem;
+}
+.proto-section h2 {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.75rem;
+}
+.proto-section p {
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+}
+.proto-section code {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.8em;
+    background: var(--accent-dim);
+    color: var(--accent);
+    padding: 0.15em 0.35em;
+    border-radius: 3px;
+}
+
+.proto-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* frame diagram */
+.frame-diagram {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 1rem;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.75rem;
+}
+.frame-byte {
+    display: flex;
+    gap: 1px;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+.frame-byte span {
+    padding: 0.5rem 0.75rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+.frame-byte[data-label]::after {
+    content: attr(data-label);
+    position: absolute;
+    bottom: -1.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    white-space: nowrap;
+}
+.frame-sync span { color: var(--green); border-color: rgba(78, 203, 113, 0.3); }
+.frame-payload span { color: var(--text-dim); flex: 1; }
+.frame-payload { flex: 1; }
+.frame-footer span { color: var(--red); border-color: rgba(232, 84, 84, 0.3); }
+
+/* field list */
+.field-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.field-row {
+    display: grid;
+    grid-template-columns: 60px 40px 70px 140px 1fr;
+    padding: 0.4rem 1rem;
+    font-size: 0.78rem;
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+}
+.field-row:last-child { border-bottom: none; }
+.field-header {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    background: var(--bg);
+}
+.field-row .f-offset { color: var(--text-dim); }
+.field-row .f-size { color: var(--text-dim); }
+.field-row .f-type { color: var(--purple); }
+.field-row .f-name { color: var(--text); font-weight: 500; }
+.field-row .f-unit { color: var(--text-dim); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; }
+
+.field-row.framing { background: rgba(78, 203, 113, 0.04); }
+.field-row.imu .f-name { color: var(--blue); }
+.field-row.mag .f-name { color: var(--cyan); }
+.field-row.baro .f-name { color: var(--accent); }
+.field-row.gps .f-name { color: var(--text-dim); }
+.field-row.nav .f-name { color: var(--purple); }
+.field-row.status .f-name { color: var(--yellow); }
+
+/* sensor cards */
+.sensor-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+.sensor-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+}
+.sensor-name {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.15rem;
+}
+.sensor-type {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 0.5rem;
+}
+.sensor-fields {
+    font-size: 0.78rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+}
+.sensor-fields span {
+    color: var(--text);
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.75rem;
+}
+
+/* two column layout */
+.two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* enum lists */
+.enum-list {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.enum-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.35rem 1rem;
+    font-size: 0.78rem;
+    border-bottom: 1px solid var(--border);
+}
+.enum-row:last-child { border-bottom: none; }
+.enum-val {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    color: var(--accent);
+    min-width: 36px;
+}
+.enum-name {
+    font-family: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
+    color: var(--text);
+}
+.enum-row.abort .enum-name { color: var(--red); }
+.enum-note {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    margin-top: 0.5rem;
+}
+
+@media (max-width: 700px) {
+    .proto-stats { grid-template-columns: repeat(2, 1fr); }
+    .sensor-grid { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; }
+    .field-row { grid-template-columns: 45px 30px 60px 110px 1fr; font-size: 0.7rem; padding: 0.35rem 0.5rem; }
+}

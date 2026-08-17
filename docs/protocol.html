@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Telemetry Protocol</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/protocol.css">
+</head>
+<body>
+
+<div class="header">
+    <h1>Telemetry Protocol</h1>
+    <span class="tag">STM32H723</span>
+    <a href="index.html" class="header-link">Log Viewer</a>
+</div>
+
+<div class="protocol-content">
+
+<section class="proto-section">
+    <h2>Overview</h2>
+    <p>The flight controller sends <code>FlightData_t</code> as raw bytes over UART1 using DMA. No protocol wrapping — the struct is the packet. Little-endian (ARM Cortex-M7), packed with <code>#pragma pack(push, 1)</code>, no padding.</p>
+    <div class="proto-stats">
+        <div class="stat-card"><div class="label">Packet size</div><div class="value">85 B</div></div>
+        <div class="stat-card"><div class="label">Baud rate</div><div class="value">115200</div></div>
+        <div class="stat-card"><div class="label">Max rate</div><div class="value">~135 Hz</div></div>
+        <div class="stat-card"><div class="label">Byte order</div><div class="value">Little-endian</div></div>
+    </div>
+</section>
+
+<section class="proto-section">
+    <h2>Framing</h2>
+    <div class="frame-diagram">
+        <div class="frame-byte frame-sync" data-label="Sync"><span>0xFE</span><span>0xCA</span></div>
+        <div class="frame-byte frame-payload" data-label="Payload (81 bytes)"><span>...</span></div>
+        <div class="frame-byte frame-footer" data-label="Footer"><span>0xBE</span></div>
+    </div>
+    <p>Sync word <code>0xCAFE</code> at offset 0 (little-endian on wire: <code>0xFE</code> then <code>0xCA</code>). Footer byte <code>0xBE</code> at offset 84. No length field, no checksum, no CRC — fixed-size packet.</p>
+</section>
+
+<section class="proto-section">
+    <h2>Packet Layout</h2>
+    <div class="field-list">
+        <div class="field-row field-header">
+            <span class="f-offset">Offset</span>
+            <span class="f-size">Size</span>
+            <span class="f-type">Type</span>
+            <span class="f-name">Field</span>
+            <span class="f-unit">Unit / Notes</span>
+        </div>
+        <div class="field-row framing"><span class="f-offset">0</span><span class="f-size">2</span><span class="f-type">uint16</span><span class="f-name">Sync</span><span class="f-unit">Always 0xCAFE</span></div>
+        <div class="field-row"><span class="f-offset">2</span><span class="f-size">4</span><span class="f-type">uint32</span><span class="f-name">Tick</span><span class="f-unit">FreeRTOS tick count (ms)</span></div>
+        <div class="field-row imu"><span class="f-offset">6</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">AccelX</span><span class="f-unit">m/s² (scale: 9.81/1024)</span></div>
+        <div class="field-row imu"><span class="f-offset">10</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">AccelY</span><span class="f-unit">m/s²</span></div>
+        <div class="field-row imu"><span class="f-offset">14</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">AccelZ</span><span class="f-unit">m/s²</span></div>
+        <div class="field-row imu"><span class="f-offset">18</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">GyroX</span><span class="f-unit">dps, bias-corrected (scale: 1/16.4)</span></div>
+        <div class="field-row imu"><span class="f-offset">22</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">GyroY</span><span class="f-unit">dps</span></div>
+        <div class="field-row imu"><span class="f-offset">26</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">GyroZ</span><span class="f-unit">dps</span></div>
+        <div class="field-row mag"><span class="f-offset">30</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">MagX</span><span class="f-unit">milligauss (scale: 1.5)</span></div>
+        <div class="field-row mag"><span class="f-offset">34</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">MagY</span><span class="f-unit">milligauss</span></div>
+        <div class="field-row mag"><span class="f-offset">38</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">MagZ</span><span class="f-unit">milligauss</span></div>
+        <div class="field-row baro"><span class="f-offset">42</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">PressurePa</span><span class="f-unit">Pascals</span></div>
+        <div class="field-row baro"><span class="f-offset">46</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">TemperatureC</span><span class="f-unit">Celsius</span></div>
+        <div class="field-row gps"><span class="f-offset">50</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Latitude</span><span class="f-unit">Reserved (currently 0)</span></div>
+        <div class="field-row gps"><span class="f-offset">54</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Longitude</span><span class="f-unit">Reserved (currently 0)</span></div>
+        <div class="field-row nav"><span class="f-offset">58</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">Altitude</span><span class="f-unit">meters, barometric IIR filtered</span></div>
+        <div class="field-row nav"><span class="f-offset">62</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelX</span><span class="f-unit">m/s (currently 0)</span></div>
+        <div class="field-row nav"><span class="f-offset">66</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelY</span><span class="f-unit">m/s, vertical velocity</span></div>
+        <div class="field-row nav"><span class="f-offset">70</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelZ</span><span class="f-unit">m/s (currently 0)</span></div>
+        <div class="field-row status"><span class="f-offset">74</span><span class="f-size">4</span><span class="f-type">uint32</span><span class="f-name">Flags</span><span class="f-unit">Fault bitmask</span></div>
+        <div class="field-row status"><span class="f-offset">78</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">BatteryVoltage</span><span class="f-unit">Volts (currently 0)</span></div>
+        <div class="field-row status"><span class="f-offset">82</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">State</span><span class="f-unit">SystemState_t enum (0–11)</span></div>
+        <div class="field-row status"><span class="f-offset">83</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">RelayState</span><span class="f-unit">Pyro bitmask</span></div>
+        <div class="field-row framing"><span class="f-offset">84</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">SyncEnd</span><span class="f-unit">Always 0xBE</span></div>
+    </div>
+</section>
+
+<section class="proto-section">
+    <h2>Sensors</h2>
+    <div class="sensor-grid">
+        <div class="sensor-card">
+            <div class="sensor-name">IIM42653</div>
+            <div class="sensor-type">IMU (SPI)</div>
+            <div class="sensor-fields">
+                <span>AccelX/Y/Z</span> — 32g range, 1024 LSB/g, output in m/s²<br>
+                <span>GyroX/Y/Z</span> — 2000 dps range, 16.4 LSB/dps, bias-corrected
+            </div>
+        </div>
+        <div class="sensor-card">
+            <div class="sensor-name">IIS2MDCTR</div>
+            <div class="sensor-type">Magnetometer (I2C)</div>
+            <div class="sensor-fields">
+                <span>MagX/Y/Z</span> — ±50 gauss range, 1.5 mgauss/LSB, output in milligauss
+            </div>
+        </div>
+        <div class="sensor-card">
+            <div class="sensor-name">BMP581</div>
+            <div class="sensor-type">Barometer (I2C)</div>
+            <div class="sensor-fields">
+                <span>PressurePa</span> — Pascals<br>
+                <span>TemperatureC</span> — Celsius
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="proto-section two-col">
+    <div>
+        <h2>State Machine</h2>
+        <div class="enum-list">
+            <div class="enum-row"><span class="enum-val">0</span><span class="enum-name">IDLE</span></div>
+            <div class="enum-row"><span class="enum-val">1</span><span class="enum-name">CALIBRATION</span></div>
+            <div class="enum-row"><span class="enum-val">2</span><span class="enum-name">PRELAUNCH</span></div>
+            <div class="enum-row"><span class="enum-val">3</span><span class="enum-name">BURN</span></div>
+            <div class="enum-row"><span class="enum-val">4</span><span class="enum-name">PASSIVE_BURNOUT</span></div>
+            <div class="enum-row"><span class="enum-val">5</span><span class="enum-name">ACTIVE_BURNOUT</span></div>
+            <div class="enum-row"><span class="enum-val">6</span><span class="enum-name">APOGEE</span></div>
+            <div class="enum-row"><span class="enum-val">7</span><span class="enum-name">PARACHUTE</span></div>
+            <div class="enum-row"><span class="enum-val">8</span><span class="enum-name">LANDED</span></div>
+            <div class="enum-row abort"><span class="enum-val">9</span><span class="enum-name">GROUND_ABORT</span></div>
+            <div class="enum-row abort"><span class="enum-val">10</span><span class="enum-name">ASCENT_ABORT</span></div>
+            <div class="enum-row abort"><span class="enum-val">11</span><span class="enum-name">DESCENT_ABORT</span></div>
+        </div>
+    </div>
+    <div>
+        <h2>Fault Flags</h2>
+        <div class="enum-list">
+            <div class="enum-row"><span class="enum-val">bit 0</span><span class="enum-name">BMP280_MODE_IDLE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 1</span><span class="enum-name">BMP280_MODE_PERFORMANCE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 2</span><span class="enum-name">BMP581_MODE_IDLE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 3</span><span class="enum-name">BMP581_MODE_PERFORMANCE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 4</span><span class="enum-name">IIM42653_MODE_IDLE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 5</span><span class="enum-name">IIM42653_MODE_PERFORMANCE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 6</span><span class="enum-name">IIS2MDCTR_MODE_IDLE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 7</span><span class="enum-name">IIS2MDCTR_MODE_PERFORMANCE_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 8</span><span class="enum-name">SD_MOUNT_FAILED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 9</span><span class="enum-name">SD_OPEN_FAILED</span></div>
+        </div>
+
+        <h2 style="margin-top: 1.5rem;">Relay State</h2>
+        <div class="enum-list">
+            <div class="enum-row"><span class="enum-val">bit 0</span><span class="enum-name">DROGUE_FIRED</span></div>
+            <div class="enum-row"><span class="enum-val">bit 1</span><span class="enum-name">PARACHUTE_FIRED</span></div>
+        </div>
+        <p class="enum-note">Latching: set on PyroFire(), cleared on PyroSafe().</p>
+    </div>
+</section>
+
+</div>
+
+</body>
+</html>
