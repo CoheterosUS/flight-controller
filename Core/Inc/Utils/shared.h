@@ -47,6 +47,7 @@ typedef struct {
     volatile bool AltitudeFilterInitialized;
     volatile bool SDLoggingEnabled;
     volatile bool SensorsIdleFinished;
+    uint32_t StateEntryTick;
 } SystemContext_t;
 
 typedef enum {

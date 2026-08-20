@@ -19,6 +19,7 @@ void StopSensorTimers(void) {
 }
 
 void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *SystemContext) {
+    SystemContext->StateEntryTick = xTaskGetTickCount();
     xTaskNotify(SensorConfigTaskHandle, (uint32_t)CurrentSystemState, eSetValueWithOverwrite);
 
     switch (CurrentSystemState) {
