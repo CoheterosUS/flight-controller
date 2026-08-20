@@ -19,11 +19,10 @@
 
 <section class="proto-section">
     <h2>Overview</h2>
-    <p>The flight controller sends <code>FlightData_t</code> as raw bytes over UART1 using DMA. No protocol wrapping — the struct is the packet. Little-endian (ARM Cortex-M7), packed with <code>#pragma pack(push, 1)</code>, no padding.</p>
+    <p>The flight controller logs <code>SDLogRecord_t</code> to SD card as raw packed bytes. No protocol wrapping — the struct is the record. Little-endian (ARM Cortex-M7), packed with <code>#pragma pack(push, 1)</code>, no padding.</p>
     <div class="proto-stats">
-        <div class="stat-card"><div class="label">Packet size</div><div class="value">85 B</div></div>
-        <div class="stat-card"><div class="label">Baud rate</div><div class="value">115200</div></div>
-        <div class="stat-card"><div class="label">Max rate</div><div class="value">~135 Hz</div></div>
+        <div class="stat-card"><div class="label">Record size</div><div class="value">80 B</div></div>
+        <div class="stat-card"><div class="label">Log rate</div><div class="value">~100 Hz</div></div>
         <div class="stat-card"><div class="label">Byte order</div><div class="value">Little-endian</div></div>
     </div>
 </section>
@@ -32,10 +31,10 @@
     <h2>Framing</h2>
     <div class="frame-diagram">
         <div class="frame-byte frame-sync" data-label="Sync"><span>0xFE</span><span>0xCA</span></div>
-        <div class="frame-byte frame-payload" data-label="Payload (81 bytes)"><span>...</span></div>
+        <div class="frame-byte frame-payload" data-label="Payload (76 bytes)"><span>...</span></div>
         <div class="frame-byte frame-footer" data-label="Footer"><span>0xBE</span></div>
     </div>
-    <p>Sync word <code>0xCAFE</code> at offset 0 (little-endian on wire: <code>0xFE</code> then <code>0xCA</code>). Footer byte <code>0xBE</code> at offset 84. No length field, no checksum, no CRC — fixed-size packet.</p>
+    <p>Sync word <code>0xCAFE</code> at offset 0 (little-endian on wire: <code>0xFE</code> then <code>0xCA</code>). Footer byte <code>0xBE</code> at offset 79. No length field, no checksum, no CRC — fixed-size record.</p>
 </section>
 
 <section class="proto-section">
@@ -61,17 +60,17 @@
         <div class="field-row mag"><span class="f-offset">38</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">MagZ</span><span class="f-unit">milligauss</span></div>
         <div class="field-row baro"><span class="f-offset">42</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">PressurePa</span><span class="f-unit">Pascals</span></div>
         <div class="field-row baro"><span class="f-offset">46</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">TemperatureC</span><span class="f-unit">Celsius</span></div>
-        <div class="field-row gps"><span class="f-offset">50</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Latitude</span><span class="f-unit">Reserved (currently 0)</span></div>
-        <div class="field-row gps"><span class="f-offset">54</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Longitude</span><span class="f-unit">Reserved (currently 0)</span></div>
-        <div class="field-row nav"><span class="f-offset">58</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">Altitude</span><span class="f-unit">meters, barometric IIR filtered</span></div>
-        <div class="field-row nav"><span class="f-offset">62</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelX</span><span class="f-unit">m/s (currently 0)</span></div>
-        <div class="field-row nav"><span class="f-offset">66</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelY</span><span class="f-unit">m/s, vertical velocity</span></div>
-        <div class="field-row nav"><span class="f-offset">70</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">VelZ</span><span class="f-unit">m/s (currently 0)</span></div>
-        <div class="field-row status"><span class="f-offset">74</span><span class="f-size">4</span><span class="f-type">uint32</span><span class="f-name">Flags</span><span class="f-unit">Fault bitmask</span></div>
-        <div class="field-row status"><span class="f-offset">78</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">BatteryVoltage</span><span class="f-unit">Volts (currently 0)</span></div>
-        <div class="field-row status"><span class="f-offset">82</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">State</span><span class="f-unit">SystemState_t enum (0–11)</span></div>
-        <div class="field-row status"><span class="f-offset">83</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">RelayState</span><span class="f-unit">Pyro bitmask</span></div>
-        <div class="field-row framing"><span class="f-offset">84</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">SyncEnd</span><span class="f-unit">Always 0xBE</span></div>
+        <div class="field-row gps"><span class="f-offset">50</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Latitude</span><span class="f-unit">degrees &times; 10^7</span></div>
+        <div class="field-row gps"><span class="f-offset">54</span><span class="f-size">4</span><span class="f-type">int32</span><span class="f-name">Longitude</span><span class="f-unit">degrees &times; 10^7</span></div>
+        <div class="field-row gps"><span class="f-offset">58</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">GPSAltitude</span><span class="f-unit">meters (converted from mm)</span></div>
+        <div class="field-row gps"><span class="f-offset">62</span><span class="f-size">4</span><span class="f-type">uint32</span><span class="f-name">UnixTime</span><span class="f-unit">seconds since epoch</span></div>
+        <div class="field-row gps"><span class="f-offset">66</span><span class="f-size">2</span><span class="f-type">uint16</span><span class="f-name">Milliseconds</span><span class="f-unit">0–999</span></div>
+        <div class="field-row gps"><span class="f-offset">68</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">Satellites</span><span class="f-unit">count</span></div>
+        <div class="field-row status"><span class="f-offset">69</span><span class="f-size">4</span><span class="f-type">uint32</span><span class="f-name">Flags</span><span class="f-unit">Fault bitmask</span></div>
+        <div class="field-row status"><span class="f-offset">73</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">BatteryVoltage</span><span class="f-unit">Volts (currently 0)</span></div>
+        <div class="field-row status"><span class="f-offset">77</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">State</span><span class="f-unit">SystemState_t enum (0–11)</span></div>
+        <div class="field-row status"><span class="f-offset">78</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">RelayState</span><span class="f-unit">Pyro bitmask</span></div>
+        <div class="field-row framing"><span class="f-offset">79</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">SyncEnd</span><span class="f-unit">Always 0xBE</span></div>
     </div>
 </section>
 

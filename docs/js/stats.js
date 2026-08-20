@@ -4,7 +4,7 @@ function renderStats(records, skipped) {
     const n = records.length;
     const pressure = getCol(records, 'PressurePa');
     const temp = getCol(records, 'TemperatureC');
-    const alt = getCol(records, 'Altitude');
+    const alt = getCol(records, 'GPSAltitude');
     const pMin = arrMin(pressure).toFixed(1);
     const pMax = arrMax(pressure).toFixed(1);
     const tAvg = (temp.reduce((a, b) => a + b, 0) / n).toFixed(1);

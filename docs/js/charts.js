@@ -291,12 +291,7 @@ function redrawAllCharts() {
         ]},
         { key: 'pressure', datasets: [{ data: getCol(visible, 'PressurePa'), color: accent }] },
         { key: 'temp', datasets: [{ data: getCol(visible, 'TemperatureC'), color: cyan }] },
-        { key: 'alt', datasets: [{ data: getCol(visible, 'Altitude'), color: purple }] },
-        { key: 'vel', datasets: [
-            { data: getCol(visible, 'VelX'), color: red },
-            { data: getCol(visible, 'VelY'), color: green },
-            { data: getCol(visible, 'VelZ'), color: blue },
-        ]},
+        { key: 'alt', datasets: [{ data: getCol(visible, 'GPSAltitude'), color: purple }] },
         { key: 'voltage', datasets: [{ data: getCol(visible, 'BatteryVoltage'), color: yellow }] },
         { key: 'relay', datasets: [
             { data: visible.map(r => (r.RelayState & 0x01) ? 1 : 0), color: red },
@@ -324,8 +319,7 @@ function renderCharts() {
         { key: 'mag', title: 'Magnetometer', legend: [['X','legend-x'],['Y','legend-y'],['Z','legend-z']] },
         { key: 'pressure', title: 'Pressure' },
         { key: 'temp', title: 'Temperature' },
-        { key: 'alt', title: 'Altitude' },
-        { key: 'vel', title: 'Velocity Z' },
+        { key: 'alt', title: 'GPS Altitude' },
         { key: 'voltage', title: 'Battery Voltage' },
         { key: 'relay', title: 'Relay State', legend: [['Drogue','legend-x'],['Parachute','legend-z']] },
     ];
