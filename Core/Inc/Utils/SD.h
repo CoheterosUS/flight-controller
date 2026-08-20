@@ -2,10 +2,10 @@
 #define SD_H
 
 #include "fatfs.h"
-#include "Utils/shared.h"
+#include "Managers/StructManager.h"
 
 typedef struct {
-    FlightData_t Records[SD_LOGGING_RECORDS_PER_BUFFER];
+    SDLogRecord_t Records[SD_LOGGING_RECORDS_PER_BUFFER];
     uint16_t Count;
 } SDLoggingBuffer_t;
 

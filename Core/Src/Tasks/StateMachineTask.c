@@ -5,6 +5,7 @@
 #include <Utils/FlightData.h>
 #include <Utils/Battery.h>
 #include "Managers/Managers.h"
+#include "Managers/StructManager.h"
 #include "queue.h"
 
 TaskHandle_t StateMachineTaskHandle;
@@ -42,12 +43,14 @@ void StateMachineTask(void *pvParameters) {
         BMP581_SensorData_t BMP581_SensorData;
         IIM42653_SensorData_t IIM42653_SensorData;
         IIS2MDCTR_SensorData_t IIS2MDCTR_SensorData;
+        ZOEM8Q_SensorData_t ZOEM8Q_SensorData;
 
         BMP581_Mailbox_Read(&BMP581_SensorData);
         IIM42653_Mailbox_Read(&IIM42653_SensorData);
         IIS2MDCTR_Mailbox_Read(&IIS2MDCTR_SensorData);
+        ZOEM8Q_Mailbox_Read(&ZOEM8Q_SensorData);
 
-        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData);
+        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData, ZOEM8Q_SensorData);
         dbg_flight_data = FlightData;
 
         CommandType_t Command;
@@ -68,10 +71,12 @@ void StateMachineTask(void *pvParameters) {
         }
 
         if (SDLoggingQueue != NULL && !StateChanged) {
-			xQueueSend(SDLoggingQueue, &FlightData, 0);
+            SDLogRecord_t Record = BuildSDLogRecord(&FlightData);
+			xQueueSend(SDLoggingQueue, &Record, 0);
 		}
 
-        SerialSendFlightData(&FlightData);
+        TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
+        SerialSendFlightData(&Packet);
 
         dbg_current_state = CurrentSystemState;
         dbg_system_faults = SystemFaultFlags;

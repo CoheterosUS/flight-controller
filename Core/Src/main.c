@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "Utils/configuration.h"
 #include "Utils/shared.h"
+#include "Managers/StructManager.h"
 #include "Callbacks/Callbacks.h"
 #include <Tasks/SDLoggingTask.h>
 #include <Tasks/StateMachineTask.h>
@@ -187,7 +188,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_THREADS */
   HAL_TIM_Base_Start(&htim2);
 
-  SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(FlightData_t));
+  SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(SDLogRecord_t));
   CommandQueue = xQueueCreate(QUEUE_LENGTH, sizeof(CommandType_t));
 
   CreateTelemetryTask(&huart1, tskIDLE_PRIORITY + 4, STACK_SIZE_TELEMETRY);

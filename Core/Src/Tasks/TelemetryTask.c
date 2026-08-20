@@ -3,6 +3,7 @@
 #include <Tasks/TelemetryTask.h>
 #include "Protocol/Protocol.h"
 #include "HIL/HIL.h"
+#include "Sensors/Sensors.h"
 
 __attribute__((section(".dma_buffer")))
 uint8_t TELEMETRY_RX_BUFFER[TELEMETRY_RX_BUFFER_SIZE];
@@ -41,6 +42,12 @@ void TelemetryTask(void *pvParameters) {
                     HandleHILPacket(Parser.Payload);
                 }
 #endif
+                if (Command == COMMAND_GPS_DATA && Parser.Length == ZOEM8Q_PAYLOAD_SIZE) {
+                    ZOEM8Q_SensorData_t GPSData;
+                    ZOEM8Q_ParsePayload(Parser.Payload, &GPSData);
+                    ZOEM8Q_Mailbox_Inject(&GPSData);
+                }
+
                 if (Command >= COMMAND_RESET && Command <= COMMAND_CALIBRATION) {
                     xQueueSend(CommandQueue, &Command, 0);
                 }

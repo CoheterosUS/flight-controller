@@ -39,12 +39,12 @@ void SDProducerTask(void *pvParameters) {
     SystemContext_t *SystemContext = pvParameters;
 
     for (;;) {
-        FlightData_t FlightData;
+        SDLogRecord_t Record;
 
-        BaseType_t SDQueueStatus = xQueueReceive(SDLoggingQueue, &FlightData, portMAX_DELAY);
+        BaseType_t SDQueueStatus = xQueueReceive(SDLoggingQueue, &Record, portMAX_DELAY);
 
         if (SDQueueStatus == pdPASS && SystemContext->SDLoggingEnabled) {
-            ActiveBuffer->Records[ActiveBuffer->Count++] = FlightData;
+            ActiveBuffer->Records[ActiveBuffer->Count++] = Record;
 
             if (ActiveBuffer->Count >= SD_LOGGING_RECORDS_PER_BUFFER) {
                 WriteBuffer = ActiveBuffer;

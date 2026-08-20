@@ -11,7 +11,8 @@ typedef enum {
     COMMAND_RESET = 0x01,
     COMMAND_ABORT = 0x02,
     COMMAND_CALIBRATION = 0x03,
-    COMMAND_HIL_DATA = 0x10
+    COMMAND_HIL_DATA = 0x10,
+    COMMAND_GPS_DATA = 0x20
 } CommandType_t;
 
 typedef enum {

@@ -82,6 +82,10 @@ typedef struct {
     float TemperatureC;
     int32_t Latitude;
     int32_t Longitude;
+    float GPSAltitude;
+    uint32_t UnixTime;
+    uint16_t Milliseconds;
+    uint8_t Satellites;
     float Altitude;
     float VelX;
     float VelY;

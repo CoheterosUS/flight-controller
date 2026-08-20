@@ -2,9 +2,10 @@
 #define MANAGERS_H
 
 #include "Protocol/Protocol.h"
+#include "Managers/StructManager.h"
 
 void SerialInit(void);
-void SerialSendFlightData(const FlightData_t *FlightData);
+void SerialSendFlightData(const TelemetryPacket_t *Packet);
 
 void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *SystemContext);
 void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemState);

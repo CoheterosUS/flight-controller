@@ -4,7 +4,9 @@
 #include "Utils/Calculations.h"
 #include "Utils/Pyro.h"
 
-FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemContext, IIM42653_SensorData_t IIM42653_FlightData, BMP581_SensorData_t BMP581_FlightData, IIS2MDCTR_SensorData_t IIS2MDCTR_FlightData) {
+#define MM_TO_METERS 0.001f
+
+FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemContext, IIM42653_SensorData_t IIM42653_FlightData, BMP581_SensorData_t BMP581_FlightData, IIS2MDCTR_SensorData_t IIS2MDCTR_FlightData, ZOEM8Q_SensorData_t ZOEM8Q_FlightData) {
 	FlightData_t FlightData;
 
 	FlightData.Sync = PACKET_HEADER;
@@ -25,8 +27,12 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.AccelY = IIM42653_FlightData.AccelY;
 	FlightData.AccelZ = IIM42653_FlightData.AccelZ;
 
-	FlightData.Latitude = 0;
-	FlightData.Longitude = 0;
+	FlightData.Latitude = ZOEM8Q_FlightData.Latitude;
+	FlightData.Longitude = ZOEM8Q_FlightData.Longitude;
+	FlightData.GPSAltitude = ZOEM8Q_FlightData.AltitudeMm * MM_TO_METERS;
+	FlightData.UnixTime = ZOEM8Q_FlightData.UnixTime;
+	FlightData.Milliseconds = ZOEM8Q_FlightData.Milliseconds;
+	FlightData.Satellites = ZOEM8Q_FlightData.Satellites;
 
 	FlightData.Altitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
 	FlightData.Altitude = CalculateFilteredAltitude(SystemContext, FlightData.Altitude);
