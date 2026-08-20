@@ -86,7 +86,8 @@ typedef struct {
     uint32_t UnixTime;
     uint16_t Milliseconds;
     uint8_t Satellites;
-    float Altitude;
+    float BarometricAltitude;
+    float BarometricVelocity;
     float VelX;
     float VelY;
     float VelZ;

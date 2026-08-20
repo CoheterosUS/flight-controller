@@ -49,7 +49,8 @@ typedef struct {
     int32_t Longitude;
     int32_t GPSAltitude;
     uint8_t Satellites;
-    int32_t Altitude;
+    int32_t BarometricAltitude;
+    int32_t BarometricVelocity;
     int32_t VelX;
     int32_t VelY;
     int32_t VelZ;

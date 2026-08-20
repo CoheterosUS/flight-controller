@@ -34,11 +34,12 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.Milliseconds = ZOEM8Q_FlightData.Milliseconds;
 	FlightData.Satellites = ZOEM8Q_FlightData.Satellites;
 
-	FlightData.Altitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
-	FlightData.Altitude = CalculateFilteredAltitude(SystemContext, FlightData.Altitude);
+	FlightData.BarometricAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
+	FlightData.BarometricAltitude = CalculateFilteredAltitude(SystemContext, FlightData.BarometricAltitude);
+	FlightData.BarometricVelocity = CalculateVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick);
 
 	FlightData.VelX = 0;
-	FlightData.VelY = CalculateVerticalVelocity(FlightData.Altitude, FlightData.Tick);
+	FlightData.VelY = 0;
 	FlightData.VelZ = 0;
 
 	FlightData.Flags = SystemFaultFlags;

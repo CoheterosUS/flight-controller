@@ -8,11 +8,11 @@ void BurnStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t BurnStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (FlightData.VelY > BURN_MIN_VEL_Y_REACHED) {
+	if (FlightData.BarometricVelocity > BURN_MIN_VEL_Y_REACHED) {
 		VelocityReached = true;
 	}
 
-	if (VelocityReached && FlightData.VelY < BURN_APOGEE_VEL_Y_THRESHOLD) {
+	if (VelocityReached && FlightData.BarometricVelocity < BURN_APOGEE_VEL_Y_THRESHOLD) {
 		return STATE_PASSIVE_BURNOUT;
 	}
 

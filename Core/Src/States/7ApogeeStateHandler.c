@@ -7,7 +7,7 @@ void ApogeeStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t ApogeeStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (FlightData.Altitude < APOGEE_PARACHUTE_ALTITUDE_THRESHOLD) {
+	if (FlightData.BarometricAltitude < APOGEE_PARACHUTE_ALTITUDE_THRESHOLD) {
 		return STATE_PARACHUTE;
 	}
 

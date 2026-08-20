@@ -4,10 +4,10 @@
 
 The flight controller sends telemetry packets over UART at **115200 baud, 8N1**. Each packet is a packed C struct (`TelemetryPacket_t`) sent as raw little-endian bytes. No additional protocol wrapping — the struct IS the packet.
 
-**Packet size:** 90 bytes  
+**Packet size:** 94 bytes  
 **Byte order:** Little-endian  
 **Sync word:** `0xCAFE` (on wire: `0xFE` then `0xCA`)  
-**Footer byte:** `0xBE` at offset 89  
+**Footer byte:** `0xBE` at offset 93  
 **Estimated rate:** ~100 Hz (10 ms intervals)
 
 ## Packet Layout
@@ -31,25 +31,26 @@ All `int32 (×100)` fields are float values multiplied by 100 before sending. Di
 | 46     | 4    | int32  | TemperatureC   | Celsius × 100                      |
 | 50     | 4    | int32  | Latitude       | degrees × 10^7 (NOT ×100)          |
 | 54     | 4    | int32  | Longitude      | degrees × 10^7 (NOT ×100)          |
-| 58     | 4    | int32  | GPSAltitude    | meters × 100                       |
-| 62     | 1    | uint8  | Satellites     | GPS satellite count                 |
-| 63     | 4    | int32  | Altitude       | meters × 100, barometric filtered   |
-| 67     | 4    | int32  | VelX           | m/s × 100 (currently 0)            |
-| 71     | 4    | int32  | VelY           | m/s × 100, vertical velocity        |
-| 75     | 4    | int32  | VelZ           | m/s × 100 (currently 0)            |
-| 79     | 4    | uint32 | Flags          | Fault bitmask (see below)           |
-| 83     | 4    | int32  | BatteryVoltage | Volts × 100                        |
-| 87     | 1    | uint8  | State          | State machine enum (see below)      |
-| 88     | 1    | uint8  | RelayState     | Pyro bitmask (see below)            |
-| 89     | 1    | uint8  | SyncEnd        | Always `0xBE`                       |
+| 58     | 4    | int32  | GPSAltitude        | meters × 100                       |
+| 62     | 1    | uint8  | Satellites         | GPS satellite count                 |
+| 63     | 4    | int32  | BarometricAltitude | meters × 100, IIR filtered          |
+| 67     | 4    | int32  | BarometricVelocity | m/s × 100, vertical velocity        |
+| 71     | 4    | int32  | VelX               | m/s × 100 (currently 0)            |
+| 75     | 4    | int32  | VelY               | m/s × 100 (currently 0)            |
+| 79     | 4    | int32  | VelZ               | m/s × 100 (currently 0)            |
+| 83     | 4    | uint32 | Flags              | Fault bitmask (see below)           |
+| 87     | 4    | int32  | BatteryVoltage     | Volts × 100                        |
+| 91     | 1    | uint8  | State              | State machine enum (see below)      |
+| 92     | 1    | uint8  | RelayState         | Pyro bitmask (see below)            |
+| 93     | 1    | uint8  | SyncEnd            | Always `0xBE`                       |
 
-**Total: 90 bytes (packed, no padding)**
+**Total: 94 bytes (packed, no padding)**
 
 ## Parsing Strategy
 
 1. Read bytes from serial port into a rolling buffer.
 2. Scan for sync word: byte `0xFE` followed by `0xCA`.
-3. Once sync found, accumulate 90 bytes total (including sync).
+3. Once sync found, accumulate 94 bytes total (including sync).
 4. Verify last byte is `0xBE` (footer). If not, discard and rescan.
 5. Parse fields at their offsets using little-endian byte order.
 6. For ×100 fields: `actual_value = raw_int32 / 100.0`

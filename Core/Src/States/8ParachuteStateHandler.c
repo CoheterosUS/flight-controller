@@ -11,11 +11,11 @@ void ParachuteStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t ParachuteStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (FlightData.VelY < PARACHUTE_MIN_VEL_Y_REACHED) {
+	if (FlightData.BarometricVelocity < PARACHUTE_MIN_VEL_Y_REACHED) {
 		DescentReached = true;
 	}
 
-	if (DescentReached && fabsf(FlightData.VelY) < PARACHUTE_LANDED_VEL_Y_THRESHOLD) {
+	if (DescentReached && fabsf(FlightData.BarometricVelocity) < PARACHUTE_LANDED_VEL_Y_THRESHOLD) {
 		return STATE_LANDED;
 	}
 

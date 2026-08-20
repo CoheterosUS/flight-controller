@@ -51,7 +51,8 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
     Packet.Longitude = FlightData->Longitude;
     Packet.GPSAltitude = (int32_t)(FlightData->GPSAltitude * 100.0f);
     Packet.Satellites = FlightData->Satellites;
-    Packet.Altitude = (int32_t)(FlightData->Altitude * 100.0f);
+    Packet.BarometricAltitude = (int32_t)(FlightData->BarometricAltitude * 100.0f);
+    Packet.BarometricVelocity = (int32_t)(FlightData->BarometricVelocity * 100.0f);
     Packet.VelX = (int32_t)(FlightData->VelX * 100.0f);
     Packet.VelY = (int32_t)(FlightData->VelY * 100.0f);
     Packet.VelZ = (int32_t)(FlightData->VelZ * 100.0f);
