@@ -25,6 +25,7 @@
 #define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
 #define PARACHUTE_MIN_VEL_Y_REACHED             -3.0f
 #define PARACHUTE_LANDED_VEL_Y_THRESHOLD    	2.0f
+#define LANDED_SD_STOP_DELAY_MS                 10000
 
 // Barometer Configuration
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    3000
@@ -39,6 +40,9 @@
 #define STACK_SIZE_SENSOR_CONFIG        256
 #define STACK_SIZE_STATE_MACHINE        512
 #define STACK_SIZE_SD_LOGGING           1024
+
+// Telemetry Configuration (Sends on every 10 iterations of main loop)
+#define TELEMETRY_DIVIDER                   10
 
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500

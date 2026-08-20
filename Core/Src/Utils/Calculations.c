@@ -81,3 +81,7 @@ void ResetVerticalVelocity(void) {
     PreviousAltitude = 0.0f;
     PreviousTick = 0;
 }
+
+uint32_t GetStateElapsedMs(SystemContext_t *SystemContext, SystemState_t State) {
+    return xTaskGetTickCount() - SystemContext->StateEntryTicks[State];
+}

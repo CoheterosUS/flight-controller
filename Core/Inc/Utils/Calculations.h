@@ -24,4 +24,6 @@ float CalculateMagneticField(uint8_t MSB, uint8_t LSB);
 float CalculateVerticalVelocity(float Altitude, uint32_t Tick);
 void ResetVerticalVelocity(void);
 
+uint32_t GetStateElapsedMs(SystemContext_t *SystemContext, SystemState_t State);
+
 #endif //CALCULATIONS_H

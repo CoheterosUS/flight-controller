@@ -48,6 +48,7 @@ typedef struct {
     volatile bool SDLoggingEnabled;
     volatile bool SensorsIdleFinished;
     uint32_t StateEntryTick;
+    uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
 
 typedef enum {
