@@ -8,7 +8,7 @@ The flight controller sends telemetry packets over UART at **115200 baud, 8N1**.
 **Byte order:** Little-endian  
 **Sync word:** `0xCAFE` (on wire: `0xFE` then `0xCA`)  
 **Footer byte:** `0xBE` at offset 93  
-**Estimated rate:** ~100 Hz (10 ms intervals)
+**Estimated rate:** ~10 Hz (decimated from 100 Hz main loop)
 
 ## Packet Layout
 
@@ -129,3 +129,14 @@ The ground station can send commands using this framing:
 | `0x03` | CALIBRATION |
 
 These are 5-byte frames with no payload.
+
+## Verification Checklist
+
+1. Sync detected as bytes 0xFE 0xCA (little-endian uint16 0xCAFE)
+2. All int32 fields parsed as little-endian, divided by 100.0 for display
+3. Latitude/Longitude divided by 10000000.0 (NOT by 100)
+4. Field order matches layout exactly — no gaps, no padding
+5. Total packet size is exactly 94 bytes
+6. Footer 0xBE checked at byte 93
+7. State and RelayState are single bytes (not wider)
+8. Telemetry rate is ~10 Hz (decimated from 100 Hz main loop)
