@@ -10,6 +10,7 @@ void PrelaunchStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
+	// TODO: Revise code
 	if (FlightData.AccelY > PRELAUNCH_BURN_ACCEL_Y_THRESHOLD) {
 		BurnConfirmCount++;
 		if (BurnConfirmCount >= PRELAUNCH_BURN_CONSECUTIVE_SAMPLES) {

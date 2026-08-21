@@ -1,9 +1,11 @@
 #include "States/StateHandlers.h"
 #include "Utils/Calibrations.h"
+#include "Utils/SD.h"
 #include "stm32h7xx_hal.h"
 
 void IdleStateEntry(SystemContext_t *ctx) {
     ResetCalibrationContext(ctx);
+    MountAndOpen();
 }
 
 SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

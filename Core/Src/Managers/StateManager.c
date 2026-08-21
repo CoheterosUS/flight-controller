@@ -53,7 +53,8 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
             LandedStateEntry(SystemContext);
             break;
         case STATE_GROUND_ABORT:
-        case STATE_ASCENT_ABORT:
+            GroundAbortStateEntry(SystemContext);
+            break;
         case STATE_DESCENT_ABORT:
             PyroSafeAll();
             break;
@@ -151,12 +152,8 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 		case STATE_LANDED:
 			return LandedStateHandler(SystemContext, SensorData);
 			break;
-			// TODO: Refine
 		case STATE_GROUND_ABORT:
-			return STATE_GROUND_ABORT;
-			break;
-		case STATE_ASCENT_ABORT:
-			return STATE_ASCENT_ABORT;
+			return GroundAbortStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_DESCENT_ABORT:
 			return STATE_DESCENT_ABORT;

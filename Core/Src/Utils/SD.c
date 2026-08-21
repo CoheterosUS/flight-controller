@@ -65,7 +65,7 @@ FRESULT WriteLoggingBuffer(SDLoggingBuffer_t *Buffer) {
     }
 
     UINT BytesWritten = 0;
-    UINT BytesToWrite = Buffer->Count * sizeof(FlightData_t);
+    UINT BytesToWrite = Buffer->Count * sizeof(SDLogRecord_t);
 
     FRESULT Result = f_write(&SDFile, Buffer->Records, BytesToWrite, &BytesWritten);
     if (Result == FR_OK && BytesWritten != BytesToWrite) {

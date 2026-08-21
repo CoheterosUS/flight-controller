@@ -58,8 +58,6 @@ void SDProducerTask(void *pvParameters) {
 }
 
 void SDWriterTask(void *pvParameters) {
-    MountAndOpen();
-
     for (;;) {
         xSemaphoreTake(WriteSemaphore, portMAX_DELAY);
 

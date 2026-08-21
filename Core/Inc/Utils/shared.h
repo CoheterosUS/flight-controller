@@ -30,7 +30,6 @@ typedef enum {
     STATE_LANDED,       	// Landed, turn off except GPS
 
     STATE_GROUND_ABORT,
-    STATE_ASCENT_ABORT,
     STATE_DESCENT_ABORT,
 
     STATE_MAX           // Table size

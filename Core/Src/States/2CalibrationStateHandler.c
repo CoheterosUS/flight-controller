@@ -18,6 +18,5 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
         return STATE_GROUND_ABORT;
     }
 
-    // Remain on Calibration if not valid command
     return STATE_CALIBRATION;
 }
