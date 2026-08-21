@@ -97,6 +97,19 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 
 			StartSensorTimers();
 			break;
+		case STATE_GROUND_ABORT:
+		case STATE_LANDED:
+			StopSensorTimers();
+			if (BMP581_Mode_Idle(BMP581_HANDLE) != HAL_OK) {
+				SystemFaultFlags |= BMP581_MODE_IDLE_FAILED;
+			}
+			if (IIM42653_Mode_Idle(IIM42653_HANDLE) != HAL_OK) {
+				SystemFaultFlags |= IIM42653_MODE_IDLE_FAILED;
+			}
+			if (IIS2MDCTR_Mode_Idle(IIS2MDCTR_HANDLE) != HAL_OK) {
+				SystemFaultFlags |= IIS2MDCTR_MODE_IDLE_FAILED;
+			}
+			break;
 		default:
 			break;
 	}
