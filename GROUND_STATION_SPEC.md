@@ -125,8 +125,9 @@ The ground station can send commands using this framing:
 | Value  | Command     |
 |--------|-------------|
 | `0x01` | RESET       |
-| `0x02` | ABORT       |
+| `0x02` | GROUND_ABORT|
 | `0x03` | CALIBRATION |
+| `0x04` | DROGUE      |
 
 These are 5-byte frames with no payload.
 
