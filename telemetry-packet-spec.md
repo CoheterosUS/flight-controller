@@ -53,8 +53,7 @@ Offset  Size  Type     Field           Unit / Notes
 7 = PARACHUTE
 8 = LANDED
 9 = GROUND_ABORT
-10 = ASCENT_ABORT
-11 = DESCENT_ABORT
+10 = DESCENT_ABORT
 ```
 
 ## Fault Flags Bitmask (uint32 Flags field)

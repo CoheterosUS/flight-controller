@@ -70,8 +70,7 @@ All `int32 (×100)` fields are float values multiplied by 100 before sending. Di
 | 7     | PARACHUTE        |
 | 8     | LANDED           |
 | 9     | GROUND_ABORT     |
-| 10    | ASCENT_ABORT     |
-| 11    | DESCENT_ABORT    |
+| 10    | DESCENT_ABORT    |
 
 ## Fault Flags (bitmask)
 

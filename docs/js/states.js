@@ -9,7 +9,6 @@ const STATE_NAMES = [
     'Parachute',
     'Landed',
     'Ground Abort',
-    'Ascent Abort',
     'Descent Abort',
 ];
 
@@ -24,7 +23,6 @@ const STATE_COLORS = [
     '#4ec9c9', // Parachute — cyan
     '#4ecb71', // Landed — green
     '#e85454', // Ground Abort — red
-    '#e85454', // Ascent Abort — red
     '#e85454', // Descent Abort — red
 ];
 
