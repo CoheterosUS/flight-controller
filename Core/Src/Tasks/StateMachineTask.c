@@ -34,7 +34,7 @@ void StateMachineTask(void *pvParameters) {
 
     OnStateEntry(CurrentSystemState, SystemContext);
 
-//    BatteryInit();
+    BatteryInit();
     SerialInit();
     Buzzer_Beep_Counter(100, 2, 500, false);
 

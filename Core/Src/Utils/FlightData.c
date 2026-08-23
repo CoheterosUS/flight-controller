@@ -43,7 +43,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.VelZ = 0;
 
 	FlightData.Flags = SystemFaultFlags;
-	FlightData.BatteryVoltage = 0; // BatteryGetVoltage();
+	FlightData.BatteryVoltage = BatteryGetVoltage();
 	FlightData.State = SystemState;
 	FlightData.RelayState = PyroGetState();
 	FlightData.SyncEnd = PACKET_FOOTER;
