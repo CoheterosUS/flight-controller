@@ -34,6 +34,82 @@ function getStateColor(id) {
     return STATE_COLORS[id] || '#7a7e8c';
 }
 
+const COMMAND_NAMES = {
+    0x00: 'None',
+    0x01: 'Reset',
+    0x02: 'Ground Abort',
+    0x03: 'Calibration',
+    0x04: 'Drogue',
+    0x10: 'HIL Data',
+    0x20: 'GPS Data',
+};
+
+const COMMAND_COLORS = {
+    0x00: '#7a7e8c',
+    0x01: '#e85454',
+    0x02: '#e85454',
+    0x03: '#5b9cf6',
+    0x04: '#b07af5',
+    0x10: '#e8c840',
+    0x20: '#4ecb71',
+};
+
+function getCommandName(id) {
+    return COMMAND_NAMES[id] || ('Cmd 0x' + id.toString(16).toUpperCase());
+}
+
+function getCommandColor(id) {
+    return COMMAND_COLORS[id] || '#7a7e8c';
+}
+
+function drawCommandMarkers(canvas, pad, plotW) {
+    const visible = getVisibleRecords();
+    if (!visible.length || visible[0].LastCommand === undefined) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const ctx = canvas.getContext('2d');
+    ctx.save();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    for (let i = 0; i < visible.length; i++) {
+        const cmd = visible[i].LastCommand;
+        if (cmd === 0x00) continue;
+
+        const x = pad.left + (i / (visible.length - 1)) * plotW;
+        const color = getCommandColor(cmd);
+
+        const rect = canvas.getBoundingClientRect();
+        const fullH = rect.height;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x, 14);
+        ctx.lineTo(x, fullH - 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const label = getCommandName(cmd);
+        ctx.font = 'bold 9px -apple-system, BlinkMacSystemFont, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        const textW = ctx.measureText(label).width + 6;
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.roundRect(x - textW / 2, 0, textW, 14, 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+
+        ctx.fillStyle = '#fff';
+        ctx.fillText(label, x, 13);
+    }
+
+    ctx.restore();
+}
+
 function drawStateTimeline(canvas) {
     const visible = getVisibleRecords();
     if (!visible.length || visible[0].State === undefined) return;
@@ -46,7 +122,7 @@ function drawStateTimeline(canvas) {
     ctx.scale(dpr, dpr);
 
     const w = rect.width, h = rect.height;
-    const pad = { top: 4, right: 12, bottom: 20, left: 60 };
+    const pad = { top: 18, right: 12, bottom: 20, left: 60 };
     const plotW = w - pad.left - pad.right;
     const barH = h - pad.top - pad.bottom;
 

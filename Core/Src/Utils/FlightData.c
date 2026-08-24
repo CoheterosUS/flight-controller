@@ -46,7 +46,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.BatteryVoltage = BatteryGetVoltage();
 	FlightData.State = SystemState;
 	FlightData.RelayState = PyroGetState();
-	FlightData.LastCommand = LastCommand;
+	FlightData.LastCommand = (LastCommand < COMMAND_HIL_DATA) ? LastCommand : COMMAND_NONE;
 	FlightData.SyncEnd = PACKET_FOOTER;
 
 	return FlightData;

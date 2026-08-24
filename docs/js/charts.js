@@ -305,7 +305,13 @@ function redrawAllCharts() {
     }
 
     const stateCanvas = document.querySelector('canvas[data-key="state"]');
-    if (stateCanvas) drawStateTimeline(stateCanvas);
+    if (stateCanvas) {
+        drawStateTimeline(stateCanvas);
+        const rect = stateCanvas.getBoundingClientRect();
+        const pad = { top: 4, right: 12, bottom: 20, left: 60 };
+        const plotW = rect.width - pad.left - pad.right;
+        drawCommandMarkers(stateCanvas, pad, plotW);
+    }
 }
 
 function renderCharts() {
@@ -330,10 +336,11 @@ function renderCharts() {
         stateContainer.innerHTML = '<div class="chart-title">State Timeline</div>';
         const stateCanvas = document.createElement('canvas');
         stateCanvas.dataset.key = 'state';
-        stateCanvas.style.height = '60px';
+        stateCanvas.style.height = '76px';
         stateContainer.appendChild(stateCanvas);
         chartsDiv.appendChild(stateContainer);
     }
+
 
     for (const def of chartDefs) {
         const container = document.createElement('div');
