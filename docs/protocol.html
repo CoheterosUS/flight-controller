@@ -21,7 +21,7 @@
     <h2>Overview</h2>
     <p>The flight controller logs <code>SDLogRecord_t</code> to SD card as raw packed bytes. No protocol wrapping — the struct is the record. Little-endian (ARM Cortex-M7), packed with <code>#pragma pack(push, 1)</code>, no padding.</p>
     <div class="proto-stats">
-        <div class="stat-card"><div class="label">Record size</div><div class="value">80 B</div></div>
+        <div class="stat-card"><div class="label">Record size</div><div class="value">81 B</div></div>
         <div class="stat-card"><div class="label">Log rate</div><div class="value">~100 Hz</div></div>
         <div class="stat-card"><div class="label">Byte order</div><div class="value">Little-endian</div></div>
     </div>
@@ -31,10 +31,10 @@
     <h2>Framing</h2>
     <div class="frame-diagram">
         <div class="frame-byte frame-sync" data-label="Sync"><span>0xFE</span><span>0xCA</span></div>
-        <div class="frame-byte frame-payload" data-label="Payload (76 bytes)"><span>...</span></div>
+        <div class="frame-byte frame-payload" data-label="Payload (77 bytes)"><span>...</span></div>
         <div class="frame-byte frame-footer" data-label="Footer"><span>0xBE</span></div>
     </div>
-    <p>Sync word <code>0xCAFE</code> at offset 0 (little-endian on wire: <code>0xFE</code> then <code>0xCA</code>). Footer byte <code>0xBE</code> at offset 79. No length field, no checksum, no CRC — fixed-size record.</p>
+    <p>Sync word <code>0xCAFE</code> at offset 0 (little-endian on wire: <code>0xFE</code> then <code>0xCA</code>). Footer byte <code>0xBE</code> at offset 80. No length field, no checksum, no CRC — fixed-size record.</p>
 </section>
 
 <section class="proto-section">
@@ -70,7 +70,8 @@
         <div class="field-row status"><span class="f-offset">73</span><span class="f-size">4</span><span class="f-type">float32</span><span class="f-name">BatteryVoltage</span><span class="f-unit">Volts (currently 0)</span></div>
         <div class="field-row status"><span class="f-offset">77</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">State</span><span class="f-unit">SystemState_t enum (0–10)</span></div>
         <div class="field-row status"><span class="f-offset">78</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">RelayState</span><span class="f-unit">Pyro bitmask</span></div>
-        <div class="field-row framing"><span class="f-offset">79</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">SyncEnd</span><span class="f-unit">Always 0xBE</span></div>
+        <div class="field-row status"><span class="f-offset">79</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">LastCommand</span><span class="f-unit">Last received command (persists)</span></div>
+        <div class="field-row framing"><span class="f-offset">80</span><span class="f-size">1</span><span class="f-type">uint8</span><span class="f-name">SyncEnd</span><span class="f-unit">Always 0xBE</span></div>
     </div>
 </section>
 

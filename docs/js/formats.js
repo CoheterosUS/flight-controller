@@ -1,5 +1,5 @@
 const SYNC = 0xCAFE;
-const RECORD_SIZE = 80;
+const RECORD_SIZE = 81;
 
 function parseRecord(dv, offset) {
     let o = offset;
@@ -27,6 +27,7 @@ function parseRecord(dv, offset) {
     r.BatteryVoltage = dv.getFloat32(o, true); o += 4;
     r.State = dv.getUint8(o); o += 1;
     r.RelayState = dv.getUint8(o); o += 1;
+    r.LastCommand = dv.getUint8(o); o += 1;
     r.SyncEnd = dv.getUint8(o); o += 1;
     return { record: r, size: o - offset };
 }

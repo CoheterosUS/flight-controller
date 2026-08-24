@@ -26,6 +26,7 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     Record.BatteryVoltage = FlightData->BatteryVoltage;
     Record.State = FlightData->State;
     Record.RelayState = FlightData->RelayState;
+    Record.LastCommand = FlightData->LastCommand;
     Record.SyncEnd = FlightData->SyncEnd;
 
     return Record;
@@ -60,6 +61,7 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
     Packet.BatteryVoltage = (int32_t)(FlightData->BatteryVoltage * 100.0f);
     Packet.State = FlightData->State;
     Packet.RelayState = FlightData->RelayState;
+    Packet.LastCommand = FlightData->LastCommand;
     Packet.SyncEnd = FlightData->SyncEnd;
 
     return Packet;
