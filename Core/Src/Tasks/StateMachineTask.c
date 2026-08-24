@@ -31,6 +31,7 @@ void StateMachineTask(void *pvParameters) {
     // TODO: Refine
     FlightData_t FlightData = {0};
     SystemState_t CurrentSystemState = STATE_IDLE;
+    CommandType_t Command = COMMAND_NONE;
 
     OnStateEntry(CurrentSystemState, SystemContext);
 
@@ -50,12 +51,11 @@ void StateMachineTask(void *pvParameters) {
         IIS2MDCTR_Mailbox_Read(&IIS2MDCTR_SensorData);
         ZOEM8Q_Mailbox_Read(&ZOEM8Q_SensorData);
 
-        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData, ZOEM8Q_SensorData);
-        dbg_flight_data = FlightData;
-
-        CommandType_t Command;
         BaseType_t CommandReceived = xQueueReceive(CommandQueue, &Command, 0);
         SystemState_t NextSystemState = HandleCommand(CurrentSystemState, Command, CommandReceived);
+
+        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData, ZOEM8Q_SensorData, Command);
+        dbg_flight_data = FlightData;
 
         if (NextSystemState == CurrentSystemState) {
             NextSystemState = HandleState(CurrentSystemState, SystemContext, FlightData);

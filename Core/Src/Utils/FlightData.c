@@ -6,7 +6,7 @@
 
 #define MM_TO_METERS 0.001f
 
-FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemContext, IIM42653_SensorData_t IIM42653_FlightData, BMP581_SensorData_t BMP581_FlightData, IIS2MDCTR_SensorData_t IIS2MDCTR_FlightData, ZOEM8Q_SensorData_t ZOEM8Q_FlightData) {
+FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemContext, IIM42653_SensorData_t IIM42653_FlightData, BMP581_SensorData_t BMP581_FlightData, IIS2MDCTR_SensorData_t IIS2MDCTR_FlightData, ZOEM8Q_SensorData_t ZOEM8Q_FlightData, CommandType_t LastCommand) {
 	FlightData_t FlightData;
 
 	FlightData.Sync = PACKET_HEADER;
@@ -46,6 +46,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.BatteryVoltage = BatteryGetVoltage();
 	FlightData.State = SystemState;
 	FlightData.RelayState = PyroGetState();
+	FlightData.LastCommand = LastCommand;
 	FlightData.SyncEnd = PACKET_FOOTER;
 
 	return FlightData;

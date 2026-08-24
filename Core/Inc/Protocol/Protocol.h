@@ -8,6 +8,7 @@
 #define PROTOCOL_MAX_PAYLOAD    48
 
 typedef enum {
+    COMMAND_NONE = 0x00,
     COMMAND_RESET = 0x01,
     COMMAND_GROUND_ABORT = 0x02,
     COMMAND_CALIBRATION = 0x03,
