@@ -29,19 +29,33 @@ function initRangeControl() {
 
     function getPos(e) {
         const rect = track.getBoundingClientRect();
-        return Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        return Math.max(0, Math.min(1, (x - rect.left) / rect.width));
     }
 
-    hl.addEventListener('mousedown', (e) => {
-        e.preventDefault(); dragging = 'left'; hl.classList.add('active');
-    });
-    hr.addEventListener('mousedown', (e) => {
-        e.preventDefault(); dragging = 'right'; hr.classList.add('active');
-    });
-    sel.addEventListener('mousedown', (e) => {
-        e.preventDefault(); dragging = 'middle';
-        dragStartX = e.clientX; dragStartLeft = viewStart; dragStartRight = viewEnd;
-    });
+    function getClientX(e) {
+        return e.touches ? e.touches[0].clientX : e.clientX;
+    }
+
+    function onStart(e, type) {
+        e.preventDefault();
+        dragging = type;
+        if (type === 'left') hl.classList.add('active');
+        if (type === 'right') hr.classList.add('active');
+        if (type === 'middle') {
+            dragStartX = getClientX(e);
+            dragStartLeft = viewStart;
+            dragStartRight = viewEnd;
+        }
+    }
+
+    hl.addEventListener('mousedown', (e) => onStart(e, 'left'));
+    hr.addEventListener('mousedown', (e) => onStart(e, 'right'));
+    sel.addEventListener('mousedown', (e) => onStart(e, 'middle'));
+    hl.addEventListener('touchstart', (e) => onStart(e, 'left'), { passive: false });
+    hr.addEventListener('touchstart', (e) => onStart(e, 'right'), { passive: false });
+    sel.addEventListener('touchstart', (e) => onStart(e, 'middle'), { passive: false });
+
     track.addEventListener('mousedown', (e) => {
         if (e.target === track || e.target.tagName === 'CANVAS') {
             const pos = getPos(e);
@@ -54,8 +68,9 @@ function initRangeControl() {
         }
     });
 
-    document.addEventListener('mousemove', (e) => {
+    function onMove(e) {
         if (!dragging) return;
+        e.preventDefault();
         const pos = getPos(e);
         if (dragging === 'left') {
             viewStart = Math.min(pos, viewEnd - 0.01);
@@ -63,7 +78,7 @@ function initRangeControl() {
             viewEnd = Math.max(pos, viewStart + 0.01);
         } else if (dragging === 'middle') {
             const rect = track.getBoundingClientRect();
-            const dx = (e.clientX - dragStartX) / rect.width;
+            const dx = (getClientX(e) - dragStartX) / rect.width;
             const span = dragStartRight - dragStartLeft;
             let newStart = dragStartLeft + dx;
             let newEnd = dragStartRight + dx;
@@ -72,12 +87,17 @@ function initRangeControl() {
             viewStart = newStart; viewEnd = newEnd;
         }
         updateRangeUI(); redrawAllCharts();
-    });
+    }
 
-    document.addEventListener('mouseup', () => {
+    function onEnd() {
         dragging = null;
         hl.classList.remove('active'); hr.classList.remove('active');
-    });
+    }
+
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('touchmove', onMove, { passive: false });
+    document.addEventListener('mouseup', onEnd);
+    document.addEventListener('touchend', onEnd);
 
     drawMinimap();
     updateRangeUI();
