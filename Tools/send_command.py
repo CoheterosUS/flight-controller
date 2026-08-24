@@ -9,6 +9,7 @@ COMMANDS = {
     "reset": 0x01,
     "abort": 0x02,
     "calibrate": 0x03,
+    "drogue": 0x04,
 }
 
 
