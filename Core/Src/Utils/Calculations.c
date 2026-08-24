@@ -1,3 +1,4 @@
+#include <math.h>
 #include "Utils/shared.h"
 #include "Utils/Calculations.h"
 

@@ -1,5 +1,7 @@
 #include "Utils/shared.h"
+#include "Utils/FlightData.h"
 #include "Sensors/Sensors.h"
+#include "Protocol/Protocol.h"
 #include "Utils/Battery.h"
 #include "Utils/Calculations.h"
 #include "Utils/Pyro.h"
