@@ -48,7 +48,7 @@ void TelemetryTask(void *pvParameters) {
                     ZOEM8Q_Mailbox_Inject(&GPSData);
                 }
 
-                if (Command >= COMMAND_RESET && Command <= COMMAND_CALIBRATION) {
+                if (Command >= COMMAND_RESET && Command < COMMAND_HIL_DATA) {
                     xQueueSend(CommandQueue, &Command, 0);
                 }
             }

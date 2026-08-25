@@ -2,6 +2,7 @@
 #include "Utils/Calibrations.h"
 
 void CalibrationStateEntry(SystemContext_t *ctx) {
+    ctx->SDLoggingEnabled = true;
     ResetCalibrationContext(ctx);
 }
 

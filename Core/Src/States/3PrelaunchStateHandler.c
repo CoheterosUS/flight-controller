@@ -5,7 +5,6 @@
 static ConfirmCounter_t BurnConfirm;
 
 void PrelaunchStateEntry(SystemContext_t *ctx) {
-    ctx->SDLoggingEnabled = true;
     BurnConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BURN_CONSECUTIVE_SAMPLES };
 }
 
