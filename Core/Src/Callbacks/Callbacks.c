@@ -4,6 +4,7 @@
 #include <task.h>
 #include <timers.h>
 #include <Tasks/TelemetryTask.h>
+#include "Callbacks/Callbacks.h"
 #include "Sensors/BMP581.h"
 #include "Sensors/IIM42653.h"
 #include "Sensors/IIS2MDCTR.h"

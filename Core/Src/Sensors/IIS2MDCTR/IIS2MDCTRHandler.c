@@ -1,6 +1,7 @@
 #include "Sensors/IIS2MDCTR.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "Sensors/Sensors.h"
 
 HAL_StatusTypeDef IIS2MDCTR_Mode_Idle(I2C_HandleTypeDef *IIS2MDCTR_Handle) {
     if (IIS2MDCTR_Handle == NULL) {

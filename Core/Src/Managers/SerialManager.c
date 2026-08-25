@@ -1,5 +1,5 @@
 #include "Sensors/Sensors.h"
-#include "Managers/StructManager.h"
+#include "Managers/Managers.h"
 #include "stm32h7xx_hal.h"
 #include <string.h>
 

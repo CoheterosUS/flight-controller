@@ -3,6 +3,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "stm32h7xx_hal.h"
+#include "Sensors/Sensors.h"
 #include "Utils/configuration.h"
 
 static void Buzzer_Delay(uint32_t Duration, bool UseHAL) {

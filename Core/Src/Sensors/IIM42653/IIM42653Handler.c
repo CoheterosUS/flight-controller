@@ -1,6 +1,7 @@
 #include "Sensors/IIM42653.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "Sensors/Sensors.h"
 
 HAL_StatusTypeDef IIM42653_Mode_Idle(SPI_HandleTypeDef *IIM42653_Handle) {
     if (IIM42653_Handle == NULL) {

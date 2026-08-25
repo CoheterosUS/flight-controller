@@ -1,6 +1,7 @@
 #include "Sensors/BMP581.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "Sensors/Sensors.h"
 
 HAL_StatusTypeDef BMP581_Mode_Idle(I2C_HandleTypeDef *BMP581_Handle) {
     if (BMP581_Handle == NULL) {
