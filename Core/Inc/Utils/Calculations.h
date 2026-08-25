@@ -21,6 +21,10 @@ void ResetBarometricVerticalVelocity(void);
 float CalculateGPSVerticalVelocity(float Altitude, uint32_t Tick);
 void ResetGPSVerticalVelocity(void);
 
+static inline float CalculateGPSAltitudeAGL(float AltitudeASL) {
+    return AltitudeASL - GPS_ALTITUDE_ASL_BASELINE;
+}
+
 static inline float CalculateKelvinFromCelsius(float TemperatureC) {
     return TemperatureC + 273.15f;
 }

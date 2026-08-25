@@ -16,6 +16,7 @@
 
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f
+#define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
 // Barometer Configuration
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    3000
@@ -49,15 +50,19 @@
 
 // Passive Burnout to Active Burnout Automatic
 
-// Active Burnout to Apogee Barometric Altitude Threshold
-#define ACTIVE_BURNOUT_APOGEE_BAROM_ALT_THRESHOLD	2900.0f
-#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_THRESHOLD		2900.0f
-#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_BASELINE		90.0f	// Base altitude to calculate AGL from ASL
+// Active Burnout to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
+#define ACTIVE_BURNOUT_APOGEE_BAROM_ALT_THRESHOLD		2900.0f
+#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_THRESHOLD			2900.0f
+#define ACTIVE_BURNOUT_APOGEE_GPS_VEL_Y_THRESHOLD		0.0f
+#define ACTIVE_BURNOUT_APOGEE_DELAY_MS					10000
 
-#define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
+// Apogee to Parachute
+#define APOGEE_PARACHUTE_BAROM_ALT_THRESHOLD 	500.0f
+#define APOGEE_PARACHUTE_DELAY_MS				30000
 
-#define PARACHUTE_MIN_VEL_Y_REACHED             -3.0f
-#define PARACHUTE_LANDED_VEL_Y_THRESHOLD    	2.0f
+// Parachute to Landed
+#define PARACHUTE_LANDED_GPS_VEL_Y_THRESHOLD    	2.0f
+#define PARACHUTE_LANDED_CONSECUTIVE_SAMPLES    	10
 
 #define LANDED_SD_STOP_DELAY_MS                 5000
 
