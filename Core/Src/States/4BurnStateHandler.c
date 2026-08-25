@@ -1,18 +1,15 @@
 #include "States/StateHandlers.h"
+#include "Utils/Calculations.h"
 #include "stm32h7xx_hal.h"
 
-static bool VelocityReached;
+static ConfirmCounter_t PassiveBurnoutConfirm;
 
 void BurnStateEntry(SystemContext_t *ctx) {
-    VelocityReached = false;
+    PassiveBurnoutConfirm = (ConfirmCounter_t){ .Required = BURN_PASSIVE_BURNOUT_CONSECUTIVE_SAMPLES };
 }
 
 SystemState_t BurnStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (FlightData.BarometricVelocity > BURN_MIN_VEL_Y_REACHED) {
-		VelocityReached = true;
-	}
-
-	if (VelocityReached && FlightData.BarometricVelocity < BURN_APOGEE_VEL_Y_THRESHOLD) {
+	if (ConfirmCounterCheck(&PassiveBurnoutConfirm, FlightData.AccelY < BURN_PASSIVE_BURNOUT_ACCEL_Y_THRESHOLD)) {
 		return STATE_PASSIVE_BURNOUT;
 	}
 
