@@ -17,16 +17,6 @@
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f
 
-// Transition Configuration
-#define PRELAUNCH_BURN_ACCEL_Y_THRESHOLD      	20.0f
-#define PRELAUNCH_BURN_CONSECUTIVE_SAMPLES      5
-#define BURN_MIN_VEL_Y_REACHED                  10.0f
-#define BURN_APOGEE_VEL_Y_THRESHOLD         	5.0f
-#define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
-#define PARACHUTE_MIN_VEL_Y_REACHED             -3.0f
-#define PARACHUTE_LANDED_VEL_Y_THRESHOLD    	2.0f
-#define LANDED_SD_STOP_DELAY_MS                 10000
-
 // Barometer Configuration
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    3000
 #define PRESSURE_CALIBRATION_SAMPLES            1000
@@ -46,5 +36,15 @@
 
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
+
+// Transition Configuration
+#define PRELAUNCH_BURN_ACCEL_Y_THRESHOLD      	20.0f
+#define PRELAUNCH_BURN_CONSECUTIVE_SAMPLES      5
+#define BURN_MIN_VEL_Y_REACHED                  10.0f
+#define BURN_APOGEE_VEL_Y_THRESHOLD         	5.0f
+#define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
+#define PARACHUTE_MIN_VEL_Y_REACHED             -3.0f
+#define PARACHUTE_LANDED_VEL_Y_THRESHOLD    	2.0f
+#define LANDED_SD_STOP_DELAY_MS                 10000
 
 #endif //CONFIGURATION_H
