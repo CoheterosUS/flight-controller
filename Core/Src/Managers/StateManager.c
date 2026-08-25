@@ -128,6 +128,8 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t Comm
             return STATE_GROUND_ABORT;
         case COMMAND_DROGUE:
             return STATE_APOGEE;
+        case COMMAND_LANDED:
+            return STATE_LANDED;
         case COMMAND_CALIBRATION:
             if (CurrentSystemState == STATE_IDLE) {
                 return STATE_CALIBRATION;
