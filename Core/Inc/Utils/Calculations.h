@@ -15,8 +15,11 @@ float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitud
 
 float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool Temperature);
 
-float CalculateVerticalVelocity(float Altitude, uint32_t Tick);
-void ResetVerticalVelocity(void);
+float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick);
+void ResetBarometricVerticalVelocity(void);
+
+float CalculateGPSVerticalVelocity(float Altitude, uint32_t Tick);
+void ResetGPSVerticalVelocity(void);
 
 static inline float CalculateKelvinFromCelsius(float TemperatureC) {
     return TemperatureC + 273.15f;

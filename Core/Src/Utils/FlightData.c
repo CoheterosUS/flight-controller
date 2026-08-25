@@ -38,7 +38,8 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 
 	FlightData.BarometricAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
 	FlightData.BarometricAltitude = CalculateFilteredAltitude(SystemContext, FlightData.BarometricAltitude);
-	FlightData.BarometricVelocity = CalculateVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick);
+	FlightData.BarometricVelocity = CalculateBarometricVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick);
+	FlightData.GPSVelocity = CalculateGPSVerticalVelocity(FlightData.GPSAltitude, FlightData.Tick);
 
 	FlightData.VelX = 0;
 	FlightData.VelY = 0;

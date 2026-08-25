@@ -38,27 +38,50 @@ float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool 
     return (float)SignValue * (Temperature ? TEMPERATURE_SCALE : PRESSURE_SCALE);
 }
 
-static float PreviousAltitude;
-static uint32_t PreviousTick;
+static float BarometricPreviousAltitude;
+static uint32_t BarometricPreviousTick;
 
-float CalculateVerticalVelocity(float Altitude, uint32_t Tick) {
+float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick) {
 
-    uint32_t DeltaTick = Tick - PreviousTick;
+    uint32_t DeltaTick = Tick - BarometricPreviousTick;
     float Velocity = 0.0f;
 
-    if (DeltaTick > 0 && PreviousTick > 0) {
+    if (DeltaTick > 0 && BarometricPreviousTick > 0) {
         float DeltaSeconds = (float)DeltaTick / 1000.0f;
-        Velocity = (Altitude - PreviousAltitude) / DeltaSeconds;
+        Velocity = (Altitude - BarometricPreviousAltitude) / DeltaSeconds;
     }
 
-    PreviousAltitude = Altitude;
-    PreviousTick = Tick;
+    BarometricPreviousAltitude = Altitude;
+    BarometricPreviousTick = Tick;
 
     return Velocity;
 }
 
-void ResetVerticalVelocity(void) {
-    PreviousAltitude = 0.0f;
-    PreviousTick = 0;
+void ResetBarometricVerticalVelocity(void) {
+    BarometricPreviousAltitude = 0.0f;
+    BarometricPreviousTick = 0;
+}
+
+static float GPSPreviousAltitude;
+static uint32_t GPSPreviousTick;
+
+float CalculateGPSVerticalVelocity(float Altitude, uint32_t Tick) {
+    uint32_t DeltaTick = Tick - GPSPreviousTick;
+    float Velocity = 0.0f;
+
+    if (DeltaTick > 0 && GPSPreviousTick > 0) {
+        float DeltaSeconds = (float)DeltaTick / 1000.0f;
+        Velocity = (Altitude - GPSPreviousAltitude) / DeltaSeconds;
+    }
+
+    GPSPreviousAltitude = Altitude;
+    GPSPreviousTick = Tick;
+
+    return Velocity;
+}
+
+void ResetGPSVerticalVelocity(void) {
+    GPSPreviousAltitude = 0.0f;
+    GPSPreviousTick = 0;
 }
 

@@ -38,11 +38,21 @@
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
 
 // Transition Configuration
+
+// Prelaunch to Burn Acceleration Threshold
 #define PRELAUNCH_BURN_ACCEL_Y_THRESHOLD      	20.0f
 #define PRELAUNCH_BURN_CONSECUTIVE_SAMPLES      5
 
+// Burn to Passive Burnout Acceleration Threshold
 #define BURN_PASSIVE_BURNOUT_ACCEL_Y_THRESHOLD          5.0f
 #define BURN_PASSIVE_BURNOUT_CONSECUTIVE_SAMPLES        5
+
+// Passive Burnout to Active Burnout Automatic
+
+// Active Burnout to Apogee Barometric Altitude Threshold
+#define ACTIVE_BURNOUT_APOGEE_BAROM_ALT_THRESHOLD	2900.0f
+#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_THRESHOLD		2900.0f
+#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_BASELINE		90.0f	// Base altitude to calculate AGL from ASL
 
 #define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
 

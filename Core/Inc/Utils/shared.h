@@ -89,6 +89,7 @@ typedef struct {
     uint8_t Satellites;
     float BarometricAltitude;
     float BarometricVelocity;
+    float GPSVelocity;
     float VelX;
     float VelY;
     float VelZ;

@@ -18,7 +18,8 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->GyroCalibrationValid = false;
     ctx->AltitudeFilterInitialized = false;
 
-    ResetVerticalVelocity();
+    ResetBarometricVerticalVelocity();
+    ResetGPSVerticalVelocity();
 
     PressureSumPa = 0.0f;
     PressureSampleCount = 0;
