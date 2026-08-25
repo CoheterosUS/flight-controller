@@ -2,10 +2,6 @@
 #include "Utils/shared.h"
 #include "Utils/Calculations.h"
 
-float CalculateKelvinFromCelsius(float TemperatureC) {
-    return TemperatureC + 273.15f;
-}
-
 float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa, float Temperature) {
     if (PressurePa <= 0.0f || SystemContext->ReferencePressurePa <= 0.0f || !(SystemContext->ReferencePressurePaValid)) {
         return 0.0f;
@@ -42,23 +38,6 @@ float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool 
     return (float)SignValue * (Temperature ? TEMPERATURE_SCALE : PRESSURE_SCALE);
 }
 
-float CalculateGyroscope(uint8_t MSB, uint8_t LSB, float Factor) {
-    return ((int16_t)((MSB << 8) | LSB)) * Factor;
-}
-
-float CalculateAcceleration(uint8_t MSB, uint8_t LSB, float Factor) {
-    return ((int16_t)((MSB << 8) | LSB)) * Factor;
-}
-
-float CalculateBiasedGyroscope(SystemContext_t *SystemContext, float Value, float Bias) {
-    return SystemContext->GyroCalibrationValid ? Value - Bias : Value;
-}
-
-float CalculateMagneticField(uint8_t MSB, uint8_t LSB) {
-    int16_t Raw = (int16_t)((MSB << 8) | LSB);
-    return (float)Raw * 1.5f;
-}
-
 static float PreviousAltitude;
 static uint32_t PreviousTick;
 
@@ -83,6 +62,3 @@ void ResetVerticalVelocity(void) {
     PreviousTick = 0;
 }
 
-uint32_t GetStateElapsedMs(SystemContext_t *SystemContext, SystemState_t State) {
-    return xTaskGetTickCount() - SystemContext->StateEntryTicks[State];
-}

@@ -40,11 +40,15 @@
 // Transition Configuration
 #define PRELAUNCH_BURN_ACCEL_Y_THRESHOLD      	20.0f
 #define PRELAUNCH_BURN_CONSECUTIVE_SAMPLES      5
+
 #define BURN_MIN_VEL_Y_REACHED                  10.0f
 #define BURN_APOGEE_VEL_Y_THRESHOLD         	5.0f
+
 #define APOGEE_PARACHUTE_ALTITUDE_THRESHOLD 	500.0f
+
 #define PARACHUTE_MIN_VEL_Y_REACHED             -3.0f
 #define PARACHUTE_LANDED_VEL_Y_THRESHOLD    	2.0f
-#define LANDED_SD_STOP_DELAY_MS                 10000
+
+#define LANDED_SD_STOP_DELAY_MS                 5000
 
 #endif //CONFIGURATION_H

@@ -1,26 +1,19 @@
 #include "States/StateHandlers.h"
+#include "Utils/Calculations.h"
 #include "stm32h7xx_hal.h"
 
-static uint8_t BurnConfirmCount;
+static ConfirmCounter_t BurnConfirm;
 
 void PrelaunchStateEntry(SystemContext_t *ctx) {
-    // TODO: Refine
     ctx->SDLoggingEnabled = true;
-    BurnConfirmCount = 0;
+    BurnConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BURN_CONSECUTIVE_SAMPLES };
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	// TODO: Revise code
-	if (FlightData.AccelY > PRELAUNCH_BURN_ACCEL_Y_THRESHOLD) {
-		BurnConfirmCount++;
-		if (BurnConfirmCount >= PRELAUNCH_BURN_CONSECUTIVE_SAMPLES) {
-			return STATE_BURN;
-		}
-	} else {
-		BurnConfirmCount = 0;
+	if (ConfirmCounterCheck(&BurnConfirm, FlightData.AccelY > PRELAUNCH_BURN_ACCEL_Y_THRESHOLD)) {
+		return STATE_BURN;
 	}
 
-	// TODO: Refine
     if (SystemFaultFlags != 0) {
         return STATE_GROUND_ABORT;
     }
