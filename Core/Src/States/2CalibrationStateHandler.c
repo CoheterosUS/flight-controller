@@ -10,7 +10,11 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
 	CalibratePressure(FlightData, Context);
 	CalibrateGyroscope(FlightData, Context);
 
-	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid) {
+	if (FlightData.GPSAltitude != 0.0f && FlightData.UnixTime != 0 && FlightData.Latitude != 0 && FlightData.Longitude != 0 && FlightData.Satellites >= GPS_FIX_MIN_SATELLITES) {
+		Context->GPSFixValid = true;
+	}
+
+	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid && Context->GPSFixValid) {
 		return STATE_PRELAUNCH;
 	}
 

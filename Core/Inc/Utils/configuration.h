@@ -16,7 +16,6 @@
 
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f
-#define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
 // Barometer Configuration
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    3000
@@ -25,6 +24,10 @@
 // Gyroscope Configuration
 #define GYRO_CALIBRATION_DISCARD_SAMPLES        3000
 #define GYRO_CALIBRATION_SAMPLES                1000
+
+// GPS Configuration
+#define GPS_FIX_MIN_SATELLITES       1
+#define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
 // Stack Sizes (words)
 #define STACK_SIZE_TELEMETRY            256

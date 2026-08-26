@@ -17,6 +17,7 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->GyroBiasZ = 0.0f;
     ctx->GyroCalibrationValid = false;
     ctx->AltitudeFilterInitialized = false;
+    ctx->GPSFixValid = false;
 
     ResetBarometricVerticalVelocity();
     ResetGPSVerticalVelocity();

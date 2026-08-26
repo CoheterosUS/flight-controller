@@ -46,6 +46,7 @@ typedef struct {
     volatile bool AltitudeFilterInitialized;
     volatile bool SDLoggingEnabled;
     volatile bool SensorsIdleFinished;
+    bool GPSFixValid;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
