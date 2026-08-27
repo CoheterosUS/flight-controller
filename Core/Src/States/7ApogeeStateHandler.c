@@ -16,9 +16,11 @@ SystemState_t ApogeeStateHandler(SystemContext_t *Context, FlightData_t FlightDa
 	// TODO: Discuss if GPS Altitude too
 
 	// Delay
+#if APOGEE_PARACHUTE_DELAY_ENABLED
 	if (GetStateElapsedMs(Context, STATE_APOGEE) >= APOGEE_PARACHUTE_DELAY_MS) {
 		return STATE_PARACHUTE;
 	}
+#endif
 
     return STATE_APOGEE;
 }

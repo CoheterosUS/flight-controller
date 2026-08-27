@@ -21,9 +21,11 @@ SystemState_t ActiveBurnoutStateHandler(SystemContext_t *Context, FlightData_t F
 	}
 
 	// Delay
+#if ACTIVE_BURNOUT_APOGEE_DELAY_ENABLED
 	if (GetStateElapsedMs(Context, STATE_ACTIVE_BURNOUT) >= ACTIVE_BURNOUT_APOGEE_DELAY_MS) {
 		return STATE_APOGEE;
 	}
+#endif
 
 	return STATE_ACTIVE_BURNOUT;
 }

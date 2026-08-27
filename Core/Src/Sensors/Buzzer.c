@@ -15,7 +15,7 @@ static void Buzzer_Delay(uint32_t Duration, bool UseHAL) {
 }
 
 void Buzzer_Beep(uint32_t Duration) {
-#if !BUZZER_SILENT
+#if BUZZER_ENABLED
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
 	Buzzer_Delay(Duration, false);
 	HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
@@ -23,7 +23,7 @@ void Buzzer_Beep(uint32_t Duration) {
 }
 
 void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t WaitDuration, bool UseHAL) {
-#if !BUZZER_SILENT
+#if BUZZER_ENABLED
 	for (uint32_t Count = 0; Count < BeepCount; Count++) {
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
 		Buzzer_Delay(BeepDuration, UseHAL);

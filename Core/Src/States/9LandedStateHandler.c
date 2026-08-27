@@ -9,7 +9,11 @@ void LandedStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t LandedStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-    if (Context->SDLoggingEnabled && GetStateElapsedMs(Context, STATE_LANDED) >= LANDED_SD_STOP_DELAY_MS) {
+    if (Context->SDLoggingEnabled
+#if LANDED_SD_STOP_DELAY_ENABLED
+        && GetStateElapsedMs(Context, STATE_LANDED) >= LANDED_SD_STOP_DELAY_MS
+#endif
+    ) {
         Context->SDLoggingEnabled = false;
         CloseFile();
     }
