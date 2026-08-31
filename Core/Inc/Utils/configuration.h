@@ -35,8 +35,9 @@
 #define STACK_SIZE_STATE_MACHINE        512
 #define STACK_SIZE_SD_LOGGING           1024
 
-// Telemetry Configuration (Sends on every 10 iterations of main loop)
-#define TELEMETRY_DIVIDER                   10
+// Telemetry Configuration (main loop at 100Hz)
+#define TELEMETRY_DIVIDER                   10   // 10Hz in active states
+#define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
 
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500

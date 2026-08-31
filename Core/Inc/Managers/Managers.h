@@ -5,7 +5,7 @@
 #include "Managers/StructManager.h"
 
 void SerialInit(void);
-void SerialSendFlightData(const TelemetryPacket_t *Packet);
+void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State);
 
 void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *SystemContext);
 void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemState);

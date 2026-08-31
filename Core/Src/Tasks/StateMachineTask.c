@@ -76,7 +76,7 @@ void StateMachineTask(void *pvParameters) {
 		}
 
         TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
-        SerialSendFlightData(&Packet);
+        SerialSendFlightData(&Packet, CurrentSystemState);
 
         dbg_current_state = CurrentSystemState;
         dbg_system_faults = SystemFaultFlags;

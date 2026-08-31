@@ -16,8 +16,9 @@ void SerialInit(void) {
     TelemetryCounter = 0;
 }
 
-void SerialSendFlightData(const TelemetryPacket_t *Packet) {
-    if (++TelemetryCounter < TELEMETRY_DIVIDER) return;
+void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State) {
+    uint8_t Divider = (State == STATE_IDLE) ? TELEMETRY_DIVIDER_IDLE : TELEMETRY_DIVIDER;
+    if (++TelemetryCounter < Divider) return;
     TelemetryCounter = 0;
 
     if (TXBusy) return;
