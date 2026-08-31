@@ -75,6 +75,11 @@ void StateMachineTask(void *pvParameters) {
 			xQueueSend(SDLoggingQueue, &Record, 0);
 		}
 
+        if (FlashLoggingQueue != NULL && !StateChanged) {
+            FlashLogRecord_t FlashRecord = BuildFlashLogRecord(&FlightData);
+            xQueueSend(FlashLoggingQueue, &FlashRecord, 0);
+        }
+
         TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
         SerialSendFlightData(&Packet, CurrentSystemState);
 
