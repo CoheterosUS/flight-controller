@@ -1,6 +1,7 @@
 #include "States/StateHandlers.h"
 #include "Utils/Calibrations.h"
 #include "Utils/SD.h"
+#include "Sensors/W25Q32JV.h"
 #include "stm32h7xx_hal.h"
 #include "Utils/Pyro.h"
 
@@ -8,6 +9,7 @@ void IdleStateEntry(SystemContext_t *ctx) {
 	PyroSafeAll();
     ResetCalibrationContext(ctx);
     MountAndOpen();
+    W25Q_LoggingInit();
 }
 
 SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

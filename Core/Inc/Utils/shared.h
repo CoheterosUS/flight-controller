@@ -45,6 +45,7 @@ typedef struct {
     bool GyroCalibrationValid;
     volatile bool AltitudeFilterInitialized;
     volatile bool SDLoggingEnabled;
+    volatile bool FlashLoggingEnabled;
     volatile bool SensorsIdleFinished;
     bool GPSFixValid;
     uint32_t StateEntryTick;
@@ -62,7 +63,8 @@ typedef enum {
     IIS2MDCTR_MODE_PERFORMANCE_FAILED = 1u << 7,
     SD_MOUNT_FAILED = 1u << 8,
     SD_OPEN_FAILED = 1u << 9,
-    // TODO: Refine
+    W25Q_JEDEC_ID_FAILED = 1u << 10,
+    W25Q_INIT_FAILED = 1u << 11,
 } SystemFaultFlag_t;
 
 typedef uint32_t SystemFaultFlags_t;
@@ -104,6 +106,7 @@ typedef struct {
 #pragma pack(pop)
 
 extern QueueHandle_t SDLoggingQueue;
+extern QueueHandle_t FlashLoggingQueue;
 extern QueueHandle_t CommandQueue;
 
 extern TimerHandle_t TimerIIM42653;
@@ -117,12 +120,14 @@ extern I2C_HandleTypeDef hi2c1;
 extern I2C_HandleTypeDef hi2c2;
 extern SD_HandleTypeDef hsd1;
 extern SPI_HandleTypeDef hspi2;
+extern SPI_HandleTypeDef hspi4;
 extern TIM_HandleTypeDef htim2;
 extern UART_HandleTypeDef huart1;
 extern ADC_HandleTypeDef hadc1;
 
 #define BMP581_HANDLE      (&hi2c2)
 #define IIM42653_HANDLE    (&hspi2)
+#define W25Q_HANDLE        (&hspi4)
 #define IIS2MDCTR_HANDLE   (&hi2c1)
 #define SD_HANDLE          (&hsd1)
 #define TIM2_HANDLE        (&htim2)
