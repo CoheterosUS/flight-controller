@@ -32,6 +32,7 @@
 #include <Tasks/StateMachineTask.h>
 #include <Tasks/TelemetryTask.h>
 #include <Tasks/SensorConfigTask.h>
+#include <Tasks/FlashLoggingTask.h>
 #include "Sensors/Sensors.h"
 #include "Protocol/Protocol.h"
 
@@ -89,6 +90,7 @@ const osThreadAttr_t defaultTask_attributes = {
 };
 /* USER CODE BEGIN PV */
 QueueHandle_t SDLoggingQueue;
+QueueHandle_t FlashLoggingQueue;
 QueueHandle_t CommandQueue;
 
 TimerHandle_t TimerIIM42653;
@@ -198,12 +200,14 @@ int main(void)
   HAL_TIM_Base_Start(&htim2);
 
   SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(SDLogRecord_t));
+  FlashLoggingQueue = xQueueCreate(FLASH_LOGGING_QUEUE_LENGTH, sizeof(FlashLogRecord_t));
   CommandQueue = xQueueCreate(QUEUE_LENGTH, sizeof(CommandType_t));
 
   CreateTelemetryTask(&huart1, tskIDLE_PRIORITY + 4, STACK_SIZE_TELEMETRY);
   CreateSensorConfigTask(&SystemContext, tskIDLE_PRIORITY + 3, STACK_SIZE_SENSOR_CONFIG);
   CreateStateMachineTask(&SystemContext, tskIDLE_PRIORITY + 6, STACK_SIZE_STATE_MACHINE);
   CreateSDLoggingTask(&SystemContext, tskIDLE_PRIORITY + 1, STACK_SIZE_SD_LOGGING);
+  CreateFlashLoggingTask(&SystemContext, tskIDLE_PRIORITY + 2, STACK_SIZE_FLASH_LOGGING);
 
   // TODO: Revise rate
   TimerIIM42653 = xTimerCreate("IIM42653", pdMS_TO_TICKS(10), pdTRUE, NULL, IIM42653_Timer_Callback);

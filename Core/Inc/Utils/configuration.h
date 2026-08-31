@@ -42,6 +42,11 @@
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
 
+// Flash Configuration
+#define STACK_SIZE_FLASH_LOGGING            512
+#define FLASH_LOGGING_QUEUE_LENGTH          10
+#define FLASH_RECORDS_PER_PAGE              8
+
 // Transition Configuration
 
 // Prelaunch to Burn Acceleration Threshold
@@ -73,5 +78,7 @@
 
 #define LANDED_SD_STOP_DELAY_ENABLED            1
 #define LANDED_SD_STOP_DELAY_MS                 5000
+#define LANDED_FLASH_STOP_DELAY_ENABLED         1
+#define LANDED_FLASH_STOP_DELAY_MS              5000
 
 #endif //CONFIGURATION_H

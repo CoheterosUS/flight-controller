@@ -8,6 +8,8 @@
 #include "Sensors/BMP581.h"
 #include "Sensors/IIM42653.h"
 #include "Sensors/IIS2MDCTR.h"
+#include "Sensors/W25Q32JV.h"
+
 #include "Utils/shared.h"
 
 __attribute__((section(".dma_buffer"), aligned(32)))
@@ -56,6 +58,15 @@ void BMP581_Timer_Callback(TimerHandle_t xTimer) {
 
 void IIS2MDCTR_Timer_Callback(TimerHandle_t xTimer) {
     HAL_I2C_Mem_Read_DMA(IIS2MDCTR_HANDLE, IIS2MDCTR_I2C_ADDRESS, IIS2MDCTR_REG_OUTX_L_REG | IIS2MDCTR_AUTO_INCREMENT_MASK, I2C_MEMADD_SIZE_8BIT, IIS2MDCTR_RXBuf, IIS2MDCTR_SENSOR_DATA_SIZE);
+}
+
+void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
+    if (hspi->Instance == SPI4) {
+        W25Q_DeselectCS();
+        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+        xSemaphoreGiveFromISR(FlashSPISemaphore, &xHigherPriorityTaskWoken);
+        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+    }
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {

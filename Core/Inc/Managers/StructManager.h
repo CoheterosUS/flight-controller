@@ -62,9 +62,23 @@ typedef struct {
     uint8_t LastCommand;
     uint8_t SyncEnd;
 } TelemetryPacket_t;
+
+typedef struct {
+    uint16_t Sync;
+    uint32_t Tick;
+    float AccelX;
+    float AccelY;
+    float AccelZ;
+    float GyroX;
+    float GyroY;
+    float GyroZ;
+    uint8_t State;
+    uint8_t SyncEnd;
+} FlashLogRecord_t;
 #pragma pack(pop)
 
 SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData);
 TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData);
+FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData);
 
 #endif //STRUCTMANAGER_H

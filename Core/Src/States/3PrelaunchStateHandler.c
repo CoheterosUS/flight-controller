@@ -6,6 +6,7 @@ static ConfirmCounter_t BurnConfirm;
 
 void PrelaunchStateEntry(SystemContext_t *ctx) {
     BurnConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BURN_CONSECUTIVE_SAMPLES };
+    ctx->FlashLoggingEnabled = true;
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

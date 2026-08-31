@@ -66,3 +66,20 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
 
     return Packet;
 }
+
+FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData) {
+    FlashLogRecord_t Record;
+
+    Record.Sync = FlightData->Sync;
+    Record.Tick = FlightData->Tick;
+    Record.AccelX = FlightData->AccelX;
+    Record.AccelY = FlightData->AccelY;
+    Record.AccelZ = FlightData->AccelZ;
+    Record.GyroX = FlightData->GyroX;
+    Record.GyroY = FlightData->GyroY;
+    Record.GyroZ = FlightData->GyroZ;
+    Record.State = FlightData->State;
+    Record.SyncEnd = FlightData->SyncEnd;
+
+    return Record;
+}
