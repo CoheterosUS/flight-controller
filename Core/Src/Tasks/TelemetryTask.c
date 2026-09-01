@@ -12,6 +12,9 @@ TaskHandle_t TelemetryTaskHandle;
 
 static ProtocolParser_t Parser;
 
+volatile CommandType_t dbg_last_command = 0;
+volatile uint8_t dbg_last_command_counter = 0;
+
 void CreateTelemetryTask(UART_HandleTypeDef *huart, const UBaseType_t Priority, const uint16_t StackSize) {
     xTaskCreate(
         TelemetryTask,
@@ -37,6 +40,8 @@ void TelemetryTask(void *pvParameters) {
             uint8_t RawCommand = 0;
             if (ProtocolFeed(&Parser, TELEMETRY_RX_BUFFER[i], &RawCommand)) {
                 CommandType_t Command = (CommandType_t)RawCommand;
+                dbg_last_command = Command;
+                dbg_last_command_counter++;
 #if HIL_MODE
                 if (Command == COMMAND_HIL_DATA) {
                     HandleHILPacket(Parser.Payload);

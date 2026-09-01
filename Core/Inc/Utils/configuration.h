@@ -12,7 +12,7 @@
 #define EXTERNAL_COMMANDS           1
 #define AUTO_START_CALIBRATION		1
 
-#define BUZZER_ENABLED				0
+#define BUZZER_ENABLED				1
 
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f
@@ -36,7 +36,7 @@
 #define STACK_SIZE_SD_LOGGING           1024
 
 // Telemetry Configuration (main loop at 100Hz)
-#define TELEMETRY_DIVIDER                   10   // 10Hz in active states
+#define TELEMETRY_DIVIDER                   100  // 1Hz in active states
 #define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
 
 // SD Configuration
