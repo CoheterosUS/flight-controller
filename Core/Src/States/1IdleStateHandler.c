@@ -2,8 +2,10 @@
 #include "Utils/Calibrations.h"
 #include "Utils/SD.h"
 #include "stm32h7xx_hal.h"
+#include "Utils/Pyro.h"
 
 void IdleStateEntry(SystemContext_t *ctx) {
+	PyroSafeAll();
     ResetCalibrationContext(ctx);
     MountAndOpen();
 }

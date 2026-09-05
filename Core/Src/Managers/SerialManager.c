@@ -10,6 +10,8 @@ static uint8_t ActiveTXIndex;
 static volatile bool TXBusy;
 static uint8_t TelemetryCounter;
 
+volatile uint8_t dbg_telem_sent = 0;
+
 void SerialInit(void) {
     ActiveTXIndex = 0;
     TXBusy = false;
@@ -28,6 +30,7 @@ void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State) 
 
     TXBusy = true;
     HAL_UART_Transmit_DMA(USART1_HANDLE, Buf, sizeof(TelemetryPacket_t));
+    dbg_telem_sent++;
     ActiveTXIndex ^= 1;
 }
 

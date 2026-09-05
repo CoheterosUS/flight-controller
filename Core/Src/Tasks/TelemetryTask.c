@@ -14,6 +14,7 @@ static ProtocolParser_t Parser;
 
 volatile CommandType_t dbg_last_command = 0;
 volatile uint8_t dbg_last_command_counter = 0;
+volatile uint8_t dbg_gps_command_count = 0;
 
 void CreateTelemetryTask(UART_HandleTypeDef *huart, const UBaseType_t Priority, const uint16_t StackSize) {
     xTaskCreate(
@@ -48,6 +49,7 @@ void TelemetryTask(void *pvParameters) {
                 }
 #endif
                 if (Command == COMMAND_GPS_DATA && Parser.Length == ZOEM8Q_PAYLOAD_SIZE) {
+                	dbg_gps_command_count++;
                     ZOEM8Q_SensorData_t GPSData;
                     ZOEM8Q_ParsePayload(Parser.Payload, &GPSData);
                     ZOEM8Q_Mailbox_Inject(&GPSData);
