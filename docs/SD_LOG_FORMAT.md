@@ -91,11 +91,11 @@ typedef struct {
 | 0     | IDLE             | Sensors at low power                       |
 | 1     | CALIBRATION      | Sensors at max output for calibration      |
 | 2     | PRELAUNCH        | SD logging initialized, waiting for launch |
-| 3     | BURN             | Acceleration detected, motor burning       |
-| 4     | PASSIVE_BURNOUT  | Burnout, still ascending                   |
-| 5     | ACTIVE_BURNOUT   | Active control phase                       |
+| 3     | BOOST            | Acceleration detected, motor burning       |
+| 4     | COAST            | Burnout, still ascending                   |
+| 5     | ACTIVE_CONTROL   | Active control phase                       |
 | 6     | APOGEE           | Apogee detected, drogue deploy             |
-| 7     | PARACHUTE        | Main parachute deploy                      |
+| 7     | MAIN_PARACHUTE   | Main parachute deploy                      |
 | 8     | LANDED           | On ground, GPS-only                        |
 | 9     | GROUND_ABORT     | Abort on ground                            |
 | 10    | DESCENT_ABORT    | Abort during descent                       |

@@ -34,20 +34,20 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
         case STATE_PRELAUNCH:
             PrelaunchStateEntry(SystemContext);
             break;
-        case STATE_BURN:
-            BurnStateEntry(SystemContext);
+        case STATE_BOOST:
+            BoostStateEntry(SystemContext);
             break;
-        case STATE_PASSIVE_BURNOUT:
-            PassiveBurnoutStateEntry(SystemContext);
+        case STATE_COAST:
+            CoastStateEntry(SystemContext);
             break;
-        case STATE_ACTIVE_BURNOUT:
-            ActiveBurnoutStateEntry(SystemContext);
+        case STATE_ACTIVE_CONTROL:
+            ActiveControlStateEntry(SystemContext);
             break;
         case STATE_APOGEE:
             ApogeeStateEntry(SystemContext);
             break;
-        case STATE_PARACHUTE:
-            ParachuteStateEntry(SystemContext);
+        case STATE_MAIN_PARACHUTE:
+            MainParachuteStateEntry(SystemContext);
             break;
         case STATE_LANDED:
             LandedStateEntry(SystemContext);
@@ -151,20 +151,20 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 		case STATE_PRELAUNCH:
 			return PrelaunchStateHandler(SystemContext, SensorData);
 			break;
-		case STATE_BURN:
-			return BurnStateHandler(SystemContext, SensorData);
+		case STATE_BOOST:
+			return BoostStateHandler(SystemContext, SensorData);
 			break;
-		case STATE_PASSIVE_BURNOUT:
-			return PassiveBurnoutStateHandler(SystemContext, SensorData);
+		case STATE_COAST:
+			return CoastStateHandler(SystemContext, SensorData);
 			break;
-		case STATE_ACTIVE_BURNOUT:
-			return ActiveBurnoutStateHandler(SystemContext, SensorData);
+		case STATE_ACTIVE_CONTROL:
+			return ActiveControlStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_APOGEE:
 			return ApogeeStateHandler(SystemContext, SensorData);
 			break;
-		case STATE_PARACHUTE:
-			return ParachuteStateHandler(SystemContext, SensorData);
+		case STATE_MAIN_PARACHUTE:
+			return MainParachuteStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_LANDED:
 			return LandedStateHandler(SystemContext, SensorData);

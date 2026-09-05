@@ -1,17 +1,17 @@
 LÓGICA CAMBIOS DE MODO
 
-Prelaunch-Burn -> 
+Prelaunch-Boost -> 
 -	Threshold Aceleración (customizable el valor)
 
-Burn-passive burn-out -> 
+Boost-Coast -> 
 -	Threshold Aceleración (customizable el valor)
 
-Active burn-out ->
+Active Control ->
 -	Threshold Velocidad (simulaciones CFD + GNC) + altitud
 -	Delay desde modo anterior (menos conservador) + altitud 
 -	ABORTO: Delay desde modo anterior (más conservador) + precarga LUT control airbrakes (en función del tiempo) [lo pondría cuando en simulación estemos por encima de los 2.5 km]
 
-Active burn-out – Apogee -> 
+Active Control – Apogee -> 
 -	Altímetro (barómetro)
 -	Altímetro (GNSS)
 -	Threshold Velocidad vertical en NED (GNSS?)

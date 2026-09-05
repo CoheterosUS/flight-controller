@@ -44,32 +44,32 @@
 
 // Transition Configuration
 
-// Prelaunch to Burn Acceleration Threshold
-#define PRELAUNCH_BURN_ACCEL_Y_THRESHOLD      	20.0f
-#define PRELAUNCH_BURN_CONSECUTIVE_SAMPLES      5
+// Prelaunch to Boost Acceleration Threshold
+#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	20.0f
+#define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      5
 
-// Burn to Passive Burnout Acceleration Threshold
-#define BURN_PASSIVE_BURNOUT_ACCEL_Y_THRESHOLD          5.0f
-#define BURN_PASSIVE_BURNOUT_CONSECUTIVE_SAMPLES        5
+// Boost to Coast Acceleration Threshold
+#define BOOST_COAST_ACCEL_Y_THRESHOLD          5.0f
+#define BOOST_COAST_CONSECUTIVE_SAMPLES        5
 
-// Passive Burnout to Active Burnout Automatic
+// Coast to Active Control Automatic
 
-// Active Burnout to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
-#define ACTIVE_BURNOUT_APOGEE_BAROM_ALT_THRESHOLD		2900.0f
-#define ACTIVE_BURNOUT_APOGEE_GPS_ALT_THRESHOLD			2900.0f
-#define ACTIVE_BURNOUT_APOGEE_GPS_VEL_Y_THRESHOLD		0.0f
-#define ACTIVE_BURNOUT_APOGEE_DELAY_ENABLED				1
-#define ACTIVE_BURNOUT_APOGEE_DELAY_MS					10000
+// Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
+#define ACTIVE_CONTROL_APOGEE_BAROM_ALT_THRESHOLD		2900.0f
+#define ACTIVE_CONTROL_APOGEE_GPS_ALT_THRESHOLD			2900.0f
+#define ACTIVE_CONTROL_APOGEE_GPS_VEL_Y_THRESHOLD		0.0f
+#define ACTIVE_CONTROL_APOGEE_DELAY_ENABLED				1
+#define ACTIVE_CONTROL_APOGEE_DELAY_MS					10000
 
-// Apogee to Parachute
-#define APOGEE_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f
-#define APOGEE_PARACHUTE_DELAY_ENABLED			1
-#define APOGEE_PARACHUTE_DELAY_MS				30000
+// Apogee to Main Parachute
+#define APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f
+#define APOGEE_MAIN_PARACHUTE_DELAY_ENABLED			1
+#define APOGEE_MAIN_PARACHUTE_DELAY_MS				30000
 
-// Parachute to Landed
-#define PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
-#define PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD		2.0f
-#define PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		10
+// Main Parachute to Landed
+#define MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
+#define MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD		2.0f
+#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		10
 
 #define LANDED_SD_STOP_DELAY_ENABLED            1
 #define LANDED_SD_STOP_DELAY_MS                 5000

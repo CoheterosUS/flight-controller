@@ -327,7 +327,7 @@ function renderCharts() {
         { key: 'temp', title: 'Temperature' },
         { key: 'alt', title: 'GPS Altitude' },
         { key: 'voltage', title: 'Battery Voltage' },
-        { key: 'relay', title: 'Relay State', legend: [['Drogue','legend-x'],['Parachute','legend-z']] },
+        { key: 'relay', title: 'Relay State', legend: [['Drogue','legend-x'],['Main Parachute','legend-z']] },
     ];
 
     if (allRecords[0] && allRecords[0].State !== undefined) {

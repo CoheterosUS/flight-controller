@@ -2,11 +2,11 @@ const STATE_NAMES = [
     'Idle',
     'Calibration',
     'Prelaunch',
-    'Burn',
-    'Passive Burnout',
-    'Active Burnout',
+    'Boost',
+    'Coast',
+    'Active Control',
     'Apogee',
-    'Parachute',
+    'Main Parachute',
     'Landed',
     'Ground Abort',
     'Descent Abort',
@@ -16,11 +16,11 @@ const STATE_COLORS = [
     '#7a7e8c', // Idle — dim gray
     '#5b9cf6', // Calibration — blue
     '#e8c840', // Prelaunch — yellow
-    '#e89030', // Burn — orange
-    '#d4882a', // Passive Burnout — dark orange
-    '#c07020', // Active Burnout — brown-orange
+    '#e89030', // Boost — orange
+    '#d4882a', // Coast — dark orange
+    '#c07020', // Active Control — brown-orange
     '#b07af5', // Apogee — purple
-    '#4ec9c9', // Parachute — cyan
+    '#4ec9c9', // Main Parachute — cyan
     '#4ecb71', // Landed — green
     '#e85454', // Ground Abort — red
     '#e85454', // Descent Abort — red
