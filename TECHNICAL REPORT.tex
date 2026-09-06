@@ -1,0 +1,419 @@
+\documentclass[11pt, a4paper]{article} % RULE: A4, standard font size 11
+
+% --- EUROC MANDATORY FORMATTING PACKAGES ---
+\usepackage[margin=2.5cm]{geometry} % RULE: standard page margins 2,5 cm
+\usepackage{setspace}
+\singlespacing % RULE: line spacing 1,0
+
+% --- STANDARD ENGINEERING PACKAGES ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{hyperref}
+
+% --- COLOR DEFINITIONS (Coheteros Branding) ---
+\definecolor{EtseNavy}{HTML}{002F6C}
+\definecolor{LightGrayTable}{HTML}{F2F4F7}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=EtseNavy,
+    urlcolor=EtseNavy,
+    citecolor=EtseNavy
+}
+
+% --- TITLE PAGE CONFIGURATION ---
+\title{
+    \vspace{-2cm}
+    \includegraphics[height=3cm]{example-image} % PLACEHOLDER FOR COHETEROS LOGO
+    \\[1.5cm]
+    \textbf{\Huge PROJECT NAOS EVO} \\[0.5cm]
+    \Large \textit{Design, Development, and Flight Readiness Status} \\[1.5cm]
+    % EUROC MANDATORY SUBTITLE RULE:
+    \textbf{\Large Team 07 Technical Report to the 2026 EuRoC}
+}
+\author{
+    \textbf{Coheteros} \\ 
+    Rocketry Association \\ 
+    School of Engineering \\ 
+    University of Seville
+}
+\date{August 2026} % Update to your submission date
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\tableofcontents
+\newpage
+
+% =========================================================================
+% 0. ABSTRACT (Rule: Force section numbering to start at 0)
+% =========================================================================
+\setcounter{section}{-1}
+\section{Abstract}  \textcolor{red}{JD. 1 página}
+% RULE: ca. 1 page. Standalone synopsis. General description, mission/flight category, unique characteristics, payload mission, high-level goals.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} vehicle description, mission, flight category, design characteristics, payload, special features.
+
+% =========================================================================
+% 1. INTRODUCTION
+% =========================================================================
+\section{Introduction}  \textcolor{red}{JD. 1 página}
+% RULE: Academic program, stakeholders, team structure, management strategies, vision, suppliers/partners, technical challenges.
+% INTEGRATION NOTE: Here we will add the new "departmental team structure" decided in the meeting to look more professional than just a "committee".
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} academic programme, stakeholders, team, experience, vision, strategy, suppliers, partners, technical challenges.
+
+% =========================================================================
+% 2. SYSTEM ARCHITECTURE
+% =========================================================================
+\section{System Architecture}
+
+\subsection{Overview}  \textcolor{red}{JD. 1 página}
+% RULE: Top-level overview, cutaway figure depicting integrated launch vehicle.
+
+\subsection{Propulsion subsystem}  \textcolor{red}{Responsable: Miguel Gómez. Apoyo: Jesús. 4-6 páginas}
+% RULE: Engine design, propellants, total impulse, arming, ignition, nominal pressures, SRAD tanks.
+% INTEGRATION NOTE: Here we will explain the APCP solid motor and specifically detail the Cellular Polypropylene Liner discussed in the meeting.
+
+\subsection{Aerostructure subsystem}  \textcolor{red}{Responsable: Gonzalo (uninones, motor retention). Apoyo: Álvaro Moreno, Juanpe, Mateo, Álvaro Sáez. 6-8 páginas (si es menos no pasa nada)} 
+
+\vspace{1cm}
+
+\textcolor{red}{Debe incluir cálculo de estabilidad, cálculos aerodinámicos, simulaciones, fuerzas aerodinámicas, análisis de pesos, centro de gravedad...}
+% RULE: Motor retention, thrust structure, mechanical connections, expected forces.
+
+\subsection{Recovery subsystem}  \textcolor{red}{Responsable: Paula. Apoyo: José Reyes, Angelo, Gonzalo, Álvaro Sáez. 3-5 páginas}
+\vspace{1cm}
+
+\textcolor{red}{Comentarios. José Reyes (activación, hacer referencia en Avionics Bay), Angelo (hacer referencia a la máquina de estados del 2.7.3}
+% RULE: Initial/main deployment events, parachute, drogue, activation devices, redundant electronics.
+% INTEGRATION NOTE: Here we will detail the Ringsail and Drogue parachutes, and explain that $S \cdot C_{D_0}$ will be characterised in a Wind Tunnel.
+
+\subsection{Payload subsystem}  \textcolor{red}{Responsable: Miguel Rodríguez. 1 página }
+% RULE: Mass, form factor, functionality, interface.
+
+\subsection{Active flight control subsystem}  \textcolor{red}{Responsable: Fede. 4-6 páginas }
+% RULE: Safety, abort, control, systems affecting trajectory.
+% INTEGRATION NOTE: Airbrakes go here. We will include the FEM analysis of the threaded rods and nuts requested by the judges.
+
+\subsection{Special subsystems} 
+
+\subsubsection{Missionization and Simulation}
+\textcolor{red}{Responsable: Mateo. Apoyo: Fede. 2-4 páginas}
+
+\subsubsection{Missionization and Simulation}
+
+In strict accordance with the competition guidelines, the flight dynamics and mission profile of the NAOS EVO launch vehicle have been exclusively modeled and verified using the RocketPy framework. This 6-DOF simulation environment allows for precise evaluation of the vehicle's mass properties, aerodynamics, and thrust curve to predict the nominal trajectory and ensure flight readiness.
+
+To ensure maximum fidelity in the dynamic model, all aerodynamic parameters were imported from custom datasets generated by the association's in-house aerodynamic simulator. The baseline drag profile of the rocket was defined using the \texttt{CD\_NAOS.csv} file, mapping the overall drag coefficient ($C_D$) across various Mach numbers. The stabilizing fins' lift characteristics were dictated by the \texttt{Airfoil\_Cl\_Alpha.csv} dataset, detailing the geometric and aerodynamic specifications for the flat plate fin profile. Furthermore, the airbrakes' drag authority was precisely modeled utilizing the \texttt{CD\_AIRBRAKES\_Override.csv} file, which correlates aerodynamic drag to different airbrake deployment levels and Mach numbers.
+
+To guarantee accurate flight modeling and launch safety, a comprehensive wind study was conducted. Due to recent downtime and connectivity issues with the live meteorological data servers (e.g., NOAA/OPeNDAP) used by RocketPy for dynamic weather fetching, an alternative robust approach was implemented. A static historical weather dataset (\texttt{era5\_wind\_EuRoc.nc}) was manually integrated into the simulation environment. It is important to note that this file is not a mathematically processed average of multiple dates; rather, it is a raw dataset extracted from a single specific day that exhibited typical, average wind conditions for the exact launch coordinates of the EuRoC event. This approach ensures consistent, realistic, and conservative aerodynamic loads during the analysis.
+
+Once this representative static wind profile was established, it served as the reliable baseline for routine iterative simulations throughout the design phase. These iterations were critical for verifying both the vehicle's total unbraked apogee and the actively controlled apogee, laying the groundwork for a comprehensive altitude analysis.
+
+Accurate apogee prediction is a critical aspect of the mission, as the primary objective is to reach a precise altitude of 3,000 m. The solid propulsion subsystem was deliberately designed with a calculated energy surplus. Simulations of the nominal, unbraked flight profile demonstrate that the rocket achieves a baseline apogee exceeding the target, ensuring sufficient kinetic energy under all anticipated launch conditions. Figure \ref{fig:trajectory_unbraked} illustrates the simulated unbraked trajectory.
+
+% PLACEDHOLDER: IMAGEN TRAYECTORIA SIN AIRBRAKES
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/trajectory_unbraked.png} % Reemplaza con tu imagen
+    \caption{Simulated NAOS EVO nominal trajectory without airbrake deployment, showing the natural apogee overshoot.}
+    \label{fig:trajectory_unbraked}
+\end{figure}
+
+To bleed off this excess energy, the Active Flight Control subsystem intervenes. By continuously evaluating the vehicle's kinematics and utilizing the custom aerodynamic data, the airbrake deployment logic---based on a bisection root-finding algorithm---calculates the required drag in real time. The active control loop successfully demonstrates convergence, bringing the vehicle to a highly precise apogee of exactly 3,000 m, as shown in Figure \ref{fig:trajectory_braked}.
+
+% PLACEDHOLDER: IMAGEN TRAYECTORIA CON AIRBRAKES
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{figures/trajectory_braked.png} % Reemplaza con tu imagen
+    \caption{Simulated trajectory with active airbrake control, demonstrating convergence exactly at the 3,000 m target apogee.}
+    \label{fig:trajectory_braked}
+\end{figure}
+
+Furthermore, the descent phase was explicitly modeled to confirm that the terminal velocities for both the drogue and main parachutes comply with competition safety constraints, providing a stable payload return and a safe kinetic energy upon ground impact.
+
+To predict the vehicle's ground footprint, a rigorous Monte Carlo dispersion analysis comprising 1,000 stochastic simulations was executed. Uncertainty was systematically injected across major subsystems to model real-world variances, including Gaussian perturbations in the motor's total impulse, vehicle dry mass, parachute drag coefficients, and environmental variations derived from the static wind profile. The resulting dispersion ellipses and impact coordinates were exported to KML format, confirming that the $99\%$ confidence interval for the recovery footprint falls strictly within the designated safe operational area of the launch site.
+
+
+\vspace{1cm}
+
+\textcolor{red}{Huella en tierra, apogeos, estudio de vientos.... Hacer referencia a los Flight Simulations}
+
+\subsubsection{Avionics Bay}
+\label{subsubsection:avionics_bay}
+
+The avionics bay of Project NAOS EVO is designed around a modular, highly redundant, and fail-safe architecture. The system combines custom-developed Student Researched and Developed (SRAD) Printed Circuit Boards (PCBs) with a mandatory Commercial Off-The-Shelf (COTS) recovery computer to guarantee maximum reliability and flight safety. 
+
+\paragraph{Architecture and SRAD Board Breakdown}
+The electronic system is distributed across four custom processing and power management units, complemented by a COTS recovery system:
+
+\begin{itemize}
+    \item \textbf{Main Flight Computer (Baseboard):} Driven by an STMicroelectronics STM32H723VGT6 microcontroller, this board executes the main flight state machine and the Extended Kalman Filter (EKF) for state estimation (detailed in Section 2.7.4). Sensor data acquisition relies on a redundant suite:
+    \begin{itemize}
+        \item 1x BMP581 high-precision barometric pressure sensor.
+        \item 1x IIS2MDCTR 3-axis digital magnetometer.
+        \item 1x IIM-42653 6-axis low-noise IMU.
+        \item 1x LSM6DSV320XTR high-g 6-axis IMU.
+    \end{itemize}
+    Flight parameters are logged concurrently to an onboard microSD card and a high-speed NOR Flash memory chip. Additionally, the Baseboard controls the power and recording states of an integrated RunCam Split 4 HD camera.
+
+    \item \textbf{Powerboard and Actuation System:} Connected directly to the Baseboard, the Powerboard houses DC-DC buck converters supplying $5\,\text{V}$ and $3.3\,\text{V}$ power rails. It incorporates high-current MOSFET switches for triggering the Main and Drogue parachute pyrotechnic charges, alongside relays managing the $5\,\text{V}$ supply line for the active control servomotor. Interfacing between the Baseboard and Powerboard is established via two buses:
+    \begin{itemize}
+        \item \textit{Power Bus (10-pin connector):} Delivers $5\,\text{V}$, $3.3\,\text{V}$, and GND to the Baseboard.
+        \item \textit{Signal Bus (20-pin connector):} Carries relay control lines, PWM active control signals, battery voltage real-time telemetry feedback, and pyrotechnic activation signals.
+    \end{itemize}
+
+    \item \textbf{Active Control Hardware Watchdog:} To prevent uncontrolled airbrake behavior upon signal disruption, the Powerboard includes a hardware watchdog circuit. If an anomaly or loss in the PWM signal is detected, the watchdog forces an automatic $0\%$ deflection (full retraction) and locks the control surface. This hardware override can be bypassed to hand over actuator authority to the Redundant Active Control PCB.
+
+    \item \textbf{Redundant Active Control PCB:} Serving as a processing and estimation backup for active control, this board incorporates the primary processing platform (STM32H723VGT6 MCU) along with a dedicated sensor suite consisting of the BMP581 barometric sensor, IIS2MDCTR magnetometer, and LSM6DSV320XTR high-g IMU. It executes a parallel instance of the EKF and state machine alongside the active airbrake control algorithm. In the event of a primary flight computer failure, this unit assumes full control authority over the airbrakes.
+
+    \item \textbf{Telemetry and GNSS Module:} Driven by an ESP32 microcontroller, this board receives flight telemetry packets from the Baseboard via UART and transmits them to the ground station via an Ebyte E32-900T30D LoRa transceiver operating at $868\,\text{MHz}$. Position tracking is handled by an onboard u-blox ZOE-M8Q GNSS receiver.
+
+    \item \textbf{COTS Backup Computer (CATS Vega):} To strictly comply with EuRoC recovery redundancy requirements, a commercial CATS Vega flight computer is integrated as a fully isolated secondary recovery system. It operates on dedicated sensors, power supplies, and pyrotechnic channels to ensure recovery system deployment independently of the primary SRAD system.
+\end{itemize}
+
+\paragraph{Power Distribution and Electrical Isolation}
+Electrical isolation is maintained by utilizing three independent, custom-built $2\text{S}$ 18650 Lithium-Ion battery packs equipped with balance cables:
+
+\begin{table}[H]
+\centering
+\caption{Avionics Subsystem Power Domain Allocation}
+\label{tab:power_domains}
+\begin{tabularx}{\textwidth}{l l X}
+\toprule
+\textbf{Battery Pack} & \textbf{Configuration} & \textbf{Powered Subsystems} \\
+\midrule
+Pack 1 & 2S 18650 Li-Ion & Powerboard, Baseboard, Telemetry \& GNSS Module \\
+Pack 2 & 2S 18650 Li-Ion & Redundant Active Control PCB \& Servo Actuator \\
+Pack 3 & 2S 18650 Li-Ion & COTS CATS Vega Recovery Computer \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\paragraph{Arming Mechanisms and External Interface}
+Safe arming operations on the launch pad are enabled by four mechanical pull-push (Remove Before Flight) pins routed to the external surface of the airframe:
+\begin{enumerate}
+    \item \textbf{Pin 1:} Baseboard and Powerboard main system power enable.
+    \item \textbf{Pin 2:} Pyrotechnic charge channel physical arming.
+    \item \textbf{Pin 3:} Redundant Active Control computer power enable.
+    \item \textbf{Pin 4:} COTS CATS Vega backup system power enable.
+\end{enumerate}
+
+\paragraph{RF Antenna Integration}
+All communications transmit through the glass-fiber section of the airframe, which provides RF transparency. The antenna suite comprises:
+\begin{itemize}
+    \item \textbf{GNSS Antenna:} Flexible patch antenna mounted internally around the inner surface of the fiberglass airframe.
+    \item \textbf{Telemetry Antenna:} Externally mounted ANT-868-WRT-SMA antenna for the $868\,\text{MHz}$ LoRa transceiver.
+    \item \textbf{CATS Vega Antenna:} Dedicated ANT-2.4-CW antenna.
+\end{itemize}
+
+\paragraph{Mechanical CAD Layout and Sectional Integration}
+The avionics structural bay is organized into three 3D-printed modular sections integrated inside the fiberglass airframe:
+\begin{itemize}
+    \item \textbf{Lower Module:} Houses the Baseboard, Powerboard, and the COTS CATS Vega flight computer.
+    \item \textbf{Middle Module:} Holds the Telemetry \& GNSS PCB together with the Redundant Active Control PCB.
+    \item \textbf{Upper Module:} Accommodates the three $2\text{S}$ 18650 battery packs and the RunCam Split 4 camera module.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{example-image} % Replace with actual CAD render
+    \caption{Internal CAD arrangement of the NAOS EVO Avionics Bay modular structure.}
+    \label{fig:avionics_bay_cad}
+\end{figure}
+\subsubsection{Communication and Ground Station} \textcolor{red}{Responsable: Alejandro Ariza. 2-4 páginas}
+
+\vspace{1cm}
+
+\textcolor{red}{Hablar d ela interfaz de telemetría, toma con la antena...si nos vamos de páginas pasamos al último punto el 5.9 donde se pueden dar aún más detalles. Lo que quede mejor.}
+
+\subsubsection{Software}\textcolor{red}{Responsable: Angelo (máquina de estados). 3-5 páginas}
+
+% RULE: If applicable.
+% INTEGRATION NOTE: We will put the Avionics Subsystem here, explicitly mentioning the CATS Vega COTS backup system.
+
+% =========================================================================
+% 3. MISSION CONCEPT OF OPERATIONS OVERVIEW
+% =========================================================================
+\section{Mission concept of operations overview} 
+% RULE: Mission phases, nominal operation, phase transitions.
+
+\textcolor{red}{Responsable: Angelo. Apoyo: Álvaro Sáez. 1-3 páginas}
+
+\vspace{1cm}
+
+\textcolor{red}{Tomar como base la corrección realizada en el progress report. Revisar requitos de EUROC que hay información acerca de esto a partir del punto 5.}
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} main logic for arming/ignition/stage separation/deployment events, trajectories, influence of wind, propulsion thrust curve, predicted apogee, aerodynamic stability, centre of gravity, centre of pressure, velocity, acceleration, descent rates.
+
+% =========================================================================
+% 4. CONCLUSIONS AND OUTLOOK
+% =========================================================================
+\section{Conclusions and outlook} \textcolor{red}{Responsable:JD. 1-3 páginas}
+% RULE: Summary of achievements, reflections, project outcomes, lessons learned, remaining challenges.
+
+\vspace{0.5cm}
+\noindent\textbf{Keywords:} achievements, reflections, project outcomes, lessons learned, way forward, remaining design challenges, areas for improvement.
+
+\newpage
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% WARNING: MAXIMUM 50 PAGES UNTIL HERE (Excluding figures, etc.)
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\vspace*{5cm}
+\begin{center}
+    \Huge \textbf{\textcolor{EtseNavy}{--- MAXIMUM 50 PAGES UNTIL HERE ---}} \\
+    \vspace{1cm}
+    \Large \textit{Any content past this point belongs to the Appendices and does not count towards the page limit.}
+\end{center}
+\newpage
+
+% =========================================================================
+% 5. APPENDICES (MANDATORY ORDER)
+% =========================================================================
+\section{Appendices}
+
+\subsection{System data} \textcolor{red}{Responsable: Miguel Rodríguez. Apoyo: Gonzalo, Mateo}
+
+\vspace{1cm}
+
+\textcolor{red}{Revisar formato del progress report, cosas que se nos puedan escapar, y actualizados los datos. Performance Mateo. OJO, se explica todo con tablas.}
+% RULE: Vehicle/system weights, measures, performance data in tabular manner.
+
+\subsection{Detailed test reports} \textcolor{red}{Aquí hay que brillar u decir todo lo que hemos estado haciendo}
+% RULE: Must follow this EXACT order. If a report is not applicable, the team must include a page marked "THIS PAGE INTENTIONALLY LEFT BLANK" in its place.
+
+\subsubsection{Ground test demonstration of recovery system} \textcolor{red}{Responsable: Paula}
+% INTEGRATION NOTE: Recovery deployment test details go here.
+
+\subsubsection{Flight test demonstration of recovery system (optional)} \textcolor{red}{Responsable: Paula. Puede que no aplique, lo dejamos para el final}
+% INTEGRATION NOTE: If no flight test was performed, we can put the blank page here, or detail a sub-scale flight test if available.
+
+\subsubsection{Electronics thermal testing} \textcolor{red}{Responsable: Jose Reyes/Alejandro Ariza}
+% INTEGRATION NOTE: Avionics thermal validation details.
+
+\subsubsection{Static hot-fire test (SRAD)} \textcolor{red}{Responsable: Jesús}
+% INTEGRATION NOTE: APCP 6-Bates static fire results, thrust/pressure curves.
+
+\vspace{1cm}
+
+\textcolor{red}{Páginas 21 y 22 que se vean claras las leyendas y no den pie a confusión. Actualizar si es posible con nuevas curvas.}
+
+% -------------------------------------------------------------------------
+% N/A SECTION: Hybrid/liquid loading
+% -------------------------------------------------------------------------
+\subsubsection{Hybrid/liquid propellant loading and offloading test (SRAD)}
+\vspace*{\fill}
+\begin{center}
+    \textbf{THIS PAGE INTENTIONALLY LEFT BLANK} \\
+    \vspace{0.5cm}
+    \textit{(Not applicable: The NAOS EVO launch vehicle utilises a solid propellant motor.)}
+\end{center}
+\vspace*{\fill}
+\newpage
+
+\subsubsection{Combustion chamber pressure test (SRAD)} \textcolor{red}{Responsable: Pablo (propulsión). Apoyo: Jesús.}
+% INTEGRATION NOTE: The Hydrostatic/Hydraulic pressure test for the AISI 304 casing.
+
+% -------------------------------------------------------------------------
+% N/A SECTION: Proof pressure vessels
+% -------------------------------------------------------------------------
+\subsubsection{Proof pressure testing pressure vessels (SRAD, Modified COTS)}
+\vspace*{\fill}
+\begin{center}
+    \textbf{THIS PAGE INTENTIONALLY LEFT BLANK} \\
+    \vspace{0.5cm}
+    \textit{(Not applicable: The solid propulsion architecture does not incorporate pressurized fluid vessels.)}
+\end{center}
+\vspace*{\fill}
+\newpage
+
+% -------------------------------------------------------------------------
+% N/A SECTION: Burst pressure vessels
+% -------------------------------------------------------------------------
+\subsubsection{Burst pressure testing pressure vessels (SRAD, Modified COTS)}
+\vspace*{\fill}
+\begin{center}
+    \textbf{THIS PAGE INTENTIONALLY LEFT BLANK} \\
+    \vspace{0.5cm}
+    \textit{(Not applicable: The solid propulsion architecture does not incorporate pressurized fluid vessels.)}
+\end{center}
+\vspace*{\fill}
+\newpage
+
+\subsubsection{Test of SRAD flight computers with capability of actuating the recovery systems}
+% INTEGRATION NOTE: HIL tests, galvanic isolation verification, relay actuation tests.
+
+\subsection{Hazard analysis report} \textcolor{red}{Responsable: }
+
+\vspace{1cm}
+
+\textcolor{red}{Tomar como base el progress report con las correcciones de los jueces, si hicieron comentarios}
+
+\subsection{Risk assessment} \textcolor{red}{Responsable: Álvaro Sáez}
+% RULE: FMECA Matrix. Likelihood, Severity, Criticality Ranking.
+% INTEGRATION NOTE: We will expand the Failure Modes for Recovery here as requested in the meeting.
+
+\subsection{Compliance matrix} \textcolor{red}{Responsable: Miguel Tejera. Apoyo: Miguel Rodríguez.}
+% RULE: SRD requirements and team compliance (Fully, Partially, Non-compliant, N/A).
+
+\subsection{Checklists} \textcolor{red}{Responsable: JD}
+% RULE: Assembly, pre-flight, and launch operations. Off-nominal alternate flows.
+% INTEGRATION NOTE: Onboard cameras MUST BE REMOVED from these checklists.
+
+\subsection{Launch support equipment} \textcolor{red}{Esta sección sería lo más breve posible}
+\subsubsection{Launch support equipment list} \textcolor{red}{Responsable: Miguel Hernández. Apoyo: Carlos Pajuelo, Lucia Tinoco}
+
+\subsubsection{Launch support equipment simple operational manual} \textcolor{red}{ NA}
+\subsubsection{Launch support equipment details} \textcolor{red}{NA}
+\paragraph{5.7.3.1. Detailed structural and mechanical calculation}
+\paragraph{5.7.3.2. Detailed logical process diagrams}
+\paragraph{5.7.3.3. Detailed software architecture} 
+\paragraph{Electrical Architecture and Connection Diagram}
+\label{para:electrical_diagram}
+To provide a comprehensive operational overview of the subsystem's electrical integration, Figure~\ref{fig:electrical_connection_diagram} illustrates the global wiring topology, inter-board communication channels, power isolation domains, and pad safety arming interlocks of the NAOS EVO avionics system.
+
+The hardware interconnection is categorized into three distinct physical interface types:
+\begin{itemize}
+    \item \textbf{Soldered On-Board Connections (Cyan Lines):} High-criticality sensors and non-volatile storage modules are surface-mounted directly on their respective PCBs to ensure structural integrity under launch vibration loads. The primary STM32 MCU directly drives the Main IMU, Backup IMU, Barometer, Magnetometer, and the SD/Flash logging memory. Similarly, the Active Control Redundancy PCB incorporates dedicated soldered sensor ICs (IMU, Barometer, and Magnetometer).
+    \item \textbf{Cabled Interconnects (Gray Lines):} Heavy-duty multi-pin wiring harnesses link modular sub-assemblies across the avionics bay. The Powerboard acts as the main power distribution unit, routing power and control signals to the STM32 MCU, the Telemetry \& GNSS computer, the Active Control Servo, the payload HD Camera, and the pyrotechnic recovery actuators.
+    \item \textbf{Inter-Board Communication Bus (Green Dashed Line):} A dedicated bidirectional communication link joins the primary STM32 MCU and the Redundant Active Control PCB, facilitating real-time telemetry exchange, Extended Kalman Filter state synchronization, and dynamic control authority handoff in the event of a primary system anomaly.
+\end{itemize}
+
+\paragraph{Power Domain Isolation and Arming Safety}
+Power distribution is strictly partitioned into three isolated domains, each energized by an independent $2000\,\text{mAh}$ $2\text{S}$ Li-Ion battery pack controlled via an individual Remove-Before-Flight (RBF) pull-pin switch:
+\begin{enumerate}
+    \item \textbf{Main Electronics Domain:} Supplies power to the Powerboard, primary STM32 MCU flight computer, Telemetry \& GNSS computer, and the camera payload.
+    \item \textbf{Active Control Domain:} Supplies power exclusively to the Redundant Active Control computer and the active airbrake servomotor.
+    \item \textbf{COTS Recovery Domain:} Supplies power to the isolated CATS Vega recovery unit.
+\end{enumerate}
+
+Physical launchpad safety for pyrotechnic actuation is enforced through a dedicated \textbf{Pull Pin (Arming)} interrupt circuit. This mechanical interlock interrupts the high-current firing lines for both deployment events—\textit{Pyro 1 (Drogue Chute / $\text{CO}_2$ system)} and \textit{Pyro 2 (Main Chute / Tender Desc device)}—ensuring that neither the Powerboard nor the CATS Vega backup computer can inadvertently trigger an ejection charge until the rocket is fully armed on the launch rail.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{Conection diagram (1).png}
+    \caption{Complete electrical connection diagram and power distribution topology of the NAOS EVO avionics subsystem.}
+    \label{fig:electrical_connection_diagram}
+\end{figure}
+
+\paragraph{5.7.3.5. Detailed hydraulic/fluid architecture} \textcolor{red}{NA}
+
+\subsection{Engineering drawings}
+% RULE: Revision controlled technical drawings.
+
+\subsection{Subsystem details (optional)}
+
+\end{document}
