@@ -56,7 +56,7 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
             GroundAbortStateEntry(SystemContext);
             break;
         case STATE_DESCENT_ABORT:
-            PyroSafeAll();
+            DescentAbortStateEntry(SystemContext);
             break;
         default:
             break;
@@ -98,6 +98,7 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 			StartSensorTimers();
 			break;
 		case STATE_GROUND_ABORT:
+		case STATE_DESCENT_ABORT:
 		case STATE_LANDED:
 			StopSensorTimers();
 			if (BMP581_Mode_Idle(BMP581_HANDLE) != HAL_OK) {
@@ -173,7 +174,7 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 			return GroundAbortStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_DESCENT_ABORT:
-			return STATE_DESCENT_ABORT;
+			return DescentAbortStateHandler(SystemContext, SensorData);
 			break;
 		default:
 			// Should not be able to reach
