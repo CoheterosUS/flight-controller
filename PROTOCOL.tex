@@ -65,8 +65,8 @@ Todos los datos son \textbf{little-endian}, estructuras empaquetadas, sin rellen
 \node[smallbox, above=2cm of esp] (gps) {Módulo\\GPS};
 
 % Telemetry: CV -> ESP32 -> ET (top arrows)
-\draw[arr, blue!70!black] ([yshift=0.3cm]cv.west) -- node[lbl, above] {Telemetría 95\,B} node[lbl, below] {\tiny UART} ([yshift=0.3cm]esp.east);
-\draw[arr, blue!70!black] ([yshift=0.3cm]esp.west) -- node[lbl, above] {Telemetría 95\,B} node[lbl, below] {\tiny LoRa} ([yshift=0.3cm]et.east);
+\draw[arr, blue!70!black] ([yshift=0.3cm]cv.west) -- node[lbl, above] {Telemetría 52\,B} node[lbl, below] {\tiny UART} ([yshift=0.3cm]esp.east);
+\draw[arr, blue!70!black] ([yshift=0.3cm]esp.west) -- node[lbl, above] {Telemetría 52\,B} node[lbl, below] {\tiny LoRa} ([yshift=0.3cm]et.east);
 
 % Commands: ET -> ESP32 -> CV (bottom arrows)
 \draw[arr, red!70!black] ([yshift=-0.3cm]et.east) -- node[lbl, above] {\tiny LoRa} node[lbl, below] {Comandos 5\,B} ([yshift=-0.3cm]esp.west);
@@ -84,7 +84,7 @@ Todos los datos son \textbf{little-endian}, estructuras empaquetadas, sin rellen
 % ============================================================================
 \section{Telemetría (CV $\rightarrow$ ESP32 $\rightarrow$ ET)}
 
-Paquete de \textbf{95 bytes}. El ESP32 lo reenvía por LoRa \textbf{sin modificación}. No tiene bytes CMD ni LEN -- solo sync word y footer.
+Paquete de \textbf{52 bytes}. El ESP32 lo reenvía por LoRa \textbf{sin modificación}. No tiene bytes CMD ni LEN -- solo sync word y footer.
 
 \begin{longtable}{@{}ccllp{4.5cm}@{}}
 \toprule
@@ -97,51 +97,45 @@ Paquete de \textbf{95 bytes}. El ESP32 lo reenvía por LoRa \textbf{sin modifica
 \endhead
 0  & 2 & \texttt{uint16} & Sync             & \texttt{0xCAFE} \\
 2  & 4 & \texttt{uint32} & Tick             & ms (crudo) \\
-6  & 4 & \texttt{int32}  & AccelX           & m/s\textsuperscript{2} $\times$ 100 \\
-10 & 4 & \texttt{int32}  & AccelY           & m/s\textsuperscript{2} $\times$ 100 \\
-14 & 4 & \texttt{int32}  & AccelZ           & m/s\textsuperscript{2} $\times$ 100 \\
-18 & 4 & \texttt{int32}  & GyroX            & deg/s $\times$ 100 \\
-22 & 4 & \texttt{int32}  & GyroY            & deg/s $\times$ 100 \\
-26 & 4 & \texttt{int32}  & GyroZ            & deg/s $\times$ 100 \\
-30 & 4 & \texttt{int32}  & MagX             & mGauss $\times$ 100 \\
-34 & 4 & \texttt{int32}  & MagY             & mGauss $\times$ 100 \\
-38 & 4 & \texttt{int32}  & MagZ             & mGauss $\times$ 100 \\
-42 & 4 & \texttt{int32}  & PressurePa       & Pa $\times$ 100 \\
-46 & 4 & \texttt{int32}  & TemperatureC     & \textdegree C $\times$ 100 \\
-50 & 4 & \texttt{int32}  & Latitude         & deg $\times$ 10\textsuperscript{7} \\
-54 & 4 & \texttt{int32}  & Longitude        & deg $\times$ 10\textsuperscript{7} \\
-58 & 4 & \texttt{int32}  & GPSAltitude      & m $\times$ 100 \\
-62 & 1 & \texttt{uint8}  & Satellites       & crudo \\
-63 & 4 & \texttt{int32}  & BaroAltitude     & m $\times$ 100 \\
-67 & 4 & \texttt{int32}  & BaroVelocity     & m/s $\times$ 100 \\
-71 & 4 & \texttt{int32}  & VelX             & m/s $\times$ 100 \\
-75 & 4 & \texttt{int32}  & VelY             & m/s $\times$ 100 \\
-79 & 4 & \texttt{int32}  & VelZ             & m/s $\times$ 100 \\
-83 & 4 & \texttt{uint32} & FaultFlags       & máscara de bits \\
-87 & 4 & \texttt{int32}  & BatteryVoltage   & V $\times$ 100 \\
-91 & 1 & \texttt{uint8}  & State            & enum \\
-92 & 1 & \texttt{uint8}  & RelayState       & máscara de bits \\
-93 & 1 & \texttt{uint8}  & LastCommand      & enum \\
-94 & 1 & \texttt{uint8}  & SyncEnd          & \texttt{0xBE} \\
+6  & 2 & \texttt{int16}  & AccelX           & m/s\textsuperscript{2} truncado \\
+8  & 2 & \texttt{int16}  & AccelY           & m/s\textsuperscript{2} truncado \\
+10 & 2 & \texttt{int16}  & AccelZ           & m/s\textsuperscript{2} truncado \\
+12 & 2 & \texttt{int16}  & GyroX            & deg/s truncado \\
+14 & 2 & \texttt{int16}  & GyroY            & deg/s truncado \\
+16 & 2 & \texttt{int16}  & GyroZ            & deg/s truncado \\
+18 & 2 & \texttt{int16}  & PressurePa       & Pa $\div$ 10 \\
+20 & 1 & \texttt{int8}   & TemperatureC     & \textdegree C truncado \\
+21 & 4 & \texttt{int32}  & Latitude         & deg $\times$ 10\textsuperscript{7} \\
+25 & 4 & \texttt{int32}  & Longitude        & deg $\times$ 10\textsuperscript{7} \\
+29 & 4 & \texttt{int32}  & GPSAltitude      & m $\times$ 100 \\
+33 & 1 & \texttt{uint8}  & Satellites       & crudo \\
+34 & 4 & \texttt{int32}  & BaroAltitude     & m $\times$ 100 \\
+38 & 4 & \texttt{int32}  & BaroVelocity     & m/s $\times$ 100 \\
+42 & 4 & \texttt{uint32} & FaultFlags       & máscara de bits \\
+46 & 2 & \texttt{int16}  & BatteryVoltage   & V $\times$ 10 \\
+48 & 1 & \texttt{uint8}  & State            & enum \\
+49 & 1 & \texttt{uint8}  & RelayState       & máscara de bits \\
+50 & 1 & \texttt{uint8}  & LastCommand      & enum \\
+51 & 1 & \texttt{uint8}  & SyncEnd          & \texttt{0xBE} \\
 \bottomrule
-\caption{Paquete de telemetría (95 bytes).}
+\caption{Paquete de telemetría (52 bytes).}
 \end{longtable}
 
 \subsection{Pseudocódigo: recepción de telemetría en ESP32}
 
 \begin{lstlisting}[language=C, caption={ESP32: recibir telemetría y reenviar por LoRa.}]
 // Buffer circular UART. Buscar sync word 0xFE 0xCA.
-// Cuando se detecta, leer 95 bytes totales (incluyendo sync).
-// Verificar que byte[94] == 0xBE (footer).
-// Si es valido, enviar los 95 bytes por LoRa sin modificar.
+// Cuando se detecta, leer 52 bytes totales (incluyendo sync).
+// Verificar que byte[51] == 0xBE (footer).
+// Si es valido, enviar los 52 bytes por LoRa sin modificar.
 // Si el footer no coincide, descartar y seguir buscando sync.
 
-#define TELEMETRY_SIZE 95
+#define TELEMETRY_SIZE 52
 
 if (uart_byte == 0xFE) {
     buffer[0] = 0xFE;
     uart_read(buffer + 1, TELEMETRY_SIZE - 1);
-    if (buffer[1] == 0xCA && buffer[94] == 0xBE) {
+    if (buffer[1] == 0xCA && buffer[51] == 0xBE) {
         lora_send(buffer, TELEMETRY_SIZE);
     }
 }
@@ -293,7 +287,7 @@ uart_write(frame, 24);
 \toprule
 \textbf{Datos} & \textbf{Dirección} & \textbf{Tamaño} & \textbf{ESP32} & \textbf{ET} \\
 \midrule
-Telemetría & CV $\rightarrow$ ET & 95\,B & Passthrough & Passthrough \\
+Telemetría & CV $\rightarrow$ ET & 52\,B & Passthrough & Passthrough \\
 Comandos   & ET $\rightarrow$ CV & 5\,B  & Passthrough & Passthrough \\
 GPS        & GPS $\rightarrow$ CV & 24\,B & Construir trama & No involucrada \\
 \bottomrule
@@ -306,7 +300,7 @@ GPS        & GPS $\rightarrow$ CV & 24\,B & Construir trama & No involucrada \\
 La estación terrestre es un passthrough bidireccional entre el módulo LoRa y una interfaz de usuario conectada por serial.
 
 \begin{itemize}
-    \item \textbf{Telemetría:} recibe los 95 bytes por LoRa y los escribe tal cual por serial para que la interfaz de usuario los lea y decodifique.
+    \item \textbf{Telemetría:} recibe los 52 bytes por LoRa y los escribe tal cual por serial para que la interfaz de usuario los lea y decodifique.
     \item \textbf{Comandos:} recibe los 5 bytes por serial desde la interfaz de usuario y los envía tal cual por LoRa.
 \end{itemize}
 
