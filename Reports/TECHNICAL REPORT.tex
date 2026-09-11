@@ -911,7 +911,7 @@ During the \textbf{Boost} state the motor is active and the vehicle experiences 
 
 The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
 
-During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
+During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee} (EuRoC-LV-RQT-0350). Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
     \item Barometric altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_BAROM\_ALT\_THRESHOLD}).
     \item GPS altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_ALT\_THRESHOLD}).
@@ -923,7 +923,7 @@ During the \textbf{Active Control} phase the vehicle is in ascending ballistic f
 
 On entry to the \textbf{Apogee} state, the drogue parachute pyrotechnic channel is immediately fired via the Powerboard relay driver (see Section~\ref{subsubsection:avionics_bay}). The transition to \emph{Main Parachute} occurs when either the barometric altitude descends to the configured threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}) or the configured timeout elapses (\cfg{APOGEE\_MAIN\_PARACHUTE\_DELAY\_MS}, enabled via \cfg{APOGEE\_MAIN\_PARACHUTE\_DELAY\_ENABLED}).
 
-On entry to the \textbf{Main Parachute} state, the main parachute pyrotechnic channel is fired. Per EuRoC competition rules, the main parachute must not be deployed at an altitude higher than 450\,m AGL; this limit is enforced through the configurable threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}). A landing confirmation counter is initialized. The transition to \emph{Landed} requires both conditions to be satisfied simultaneously for the configured number of consecutive samples (\cfg{MAIN\_PARACHUTE\_LANDED\_CONSECUTIVE\_SAMPLES}):
+On entry to the \textbf{Main Parachute} state, the main parachute pyrotechnic channel is fired. Per EuRoC competition rules, the main parachute must not be deployed at an altitude higher than 450\,m AGL (EuRoC-LV-RQT-0370); this limit is enforced through the configurable threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}). A landing confirmation counter is initialized. The transition to \emph{Landed} requires both conditions to be satisfied simultaneously for the configured number of consecutive samples (\cfg{MAIN\_PARACHUTE\_LANDED\_CONSECUTIVE\_SAMPLES}):
 \begin{itemize}
     \item Barometric altitude $\leq$ threshold (\cfg{MAIN\_PARACHUTE\_LANDED\_BAROM\_ALT\_THRESHOLD}).
     \item Barometric vertical velocity $\leq$ threshold (\cfg{MAIN\_PARACHUTE\_LANDED\_BAROM\_VEL\_Y\_THRESHOLD}).
