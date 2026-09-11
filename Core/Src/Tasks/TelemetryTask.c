@@ -5,7 +5,7 @@
 #include "HIL/HIL.h"
 #include "Sensors/Sensors.h"
 
-__attribute__((section(".dma_buffer")))
+__attribute__((section(".dma_buffer"), aligned(32)))
 uint8_t TELEMETRY_RX_BUFFER[TELEMETRY_RX_BUFFER_SIZE];
 
 TaskHandle_t TelemetryTaskHandle;
@@ -39,7 +39,8 @@ void TelemetryTask(void *pvParameters) {
 
         for (uint16_t i = 0; i < (uint16_t)Size; i++) {
             uint8_t RawCommand = 0;
-            if (ProtocolFeed(&Parser, TELEMETRY_RX_BUFFER[i], &RawCommand)) {
+            uint8_t PayloadLength = 0;
+            if (ProtocolFeed(&Parser, TELEMETRY_RX_BUFFER[i], &RawCommand, &PayloadLength)) {
                 CommandType_t Command = (CommandType_t)RawCommand;
                 dbg_last_command = Command;
                 dbg_last_command_counter++;
@@ -48,7 +49,7 @@ void TelemetryTask(void *pvParameters) {
                     HandleHILPacket(Parser.Payload);
                 }
 #endif
-                if (Command == COMMAND_GPS_DATA && Parser.Length == ZOEM8Q_PAYLOAD_SIZE) {
+                if (Command == COMMAND_GPS_DATA && PayloadLength == ZOEM8Q_PAYLOAD_SIZE) {
                 	dbg_gps_command_count++;
                     ZOEM8Q_SensorData_t GPSData;
                     ZOEM8Q_ParsePayload(Parser.Payload, &GPSData);

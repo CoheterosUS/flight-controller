@@ -36,6 +36,6 @@ typedef struct {
 } ProtocolParser_t;
 
 void ProtocolInitParser(ProtocolParser_t *Parser);
-bool ProtocolFeed(ProtocolParser_t *Parser, uint8_t Byte, uint8_t *Command);
+bool ProtocolFeed(ProtocolParser_t *Parser, uint8_t Byte, uint8_t *Command, uint8_t *Length);
 
 #endif //PROTOCOL_H

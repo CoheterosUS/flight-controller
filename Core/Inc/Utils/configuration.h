@@ -26,7 +26,7 @@
 #define GYRO_CALIBRATION_SAMPLES                1000
 
 // GPS Configuration
-#define GPS_FIX_REQUIRED             0
+#define GPS_FIX_REQUIRED             1
 #define GPS_FIX_MIN_SATELLITES       1
 #define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 

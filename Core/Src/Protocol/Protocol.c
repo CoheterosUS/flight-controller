@@ -7,7 +7,7 @@ void ProtocolInitParser(ProtocolParser_t *Parser) {
     Parser->PayloadIndex = 0;
 }
 
-bool ProtocolFeed(ProtocolParser_t *Parser, uint8_t Byte, uint8_t *Command) {
+bool ProtocolFeed(ProtocolParser_t *Parser, uint8_t Byte, uint8_t *Command, uint8_t *Length) {
     switch (Parser->State) {
         case PARSE_HEADER_1:
             if (Byte == PACKET_HEADER_LSB) {
@@ -50,6 +50,7 @@ bool ProtocolFeed(ProtocolParser_t *Parser, uint8_t Byte, uint8_t *Command) {
         case PARSE_FOOTER:
             if (Byte == PACKET_FOOTER) {
                 *Command = Parser->Command;
+                *Length = Parser->Length;
                 ProtocolInitParser(Parser);
                 return true;
             }
