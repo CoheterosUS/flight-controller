@@ -342,7 +342,7 @@ NOTA: FALTAN POR PONER TODAS LAS IMÁGENES (EN PRINCIPIO 9), CÁLCULO QUE SUMAR�
 
 The recovery system utilizes a two-stage parachute configuration designed to ensure a safe and controlled descent of the vehicle. At apogee, the primary deployment mechanism separates the nose cone from the airframe using a $\text{CO}_2$ pressurization system, deploying the drogue parachute to decelerate the rocket to a target descent rate of 29 m/s. Upon descending to an altitude of 450 AGL (Above Ground Level), the secondary deployment is triggered via a pyrocutter. Once fully extracted, the main canopy stabilizes the rocket at a descent velocity of approximately \bm{9\text{ m/s}}, ensuring a safe touchdown.
 
-\subsubsection{Recovery section overview} 
+\subsubsection{Recovery section overview} \textcolor{red}{ESQUEMA SISTEMA?}
 The recovery section comprises all components and subsystems arranged as illustrated in the referenced figure, with each element explicitly identified. This section is coupled to the structural airframe via bulkhead, which serves as the critical load-bearing interface connecting the rocket to the parachute harness.
 
 \textcolor{red}{FIGURA}
@@ -395,9 +395,13 @@ The main parachute is a cruciform parachute with panel dimensions of $2.43\text{
 
 \vspace{1cm}
 \subsubsection{Recovery Avionics and Redundancy}
-\textcolor{red}{Comentarios. José Reyes (activación, hacer referencia en Avionics Bay), Angelo (hacer referencia a la máquina de estados del 2.7.3}
+\textcolor{red}{Comentarios. José Reyes (activación, hacer referencia en Avionics Bay), Angelo (hacer referencia a la máquina de estados del 2.7.5}
 % RULE: Initial/main deployment events, parachute, drogue, activation devices, redundant electronics.
 % INTEGRATION NOTE: Here we will detail the Ringsail and Drogue parachutes, and explain that $S \cdot C_{D_0}$ will be characterised in a Wind Tunnel.
+
+The flight state machine (Section~\ref{subsubsec:software}) governs both recovery deployment events: drogue activation at apogee and main parachute activation at the configured altitude. Pyrotechnic firing, redundant apogee detection, confirmation counters, and the automatic handover to the redundant flight computer are detailed in that section.
+
+Two independent redundancy layers complement the primary flight computer. The Redundant Active Control PCB (Section~\ref{subsubsection:avionics_bay}) has access to the airbrake servo actuator but not to the recovery pyrotechnic channels; its role is to preserve active control authority if the primary computer fails. The COTS CATS Vega flight computer has dedicated sensors, power supply, and independent access to the recovery pyrotechnic channels, but no connection to the active control servos. In addition to backup recovery deployment, the CATS Vega serves as the official flight data logger for competition-evaluated metrics. This complementary split ensures that both active control and recovery activation are each backed by a separate, fully isolated redundant system.
 
 \subsection{Payload subsystem}  \textcolor{red}{Responsable: Miguel Rodríguez. 1 página }
 % RULE: Mass, form factor, functionality, interface.
@@ -453,8 +457,8 @@ The flight computers operate in an active-standby configuration, with the standb
 
 \subsection{Special subsystems} 
 
-\subsubsection{Missionization and Simulation}
-\textcolor{red}{Responsable: Mateo. Apoyo: Fede. 2-4 páginas}
+%\subsubsection{Missionization and Simulation}
+%\textcolor{red}{Responsable: Mateo. Apoyo: Fede. 2-4 páginas}
 
 \subsubsection{Missionization and Simulation}
 
@@ -813,7 +817,7 @@ The theoretical 43.2 dB resulting fade margin provides a significant buffer agai
     \label{tab:link_budget}
 \end{table}
 
-\subsubsection{Software} \label{subsubsec:software} \textcolor{red}{Responsable: Angelo (máquina de estados). 3-5 páginas}
+\subsubsection{Software} \label{subsubsec:software} \textcolor{red}{Responsable: Angelo (máquina de estados). 3-5 páginas} 
 
 % RULE: If applicable.
 % INTEGRATION NOTE: We will put the Avionics Subsystem here, explicitly mentioning the CATS Vega COTS backup system.
@@ -955,6 +959,8 @@ The 2-pin interface encodes a 2-bit status word driven by the primary controller
 \end{table}
 
 Under nominal operation, the primary controller holds both pins high (\texttt{11}). If the primary detects a serious sensor fault or becomes unresponsive (connection loss), the signal defaults to \texttt{00}, triggering automatic handover. The redundant computer, running the state machine independently using its own sensor suite, then assumes active control of the airbrake servos for the remainder of the flight.
+
+Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. Per EuRoC rules, the CATS Vega firmware must remain unmodified. It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
 
 \paragraph{Confirmation Counter Mechanism}
 
