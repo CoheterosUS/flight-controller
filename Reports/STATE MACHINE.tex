@@ -1,16 +1,5 @@
-% ============================================================================
-% Section 2.7.5: Software
-% Paste into TECHNICAL REPORT.tex at the Software subsubsection.
-% Requires adding to the preamble:
-%   \usepackage{tikz}
-%   \usetikzlibrary{arrows.meta, positioning}
-%   \usepackage{seqsplit}
-% ============================================================================
 
 \newcommand{\cfg}[1]{\texttt{\seqsplit{#1}}}
-
-\subsubsection{Software}
-\label{subsubsection:software}
 
 The primary flight software running on the Baseboard's STM32H723VGT6 microcontroller is architected as a set of concurrent FreeRTOS tasks. The central task implements a deterministic finite state machine that governs all flight phases, from pre-flight sensor calibration through powered ascent, recovery deployment, and landing. The state machine executes at a fixed rate of \textbf{100\,Hz} (10\,ms period). Each state defines an \emph{entry action}, executed once upon transition, and a \emph{handler} that evaluates transition conditions on every cycle and returns the next state.
 
@@ -20,7 +9,7 @@ The flight state machine comprises 11~states organized into four functional grou
 
 \begin{figure}[H]
 \centering
-\resizebox{\textwidth}{!}{%
+\resizebox{!}{0.85\textheight}{%
 \begin{tikzpicture}[
     state/.style={draw, rounded corners=6pt, thick, minimum width=2.6cm, minimum height=1.2cm, align=center, font=\sffamily\small\bfseries},
     abortst/.style={state, draw=red!70!black, fill=red!8},
@@ -34,47 +23,44 @@ The flight state machine comprises 11~states organized into four functional grou
     lbl/.style={font=\sffamily\scriptsize, align=center, fill=white, inner sep=1.5pt},
 ]
 
-% --- Nominal flow: U-shape ---
-% Row 1 (top, left to right): ground states + boost
-\node[groundst] at (0, 0)    (idle)  {1. Idle};
-\node[groundst] at (4, 0)    (cal)   {2. Calibration};
-\node[groundst] at (8, 0)    (pre)   {3. Pre-launch};
-\node[flightst] at (12, 0)   (boost) {4. Boost};
+% --- Nominal flow: vertical column ---
+\node[groundst]   at (0, 0)     (idle)   {1. Idle};
+\node[groundst]   at (0, -2.4)  (cal)    {2. Calibration};
+\node[groundst]   at (0, -4.8)  (pre)    {3. Pre-launch};
+\node[flightst]   at (0, -7.2)  (boost)  {4. Boost};
+\node[flightst]   at (0, -9.6)  (coast)  {5. Coast};
+\node[flightst]   at (0, -12.0) (actrl)  {6. Active\\Control};
+\node[pyrost]     at (0, -14.4) (apogee) {7. Apogee\\{\scriptsize\textit{Drogue}}};
+\node[pyrost]     at (0, -16.8) (main)   {8. Main\\Parachute};
+\node[terminalst] at (0, -19.2) (landed) {9. Landed};
 
-% Row 2 (middle, right to left): coast through main parachute
-\node[flightst] at (12, -3)  (coast) {5. Coast};
-\node[flightst] at (8, -3)   (actrl) {6. Active\\Control};
-\node[pyrost]   at (4, -3)   (apogee){7. Apogee\\{\scriptsize\textit{Drogue}}};
-\node[pyrost]   at (0, -3)   (main)  {8. Main\\Parachute};
+% --- Abort states (right column) ---
+\node[abortst] at (6, -4.8)  (gabort) {10. Ground\\Abort};
+\node[abortst] at (6, -14.4) (dabort) {11. Descent\\Abort};
 
-% Row 3 (bottom): terminal + aborts
-\node[terminalst] at (0, -6)  (landed) {9. Landed};
-\node[abortst]    at (4, -6)  (dabort) {11. Descent\\Abort};
-\node[abortst]    at (8, -6)  (gabort) {10. Ground\\Abort};
-
-% --- Nominal transitions (black solid) ---
-\draw[arr] (idle)   -- node[lbl, above] {CMD Calibration\\or auto-start} (cal);
-\draw[arr] (cal)    -- node[lbl, above] {Sensors\\calibrated} (pre);
-\draw[arr] (pre)    -- node[lbl, above] {$a_Y >$ thr.\\$\times N$ samples} (boost);
+% --- Nominal transitions (black solid, vertical) ---
+\draw[arr] (idle)   -- node[lbl, right] {Auto-start} (cal);
+\draw[arr] (cal)    -- node[lbl, right] {Sensors\\calibrated} (pre);
+\draw[arr] (pre)    -- node[lbl, right] {$a_Y >$ thr.\\$\times N$ samples} (boost);
 \draw[arr] (boost)  -- node[lbl, right] {$a_Y <$ thr.\\$\times N$ samples} (coast);
-\draw[arr] (coast)  -- node[lbl, above] {Alt $\geq$ thr.} (actrl);
-\draw[arr] (actrl)  -- node[lbl, above] {Apogee\\detected} (apogee);
-\draw[arr] (apogee) -- node[lbl, above] {Alt $\leq$ thr.\\or timeout} (main);
+\draw[arr] (coast)  -- node[lbl, right] {Alt $\geq$ thr.} (actrl);
+\draw[arr] (actrl)  -- node[lbl, right] {Apogee\\detected} (apogee);
+\draw[arr] (apogee) -- node[lbl, right] {Alt $\leq$ thr.\\or timeout} (main);
 \draw[arr] (main)   -- node[lbl, right] {Landing\\detected} (landed);
 
-% --- Ground abort (red solid, from each ground state straight down) ---
-\draw[faultarr] (pre)  -- node[lbl, right] {Fault} (gabort);
-\draw[faultarr] (cal.south)  -- ++(0,-0.8) -| node[lbl, below, pos=0.7] {Fault} (gabort.north west);
-\draw[faultarr] (idle.south) -- ++(0,-0.8) -| node[lbl, below, pos=0.85] {Fault} ([xshift=-3mm]gabort.north west);
+% --- Ground abort (red solid, from ground states to abort) ---
+\draw[faultarr] (idle.east)  -- node[lbl, above] {Fault} (gabort.west);
+\draw[faultarr] (cal.east)   -- node[lbl, above] {Fault} (gabort.west);
+\draw[faultarr] (pre.east)   -- node[lbl, above] {Fault} (gabort.west);
 
-% --- Ground abort reset (dashed, routed around the left side) ---
-\draw[cmd] (gabort.west) -- ++(-0.6, 0) |- node[lbl, left, pos=0.7] {CMD\\Reset} (idle.south);
+% --- Ground abort reset (dashed, routed back up) ---
+\draw[cmd] (gabort.north) |- node[lbl, above, pos=0.8] {CMD Reset} (idle.east);
 
-% --- Descent abort (red solid, from Apogee straight down) ---
-\draw[faultarr] (apogee) -- node[lbl, right] {Sensor\\fault} (dabort);
+% --- Descent abort (red solid, from Apogee) ---
+\draw[faultarr] (apogee.east) -- node[lbl, above] {Serious sensor\\fault} (dabort.west);
 
 % --- Descent abort to landed (black solid) ---
-\draw[arr] (dabort) -- node[lbl, above] {Landing\\detected} (landed);
+\draw[arr] (dabort.south) |- node[lbl, above, pos=0.2] {Landing\\detected} (landed.east);
 
 \end{tikzpicture}%
 }
@@ -84,7 +70,7 @@ The flight state machine comprises 11~states organized into four functional grou
 
 \paragraph{Ground States}
 
-\textbf{Idle} is the initial state after power-on or reset. On entry, all pyrotechnic channels are disarmed, the calibration context is cleared, and the SD card is mounted and opened for logging. Sensors operate in low-power mode. The transition to \emph{Calibration} is initiated via a remote operator command from the ground station or, when the auto-start flag is enabled (\cfg{AUTO\_START\_CALIBRATION}), automatically after sensor initialization completes.
+\textbf{Idle} is the initial state after power-on or reset. On entry, all pyrotechnic channels are disarmed, the calibration context is cleared, and the SD card is mounted and opened for logging. Sensors operate in low-power mode. The transition to \emph{Calibration} occurs automatically after sensor initialization completes when the auto-start flag is enabled (\cfg{AUTO\_START\_CALIBRATION}).
 
 In the \textbf{Calibration} state, SD logging is enabled and all sensors switch to high-performance mode. Three calibration processes execute concurrently:
 \begin{itemize}
@@ -102,14 +88,13 @@ During the \textbf{Boost} state the motor is active and the vehicle experiences 
 
 The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
 
-During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~2.6) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration---any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
+During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~2.6) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
     \item Barometric altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_BAROM\_ALT\_THRESHOLD}).
     \item GPS altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_ALT\_THRESHOLD}).
     \item GPS vertical velocity $\leq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_VEL\_Y\_THRESHOLD}), indicating the onset of descent.
     \item Safety timeout from state entry (\cfg{ACTIVE\_CONTROL\_APOGEE\_DELAY\_MS}, enabled via \cfg{ACTIVE\_CONTROL\_APOGEE\_DELAY\_ENABLED}).
 \end{itemize}
-This multi-sensor redundancy guarantees drogue deployment even under partial sensor failure.
 
 \paragraph{Recovery States}
 
@@ -125,7 +110,7 @@ On entry to the \textbf{Main Parachute} state, the main parachute pyrotechnic ch
 
 On entry to the \textbf{Landed} state, all pyrotechnic channels are disarmed. After the configured delay (\cfg{LANDED\_SD\_STOP\_DELAY\_MS}), SD logging is disabled and the log file is closed to ensure data integrity. The system remains in this state, continuing to transmit telemetry with GPS position data to facilitate localization of the vehicle.
 
-The \textbf{Ground Abort} state is activated by system fault detection (sensor initialization failures or SD card errors) during any ground state, or by the remote ground abort command. On entry, all pyrotechnic channels are disarmed, SD logging is stopped, and the file is closed. The operator can recover the system from this state by issuing a remote reset command, which forces a return to \emph{Idle}.
+The \textbf{Ground Abort} state is activated by system fault detection (sensor initialization failures or SD card errors) during any ground state. On entry, all pyrotechnic channels are disarmed, SD logging is stopped, and the file is closed. The operator can recover the system from this state by issuing a remote reset command, which forces a return to \emph{Idle}.
 
 The \textbf{Descent Abort} state is entered when a serious sensor fault is detected during descent. Unlike the nominal recovery sequence, this state skips the main parachute deployment, allowing the vehicle to descend under the drogue parachute alone at a higher descent rate. The flight controller can continue to operate on descent with only the barometer if needed. The state monitors barometric altitude and velocity and transitions to \emph{Landed} upon landing detection.
 
@@ -174,8 +159,6 @@ The ground station operator can override automatic transitions at any point duri
 \textbf{Command} & \textbf{Effect} \\
 \midrule
 Reset & Force return to \emph{Idle} from any state. \\
-Ground Abort & Force immediate entry into \emph{Ground Abort}. \\
-Calibration & Initiate calibration sequence (only valid from \emph{Idle}). \\
 \bottomrule
 \end{tabularx}
 \end{table}
