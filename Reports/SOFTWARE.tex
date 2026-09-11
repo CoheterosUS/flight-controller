@@ -136,7 +136,7 @@ The 2-pin interface encodes a 2-bit status word driven by the primary controller
 
 Under nominal operation, the primary controller holds both pins high (\texttt{11}). If the primary detects a serious sensor fault or becomes unresponsive (connection loss), the signal defaults to \texttt{00}, triggering automatic handover. The redundant computer, running the state machine independently using its own sensor suite, then assumes active control of the airbrake servos for the remainder of the flight.
 
-Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. Per EuRoC rules, the CATS Vega firmware must remain unmodified. It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
+Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. The CATS Vega must fly the specific firmware version mandated by the EuRoC organization (EuRoC-LV-RQT-0450). It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
 
 \paragraph{Confirmation Counter Mechanism}
 

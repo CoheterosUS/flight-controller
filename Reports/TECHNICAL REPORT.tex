@@ -32,6 +32,7 @@
 \usepackage{amsmath}
 \usepackage{subcaption}
 
+
 \usepackage{tikz}
 \usetikzlibrary{arrows.meta, positioning}
 \usepackage{seqsplit}
@@ -42,6 +43,8 @@
     urlcolor=EtseNavy,
     citecolor=EtseNavy
 }
+% Definición del color si no lo tienes ya:
+\definecolor{EtseNavy}{HTML}{002F6C}
 
 % --- TITLE PAGE CONFIGURATION ---
 \title{
@@ -710,7 +713,7 @@ The flight antenna, an ANT-868-CW-HWR-SMA dipole, is mounted internally in the f
 
 \vspace{1em}
 \noindent
-ESP32 acts as a bidirectional UART link in the system. The telemetry frame is transmitted as a packed 52-byte structure, without padding bytes between fields. These frames contain all data we need from the rocket´s aptitude and GNSS. To validate the data received through the serial interface, the ESP32 uses a circular buffer to search for the header (\texttt{0xFE}, \texttt{0xCA}) and evaluates a 16-bit CRC. If the computed CRC mismatches the received checksum or the frame lacks the expected \texttt{0xCA} footer, the corrupted packet is immediately discarded to prevent erroneous data processing.
+ESP32 acts as a bidirectional UART link in the system. The telemetry frame is transmitted as a packed 58-byte structure, without padding bytes between fields. These frames contain all data we need from the rocket´s aptitude and GNSS. To validate the data received through the serial interface, the ESP32 uses a circular buffer to search for the header (\texttt{0xFE}, \texttt{0xCA}) and evaluates a 16-bit CRC. If the computed CRC mismatches the received checksum or the frame lacks the expected \texttt{0xCA} footer, the corrupted packet is immediately discarded to prevent erroneous data processing.
 
 \vspace{1em}
 \noindent
@@ -960,7 +963,7 @@ The 2-pin interface encodes a 2-bit status word driven by the primary controller
 
 Under nominal operation, the primary controller holds both pins high (\texttt{11}). If the primary detects a serious sensor fault or becomes unresponsive (connection loss), the signal defaults to \texttt{00}, triggering automatic handover. The redundant computer, running the state machine independently using its own sensor suite, then assumes active control of the airbrake servos for the remainder of the flight.
 
-Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. Per EuRoC rules, the CATS Vega firmware must remain unmodified. It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
+Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. The CATS Vega must fly the specific firmware version mandated by the EuRoC organization (EuRoC-LV-RQT-0450). It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
 
 \paragraph{Confirmation Counter Mechanism}
 
