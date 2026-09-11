@@ -403,6 +403,7 @@ The main parachute is a cruciform parachute with panel dimensions of $2.43\text{
 % RULE: Mass, form factor, functionality, interface.
 
 \subsection{Active flight control subsystem}
+\label{subsec:active_flight_control}
 
 \subsubsection{Airbrake System Architecture and Mechanical Design}
 
@@ -906,7 +907,7 @@ During the \textbf{Boost} state the motor is active and the vehicle experiences 
 
 The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
 
-During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~2.6) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
+During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
     \item Barometric altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_BAROM\_ALT\_THRESHOLD}).
     \item GPS altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_ALT\_THRESHOLD}).

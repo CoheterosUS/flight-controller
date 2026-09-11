@@ -1,4 +1,3 @@
-
 \newcommand{\cfg}[1]{\texttt{\seqsplit{#1}}}
 
 The primary flight software running on the Baseboard's STM32H723VGT6 microcontroller is architected as a set of concurrent FreeRTOS tasks. The central task implements a deterministic finite state machine that governs all flight phases, from pre-flight sensor calibration through powered ascent, recovery deployment, and landing. The state machine executes at a fixed rate of \textbf{100\,Hz} (10\,ms period). Each state defines an \emph{entry action}, executed once upon transition, and a \emph{handler} that evaluates transition conditions on every cycle and returns the next state.
@@ -88,7 +87,7 @@ During the \textbf{Boost} state the motor is active and the vehicle experiences 
 
 The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
 
-During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~2.6) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
+During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
     \item Barometric altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_BAROM\_ALT\_THRESHOLD}).
     \item GPS altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_ALT\_THRESHOLD}).
@@ -113,6 +112,29 @@ On entry to the \textbf{Landed} state, all pyrotechnic channels are disarmed. Af
 The \textbf{Ground Abort} state is activated by system fault detection (sensor initialization failures or SD card errors) during any ground state. On entry, all pyrotechnic channels are disarmed, SD logging is stopped, and the file is closed. The operator can recover the system from this state by issuing a remote reset command, which forces a return to \emph{Idle}.
 
 The \textbf{Descent Abort} state is entered when a serious sensor fault is detected during descent. Unlike the nominal recovery sequence, this state skips the main parachute deployment, allowing the vehicle to descend under the drogue parachute alone at a higher descent rate. The flight controller can continue to operate on descent with only the barometer if needed. The state monitors barometric altitude and velocity and transitions to \emph{Landed} upon landing detection.
+
+\paragraph{Redundant Flight Computer}
+
+A secondary flight computer, identical in architecture to the primary Baseboard, is connected to the main controller via a 2-pin signalling interface. The redundant computer carries its own independent set of sensors (barometer, IMU, and magnetometer) and runs the same flight state machine software, adapted for the redundant hardware. Both computers have physical access to the active control servos; the signalling interface determines which computer has authority.
+
+The 2-pin interface encodes a 2-bit status word driven by the primary controller. Table~\ref{tab:redundancy_signals} defines the signalling protocol.
+
+\begin{table}[H]
+\centering
+\caption{Redundant flight computer signalling protocol.}
+\label{tab:redundancy_signals}
+\begin{tabularx}{\textwidth}{c l X}
+\toprule
+\textbf{Signal} & \textbf{State} & \textbf{Effect} \\
+\midrule
+\texttt{11} & Nominal & Primary has servo authority. Redundant computer tracks state independently but does not actuate. \\
+\addlinespace
+\texttt{00} & Fault / Loss of connection & Handover: redundant computer assumes servo authority and continues the flight autonomously. \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Under nominal operation, the primary controller holds both pins high (\texttt{11}). If the primary detects a serious sensor fault or becomes unresponsive (connection loss), the signal defaults to \texttt{00}, triggering automatic handover. The redundant computer, running the state machine independently using its own sensor suite, then assumes active control of the airbrake servos for the remainder of the flight.
 
 \paragraph{Confirmation Counter Mechanism}
 
