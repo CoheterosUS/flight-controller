@@ -10,6 +10,7 @@ COMMANDS = {
     "abort": 0x02,
     "calibrate": 0x03,
     "drogue": 0x04,
+    "landed": 0x05,
 }
 
 
