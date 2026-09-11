@@ -3,7 +3,7 @@
 #include "stm32h7xx_hal.h"
 #include <string.h>
 
-__attribute__((section(".dma_buffer")))
+__attribute__((section(".dma_buffer"), aligned(32)))
 static uint8_t SERIAL_TX_BUFFER[2][sizeof(TelemetryPacket_t)];
 
 static uint8_t ActiveTXIndex;

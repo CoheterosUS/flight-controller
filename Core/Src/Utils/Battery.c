@@ -1,6 +1,6 @@
 #include "Utils/Battery.h"
 
-__attribute__((section(".dma_buffer")))
+__attribute__((section(".dma_buffer"), aligned(32)))
 static uint16_t BatteryADCRaw;
 
 static volatile float BatteryVoltage;
