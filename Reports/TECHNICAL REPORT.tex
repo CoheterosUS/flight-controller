@@ -197,7 +197,7 @@ The qualification of NAOS EVO entails three defining engineering challenges addr
 % INTEGRATION NOTE: Here we will explain the APCP solid motor and specifically detail the Cellular Polypropylene Liner discussed in the meeting.
 
 \paragraph{Propellant}
-The primary performance requirement for the NAOS EVO launch vehicle is to achieve a target apogee of at least $3000\,\text{m}$. Two solid propellant candidates were evaluated to satisfy the non-toxicity criteria imposed by the competition rules: Sorbitol-Potassium Nitrate (KNSB) and Ammonium Perchlorate Composite Propellant (APCP). While both choices are chemically viable, APCP was selected based on the following engineering trade-offs:
+The primary performance requirement for the NAOS EVO launch vehicle is to achieve a target apogee of at least $3000\,\text{m}$. Two solid propellant candidates were evaluated to satisfy the non-toxicity criteria imposed by the competition rules \req{EuRoC-LV-RQT-0010}: Sorbitol-Potassium Nitrate (KNSB) and Ammonium Perchlorate Composite Propellant (APCP). While both choices are chemically viable, APCP was selected based on the following engineering trade-offs:
 
 \begin{itemize}
     \item \textbf{Specific Impulse ($I_{sp}$):} APCP provides a significantly higher specific impulse compared to KNSB. Flight simulations with an identical propellant mass envelope demonstrate that the APCP variant yields nearly twice the apogee altitude of its KNSB counterpart.
@@ -270,7 +270,7 @@ As for the motor assembly process, beginning with the BATES propellant grains, t
 \textit{FOTO DEL MOTOR. (MOTOR REAL / MODELO DE CATIA / LOS COMPONENTES POR SEPARADO)}
 
 \paragraph{Ignition}
-Motor ignition is initiated via a pyrotechnic igniter paired with a commercial electric match (e-match). The exact pyrotechnic chemical composition is selected based on subscale qualification tests. This composition consists of a mixture of the propellant itself (APCP), black powder, and a tiny amount of magnesium. This subsystem remains subject to ongoing optimisation to ensure reliable, instantaneous ignition sequences on the launch rail. For the EuRoC competition, it is intended to use the mandatory e-match available in the pyro-shop. 
+Motor ignition is initiated via a pyrotechnic igniter paired with a commercial electric match (e-match). The exact pyrotechnic chemical composition is selected based on subscale qualification tests. This composition consists of a mixture of the propellant itself (APCP), black powder, and a tiny amount of magnesium. This subsystem remains subject to ongoing optimisation to ensure reliable, instantaneous ignition sequences on the launch rail. For the EuRoC competition, it is intended to use the mandatory e-match available in the pyro-shop \req{EuRoC-LV-RQT-0090}. 
 
 \subsubsection{Tests Performed and Outcomes}
 \label{Tests_Performed} 
@@ -279,7 +279,7 @@ Motor ignition is initiated via a pyrotechnic igniter paired with a commercial e
 
 Despite being a relatively new association, Coheteros has already conducted over 80 test firings with various propellants. These include several types of candy propellant and, in preparation for the EuRoC launch, a more advanced propellant such as the in-house developed APCP. Below, the test firings carried out in preparation for the competition are elaborated upon in further detail, outlining the progression from the earliest trials to the latest test conducted to date.\\
 
-\textbf{Propulsion and Static Fire Testing:} Ground static hot fire tests of the custom solid rocket motor have been successfully conducted to qualify the Ammonium Perchlorate Composite Propellant (APCP) formulation and validate the structural integrity of the stainless-steel casing (Figure \ref{fig:static_fire_test}). These campaigns verified propellant combustion characteristics under transient internal pressures, confirming reliable ignition and stable burning rates. The empirical pressure ($P_0$) and thrust curves recorded across multiple test dates (Figure \ref{fig:thrust_pressure_curves}) demonstrated high repeatability. Although initial subscale tests did not meet the target 3000-metre apogee due to non-representative test parameters, the gathered ballistic data directly informed a design iteration. This led to the definitive 6-Bates grain configuration (82\,mm length, 20\,mm core) with a 14\,mm nozzle throat, yielding the optimised theoretical performance validated in the subsequent test campaign on 28/06/2026 (Figure \ref{fig:thrust_pressure_curve_28-06-2026}).
+\textbf{Propulsion and Static Fire Testing:} Ground static hot fire tests of the custom solid rocket motor have been successfully conducted to qualify the Ammonium Perchlorate Composite Propellant (APCP) formulation and validate the structural integrity of the stainless-steel casing (Figure \ref{fig:static_fire_test}). These campaigns verified propellant combustion characteristics under transient internal pressures, confirming reliable ignition and stable burning rates. The empirical pressure ($P_0$) and thrust curves recorded across multiple test dates (Figure \ref{fig:thrust_pressure_curves}) demonstrated high repeatability and reliability. Although initial subscale tests did not meet the target 3000-metre apogee due to non-representative test parameters, the gathered ballistic data directly informed a design iteration. This led to the definitive 6-Bates grain configuration (82\,mm length, 20\,mm core) with a 14\,mm nozzle throat, yielding the optimised theoretical performance validated in the subsequent test campaign on 28/06/2026 (Figure \ref{fig:thrust_pressure_curve_28-06-2026}).
 
 \begin{figure}[H]
     \centering
@@ -288,7 +288,10 @@ Despite being a relatively new association, Coheteros has already conducted over
     \label{fig:static_fire_test}
 \end{figure}
 
-Figure \ref{fig:thrust_pressure_curves} illustrates the thrust and chamber pressure data recorded during several of the test firings. The purple trace corresponds to the initial test, the green to the second, and the red to the final run.
+Figure \ref{fig:thrust_pressure_curves} illustrates the thrust and chamber pressure data recorded during several of the test firings. Dashed curves are pressure curves, while the solid curves are thrust ones:\\
+Purple traces corresponds to test realized on 24/04/26.\\
+Green traces corresponds to test realized on 14/06/26.\\
+Brown traces corresponds to test realized on 28/06/26.\\
 
 Examining the thrust data, the curves are highly uniform, indicating successful propellant development and demonstrating high reliability and performance repeatability.
 
@@ -303,8 +306,9 @@ By slightly modifying the propellant formulation and the grain configuration, sl
     \label{fig:thrust_pressure_curves}
 \end{figure}
 
-The figure below (Figure \ref{fig:thrust_pressure_curve_28-06-2026}) illustrates the outcomes of this last test firing plotted against the theoretical predictions generated by the simulator. Under ideal theoretical conditions, the thrust and pressure curves ought to share a highly similar profile. However, it should be noted that this is not the case in this instance. This simulation accounts for a minor constriction in the nozzle throat; as demonstrated, once this phenomenon is factored in, the theoretical and experimental data closely align. By performing additional firings with these same characteristics and correlating them with theoretical models, the anticipated reduction in throat area can be estimated. This capability facilitates more effective outcome predictions for any future static firing or launch.
-
+The figure below (Figure \ref{fig:thrust_pressure_curve_28-06-2026}) illustrates the real measurements of the test firing, dtd. 28/06/26, plotted against the theoretical predictions generated by the simulator. 
+Dashed curves are pressure curves, while the solid curves are thrust ones.
+Under ideal theoretical conditions, the thrust and pressure curves ought to share a highly similar profile. However, it should be noted that this is not the case in this instance. This simulation accounts for a minor constriction in the nozzle throat; as demonstrated, once this phenomenon is factored in, the theoretical and experimental data closely align. By performing additional firings with these same characteristics and correlating them with theoretical models, the anticipated reduction in throat area can be estimated. This capability facilitates more effective outcome predictions for any future static firing or launch.
 
 \begin{figure}[H]
     \centering
@@ -313,22 +317,41 @@ The figure below (Figure \ref{fig:thrust_pressure_curve_28-06-2026}) illustrates
     \label{fig:thrust_pressure_curve_28-06-2026}
 \end{figure}
 
+In order to adjust the motor configuration to achieve accurately a total impulse which leads to a slightly higher apogee of 3000 m, an additional test was performed on 09/08/26. 
 
-Finally, the most recent test conducted to date (06/09/2026) is presented. This test was carried out using a procedure similar to previous iterations; namely, the motor was mounted in the same configuration, utilizing the same sensors and recording identical measurements. The objective of this firing was to achieve a thrust-time profile and overall motor performance capable of propelling the rocket to the 3 km target apogee. To this end, the flight motor was loaded with seven propellant grains, each measuring 74 mm in length with a 20 mm core. With this configuration, simulations predicted a maximum chamber pressure of approximately 60 bar and an apogee exceeding 3 km. The results are presented below.
+The objective of this firing was to achieve a thrust-time profile and overall motor performance capable of propelling the rocket to the 3 km target apogee. To this end, the flight motor was loaded with five propellant grains, each measuring 100 mm in length with a 20 mm core. With this configuration, simulations predicted a maximum chamber pressure of approximately 60 bar and an apogee exceeding 3 km. 
+
+On 06/09/26 a static hot-fire full scale test was carried out for a full duration burn under the most realistic settings possible as the one to be performed at EuRoC. The objective of this test was to comply with the requirement "Static hot-fire test" \req{EuRoC-LV-RQT-0230}.
+
+The motor had the same casing, nozzle, closure and thrust bulkhead components to be used at EuRoC.
+The motor was mounted in the same configuration, using the same sensors and recording measurements as previous tests with the exception of the pressure sensor that was not installed as interferes with the thrust bulkhead. 
+
+
+
+Figure \ref{fig:static_hot-fire_test_060926} shows the thrust vs time curve recorded in the static hot-fire test on 06/06/26.\\
 
 \textit{\textbf{FOTOS ENSAYO 06/09}}\\
 \textit{\textbf{CONCLUSIONES DEL ENSAYO}}
 
-Given the success of the conducted test, it is anticipated that the grain configuration used in the competition will be identical or highly similar to the one employed in this firing. Accordingly, the expected parameters regarding combustion and rocket motor performance are presented in the table below.
+\begin{figure} [H]
+    \centering
+    \includegraphics[width=0.95\linewidth]{propulsion/Grafica ensayo 060926 Tech Report3.jpg}
+    \caption{Empirical thrust (kg) versus time (s) curves recorded during static hot-fire test on 06/09/26}
+    \label{fig:static_hot-fire_test_060926}
+\end{figure}
+
+In the graphic it is shown the measurements of two force sensors: "S" load cell (grey colour curve) and "VETEK" cylindrical sensor (black colour curve). Both of them are almost identical, which gives confidence of the readings. Also, the theoretical curve that can be simulated with our two own developed simulators "HERMES" and "EDISON" is represented. The simulation results have been compared with open motor simulator with no significant deviations.
+
+Given the success of the conducted test, it is expected that the grain configuration used in the competition will be identical to that employed in this firing. Accordingly, the expected parameters regarding combustion and rocket motor performance are presented in the table below.
 
 \begin{table}[H]
     \centering
     \begin{tabular}{c|c|c|c|c|c|c}
-         N & L & Dext & P0 & t & It & Fmax\\
+         N & L & Dext & P0 & tb & It & Fmax\\
          \hline
-         7 & 75 mm & 55,2 mm & 60 bar & s &  &  \\
+         7 & 74 mm & 55,2 mm & 60 bar & 3,3 s & 3384 Ns & 141 kg \\
     \end{tabular}
-    \caption{Summary of the expected parapeters associated to the grains geometry and performance}
+    \caption{Summary of the expected parameters associated to the grains geometry and performance}
     \label{tab: parameters}
 \end{table}
 
@@ -342,63 +365,88 @@ Given the success of the conducted test, it is anticipated that the grain config
 % RULE: Motor retention, thrust structure, mechanical connections, expected forces.
 
 \subsection{Recovery subsystem}  \textcolor{red}{Responsable: Paula. Apoyo: José Reyes, Angelo, Gonzalo, Álvaro Sáez. 3-5 páginas}
-NOTA: FALTAN POR PONER TODAS LAS IMÁGENES (EN PRINCIPIO 9), CÁLCULO QUE SUMARÁN 1-1.5 PAGINAS MÁS A MI PARTE.
-\vspace{1cm}
 
-The recovery system utilizes a two-stage parachute configuration designed to ensure a safe and controlled descent of the vehicle. At apogee, the primary deployment mechanism separates the nose cone from the airframe using a $\text{CO}_2$ pressurization system, deploying the drogue parachute to decelerate the rocket to a target descent rate of 29 m/s. Upon descending to an altitude of 450 AGL (Above Ground Level), the secondary deployment is triggered via a pyrocutter. Once fully extracted, the main canopy stabilizes the rocket at a descent velocity of approximately \bm{9\text{ m/s}}, ensuring a safe touchdown.
+The recovery system utilizes a two-stage parachute configuration designed to ensure a safe and controlled descent of the vehicle \req{EuRoC-LV-RQT-0340}. At apogee, the primary deployment mechanism separates the nose cone from the airframe using a $\text{CO}_2$ pressurization system, deploying the drogue parachute to decelerate the rocket to a target descent rate of 29 m/s. Upon descending to an altitude of 450 AGL (Above Ground Level), the secondary deployment is triggered via a pyrocutter. Once fully extracted, the main canopy stabilizes the rocket at a descent velocity of approximately \bm{9\text{ m/s}}, ensuring a safe touchdown.
 
-\subsubsection{Recovery section overview} \textcolor{red}{ESQUEMA SISTEMA?}
-The recovery section comprises all components and subsystems arranged as illustrated in the referenced figure, with each element explicitly identified. This section is coupled to the structural airframe via bulkhead, which serves as the critical load-bearing interface connecting the rocket to the parachute harness.
+\subsubsection{Recovery section overview} 
+The recovery section comprises all components and subsystems arranged as illustrated in the referenced figure (figure 9), with each element explicitly identified. This section is coupled to the structural airframe via a bulkhead, which serves as the critical load-bearing interface connecting the rocket to the parachute harness.
 
-\textcolor{red}{FIGURA}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{recovery_section_names.png}
+    \caption{Recovery system overview}
+    \label{fig:recovery_section_names}
+\end{figure}
 
 This section is divided into two primary chambers by an internal platten that ensures gas-tight isolation between them. The upper chamber is dedicated to the first deployment stage and houses the drogue parachute, the tender descender, and the $\text{CO}_2$ pressurization ejection system, which is securely anchored to the nose cone. The lower chamber exclusively houses the main canopy.
 
 Furthermore, the presence of the platten enhances the system's overall reliability and safety by significantly reducing the total internal volume that must be pressurized to eject the nose cone and, consequently, deploy the drogue parachute. Additionally, it ensures that the main canopy is not prematurely deployed, as the compartment is sealed using sealing compound.
 
 \subsubsection{First deployment} 
-Once apogee is detected, the flight computers send an electrical signal to the igniter located inside the screw cylinder, causing black powder gases to be released. To ensure that the powder gases do not leak, we use a moldable putty to seal the outer diameter of the joint between the screw cylinder and the main cylinder, which are in turn secured to each other with screws, as well as the interior and exterior of the hole through which the igniter cable passes.  
+Once apogee is detected \req{EuRoC-LV-RQT-0350}, the flight computers send an electrical signal to the igniter located inside the cap, causing black powder gases to be released. To ensure that the powder gases do not leak, we use a moldable putty to seal the outer diameter of the joint between the cap and the main cylinder, which are in turn secured to each other with screws, as well as the interior and exterior of the hole through which the igniter cable passes.  
 
-These gases propel the cap, which features a pin responsible for puncturing the $\text{CO}_2$ cartridge. The cartridge is stationary and completely contained within the main cylinder, ensuring easy insertion and removal via a thread. Furthermore, its complete containment prevents it from being ejected upward due to the powder gases. A guide has been installed at the nozzle of the $\text{CO}_2$ cartridge to guarantee that the pin is actuated without deviations that could prevent puncturing. Additionally, the pin has been manufactured hollow so that the $\text{CO}_2$ gases are expelled rapidly and forcefully, making the most of the cartridge's capacity.
+These gases propel the piston screw, which features a pin responsible for puncturing the $\text{CO}_2$ cartridge. The cartridge is stationary and completely contained within the main cylinder, ensuring easy insertion and removal via a thread. Furthermore, its complete containment prevents it from being ejected upward due to the powder gases. A guide has been installed at the nozzle of the $\text{CO}_2$ cartridge to guarantee that the pin is actuated without deviations that could prevent puncturing. Additionally, the pin has been manufactured hollow so that the $\text{CO}_2$ gases are expelled rapidly and forcefully, making the most of the cartridge's capacity.
 
-Once the entire $\text{CO}_2$ mechanism is activated, the drogue chamber is rapidly pressurized, causing the ejection of the nose cone and extracting the drogue along with it.
+Once the entire $\text{CO}_2$ mechanism is activated, the drogue chamber is rapidly pressurized, causing the ejection of the ogive and extracting the drogue along with it.
 
-\textcolor{red}{FIGURA}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.75\textwidth]{CO2_subsystem_names.png}
+    \caption{Components of the $\text{CO}_2$ subsystem}
+    \label{fig:CO2_subsystem_names.png}
+\end{figure}
 
 \subsubsection{Second deployment} 
 
-The rocket initiates the second deployment upon the activation of the tender descender, which receives a signal from the flight computers when \bm{450\text{ m AGL}} is detected.
+The rocket initiates the second deployment upon the activation of the tender descender, which receives a signal from the flight computers when \bm{450\text{ m AGL}} is detected \req{EuRoC-LV-RQT-0370}.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.38\textwidth]{tender.jpg}
+    \caption{Tender descender.}
+    \label{fig:tender}
+\end{figure}
 
 The tender descender is a pyrocutter composed of two pieces secured to each other with bolts, enclosing between them a receptacle containing \bm{0.5\text{ g}} of black powder. Placed around the bolts there are two quick links that secure the ends of two ropes connecting this system. When the tender is activated, its two component parts separate due to the release of the powder gases, which allows the release of both quick links, thereby disconnecting the junction of the two ropes. 
 
 By separating the lines connecting the drogue to the rocket—which are linked through this mechanism—the cord connecting the drogue to the platten and the main is tensioned, causing the latter to be ejected.
 
-\textcolor{red}{FIGURA}
+
 
 \subsubsection{Parachute lines, and connections } 
 
-A detail schematic of the line management, including all connections points can be found in the figures below: 
+A detail schematic of the line management, including all connections points can be found in the figures 12.
 
-\textcolor{red}{FIGURA}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\textwidth]{drogue_main_lines.png}
+    \caption{Drogue and main lines distribution respectively.}
+    \label{fig:drogue_main_lines}
+\end{figure}
 
-Swivel links are used at strategic points in the rope distribution to prevent tangles and twists. We use two different types of swivels of different sizes to ensure they fit the available space and the location where they will be hooked, being capable of withstanding $250\text{ kg}$ of force.
+The drogue is firmly secured to the body of the rocket by rods that pass through the main parachute section from inside the thickness of the body. These rods pass through the bulkhead, being secured to it by nuts. The connection of the main parachute is also made through the section's bulkhead using an $\text{M8}$ eyebolt.
+
+Swivel links are used at strategic points in the rope distribution to prevent tangles and twists \req{EuRoC-LV-RQT-0400}. We use two different types of swivels of different sizes to ensure they fit the available space and the location where they will be hooked, being capable of withstanding $250\text{ kg}$ of force.
 
 For the lines, different types of cord have been selected to adjust to their purpose. For the shock cord, we are using a $6\text{ mm}$ nylon cord with a capacity of $250\text{ kg}$. For the suspension lines, we use thinner $4.5\text{ mm}$ cords with a breaking limit of $340\text{ kg}$. On the parachutes, there are flat cords that act as tie-downs for the suspension lines, which were added for the purpose of having interchangeability; these support a load of $150\text{ kg}$ each.
 
 \subsubsection{Parachutes}
-A two-stage recovery system is used.
-\subsubsection*{Drogue}
- The drogue is a green and white hemispherical parachute with a diameter of 0.36m, composed of 12 gores. Based on wind tunnel experiments, we have determined that our parachute has a $C_d$ equivalent to 0.96, resulting in a descent velocity of around $29\text{ m/s}$ taking into account its dimensions. This parachute is expected to produce a maximum force at openning of around 217N.
+A two-stage recovery system is used since our estimated reach apogee is 3000m \req{EuRoC-LV-RQT-0340}.
 
- \textcolor{red}{FIGURA}
+\subsubsection*{Drogue}
+ The drogue is a green and red hemispherical parachute \req{EuRoC-LV-RQT-0410} \req{EuRoC-LV-RQT-0420} with a diameter of 0.36m, composed of 12 gores. Based on wind tunnel experiments (see apendix 5.2.2), we have determined that our parachute has a $C_d$ equivalent to 0.96, resulting in a descent velocity of around $29\text{ m/s}$ taking into account its dimensions \req{EuRoC-LV-RQT-0360}. This parachute is expected to produce a maximum force at openning of around 217N.
 
 \subsubsection*{Main}
-The main parachute is a cruciform parachute with panel dimensions of $2.43\text{ m} \times 0.81\text{ m}$. These dimensions, along with its $C_d$ of 0.64 obtained from wind tunnel testing, guarantee an approximate descent velocity of 9 m/s. Upon deployment, this parachute is expected to produce a maximum opening force of 1239 N. Red and yellow colors were chosen for this parachute to make it easily distinguishable against the sky and vegetation, while ensuring straightforward recovery.
+The main parachute is a cruciform parachute with panel dimensions of $2.43\text{ m} \times 0.81\text{ m}$. These dimensions, along with its $C_d$ of 0.64 obtained from wind tunnel testing (see apendix 5.2.2), guarantee an approximate descent velocity of 9 m/s  \req{EuRoC-LV-RQT-0380}. Upon deployment, this parachute is expected to produce a maximum opening force of 1239 N. Red and yellow colors were chosen for this parachute to make it easily distinguishable against the sky and vegetation, while ensuring straightforward recovery \req{EuRoC-LV-RQT-0410} \req{EuRoC-LV-RQT-0420}.
 
-\textcolor{red}{FIGURA}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.88\textwidth]{parachutes_windtunel.png}
+    \caption{Rescale cross and hemiespherical parachutes.}
+    \label{fig:parachutes_windtunnel}
+\end{figure}
 
-
-\vspace{1cm}
 \subsubsection{Recovery Avionics and Redundancy}
 \textcolor{red}{Comentarios. José Reyes (activación, hacer referencia en Avionics Bay), Angelo (hacer referencia a la máquina de estados del 2.7.5}
 % RULE: Initial/main deployment events, parachute, drogue, activation devices, redundant electronics.
@@ -406,7 +454,7 @@ The main parachute is a cruciform parachute with panel dimensions of $2.43\text{
 
 The flight state machine (Section~\ref{subsubsec:software}) governs both recovery deployment events: drogue activation at apogee and main parachute activation at the configured altitude. Pyrotechnic firing, redundant apogee detection, confirmation counters, and the automatic handover to the redundant flight computer are detailed in that section.
 
-Two independent redundancy layers complement the primary flight computer. The Redundant Active Control PCB (Section~\ref{subsubsection:avionics_bay}) has access to the airbrake servo actuator but not to the recovery pyrotechnic channels; its role is to preserve active control authority if the primary computer fails. The COTS CATS Vega flight computer has dedicated sensors, power supply, and independent access to the recovery pyrotechnic channels, but no connection to the active control servos. In addition to backup recovery deployment, the CATS Vega serves as the official flight data logger for competition-evaluated metrics. This complementary split ensures that both active control and recovery activation are each backed by a separate, fully isolated redundant system.
+Two independent redundancy layers complement the primary flight computer. The Redundant Active Control PCB (Section~\ref{subsubsection:avionics_bay}) has access to the airbrake servo actuator but not to the recovery pyrotechnic channels; its role is to preserve active control authority if the primary computer fails. The COTS CATS Vega flight computer has dedicated sensors, power supply, and independent access to the recovery pyrotechnic channels, but no connection to the active control servos. In addition to backup recovery deployment, the CATS Vega serves as the official flight data logger for competition-evaluated metrics. This complementary split ensures that both active control and recovery activation are each backed by a separate, fully isolated redundant system \req{EuRoC-LV-RQT-0240}.
 
 \subsection{Payload subsystem}  \textcolor{red}{Responsable: Miguel Rodríguez. 1 página }
 % RULE: Mass, form factor, functionality, interface.
@@ -504,62 +552,62 @@ To predict the vehicle's ground footprint, a rigorous Monte Carlo dispersion ana
 
 \textcolor{red}{Huella en tierra, apogeos, estudio de vientos.... Hacer referencia a los Flight Simulations}
 
-\subsubsection{Avionics Bay}
-\label{subsubsection:avionics_bay}
+\subsection{Avionics Subsystem}
+\label{subsection:avionics_subsystem}
 
-The avionics bay of Project NAOS EVO is designed around a modular, highly redundant, and fail-safe architecture. The system combines custom Student Researched and Developed (SRAD) Printed Circuit Boards (PCBs) with a mandatory Commercial Off-The-Shelf (COTS) recovery computer to guarantee maximum reliability and flight safety.
+The avionics bay of Project NAOS EVO is engineered around a modular, highly redundant, and fail-safe architecture. Integrating custom Student Researched and Developed (SRAD) Printed Circuit Boards (PCBs) alongside a commercial COTS backup unit, the subsystem guarantees real-time state estimation, telemetry downlink, active control oversight, and flight data logging.
 
-\paragraph{Architecture and SRAD Board Breakdown}
-The electronic system is distributed across four custom processing and power management units, complemented by a COTS recovery system:
+\vspace{0.5em}
+\noindent\textbf{Architecture and SRAD Board Breakdown}
+
+The electronic hardware is distributed across four custom processing and power management units, complemented by the primary flight redundancy backup:
 
 \begin{itemize}
-    \item \textbf{Main Flight Computer (Baseboard):} Driven by an STMicroelectronics STM32H723VGT6 microcontroller, this board executes the main flight state machine and the Extended Kalman Filter (EKF) for state estimation (detailed in Section 2.7.4). Sensor data acquisition relies on a redundant suite:
+    \item \textbf{Main Flight Computer (Baseboard):} Driven by an STMicroelectronics STM32H723VGT6 microcontroller, this unit executes the main flight state machine and the Extended Kalman Filter (EKF) algorithms. Sensor data acquisition relies on a redundant IMU, pressure, and magnetic suite:
     \begin{itemize}
         \item 1x BMP581 high-precision barometric pressure sensor.
         \item 1x IIS2MDCTR 3-axis digital magnetometer.
         \item 1x IIM-42653 6-axis low-noise IMU.
         \item 1x LSM6DSV320XTR high-g 6-axis IMU.
     \end{itemize}
-    Flight parameters are logged concurrently to an onboard microSD card and a high-speed NOR Flash memory chip. Additionally, the Baseboard controls the power and recording states of an integrated RunCam Split 4 HD camera.
+    Flight parameters are concurrently logged to an onboard microSD card and a high-speed NOR Flash memory chip. The Baseboard also manages the power and recording states of an integrated RunCam Split 4 HD camera.
 
     \begin{figure}[H]
         \centering
-        % \includegraphics[width=0.7\textwidth]{figures/baseboard_pcb.png}
+         \includegraphics[width=0.45\textwidth]{BSB.png}
         \caption{Main Flight Computer (Baseboard) SRAD PCB Assembly.}
         \label{fig:baseboard_pcb}
     \end{figure}
 
-    \item \textbf{Powerboard and Actuation System:} Connected directly to the Baseboard, the Powerboard houses DC-DC buck converters supplying $5\,\text{V}$ and $3.3\,\text{V}$ power rails. It incorporates high-current MOSFET switches for triggering the Main and Drogue parachute pyrotechnic charges, alongside relays managing the $5\,\text{V}$ supply line for the active control servomotor. Interfacing between the Baseboard and Powerboard is established via two buses:
-    \begin{itemize}
-        \item \textit{Power Bus (10-pin connector):} Delivers $5\,\text{V}$, $3.3\,\text{V}$, and GND to the Baseboard.
-        \item \textit{Signal Bus (20-pin connector):} Carries relay control lines, PWM active control signals, battery voltage real-time telemetry feedback, and pyrotechnic activation signals.
-    \end{itemize}
+    \item \textbf{Powerboard and Actuation System:} Interfaced directly with the Baseboard via a 10-pin Power Bus and a 20-pin Signal Bus, the Powerboard incorporates DC-DC buck converters ($5\,\text{V}$ and $3.3\,\text{V}$ rails), high-current MOSFET switches for main/drogue pyrotechnic deployment, and actuators relays.
 
     \begin{figure}[H]
         \centering
-        % \includegraphics[width=0.7\textwidth]{figures/powerboard_pcb.png}
+         \includegraphics[width=0.45\textwidth]{PWB.png}
         \caption{Powerboard and Actuation Management SRAD PCB Assembly.}
         \label{fig:powerboard_pcb}
     \end{figure}
 
-    \item \textbf{Active Control Hardware Watchdog:} To prevent uncontrolled airbrake behavior upon signal disruption, the Powerboard includes a hardware watchdog circuit. If an anomaly or loss in the PWM signal is detected, the watchdog forces an automatic $0\%$ deflection (full retraction) and locks the control surface. This hardware override can be bypassed to hand over actuator authority to the Redundant Active Control PCB.
+    \item \textbf{Active Control Hardware Watchdog:} To prevent uncontrolled airbrake behavior upon signal disruption, a hardware watchdog circuit on the Powerboard forces an automatic $0\%$ deflection (full retraction) if PWM anomalies occur. Control authority can subsequently be handed over to the backup control board.
 
-    \item \textbf{Redundant Active Control PCB:} Serving as a processing and estimation backup for active control, this board incorporates an STM32H723VGT6 MCU along with a dedicated sensor suite consisting of a BMP581 barometric sensor, an IIS2MDCTR magnetometer, and an LSM6DSV320XTR high-g IMU. It runs a parallel instance of the EKF, flight state machine, and airbrake control algorithm. Communication with the Baseboard is implemented via a 2-bit discrete pulse protocol (\texttt{00}, \texttt{01}, \texttt{10}, \texttt{11}), enabling deterministic state handoff and fault reporting. In the event of a primary flight computer failure, this unit assumes full control authority over the airbrakes.
+    \item \textbf{Redundant Active Control PCB:} Operating as an independent processing and estimation backup for the active control system, this board incorporates an STM32H723VGT6 MCU and a dedicated sensor suite (BMP581, IIS2MDCTR, and LSM6DSV320XTR). It executes parallel EKF state estimation and airbrake control logic. Inter-board deterministic state handoff and fault reporting with the Baseboard are maintained via a 2-bit discrete pulse protocol (\texttt{00}, \texttt{01}, \texttt{10}, \texttt{11}).
 
     \begin{figure}[H]
         \centering
-        \includegraphics[width=0.3\textwidth]{ACSR.png}
+        \includegraphics[width=0.45\textwidth]{ACSR.png}
         \caption{Redundant Active Control SRAD PCB Assembly.}
         \label{fig:redundant_ac_pcb}
     \end{figure}
 
-    \item \textbf{Telemetry and GNSS Module:} Based on an ESP32 microcontroller, this board handles the downlink of flight data using an Ebyte E32 LoRa transceiver ($868\,\text{MHz}$, $25\,\text{mW}$) and position tracking via a ZOE-M8Q GNSS receiver. \textit{Further architectural details and the PCB layout of this module are expanded upon in the Ground Station section.}
+    \item \textbf{Telemetry and GNSS Module:} Powered by an ESP32 microcontroller, this board manages spatial position tracking via a ZOE-M8Q GNSS receiver and handles data downlink through an Ebyte E32 LoRa transceiver ($868\,\text{MHz}$, $25\,\text{mW}$). \textit{To avoid duplication, full schematic details, RF link budgets, and physical PCB layout photography for this unit are presented alongside the ground receiver architecture in Section~\ref{sec:introduction} (Communication \& Ground Station Committee report).}
 
-    \item \textbf{COTS Backup Computer (CATS Vega):} To strictly comply with EuRoC redundancy requirements, a commercial CATS Vega flight computer is integrated as a fully isolated secondary recovery system. In addition to ensuring recovery deployment independently of the primary SRAD system via dedicated sensors, power supplies, and pyrotechnic channels, it serves as the official flight data logger to record the metrics evaluated during the competition.
+    \item \textbf{COTS Backup Computer (CATS Vega):} Fulfilling the EuRoC recovery redundancy rules \req{EuRoC-LV-RQT-0470}, a commercial CATS Vega unit operates on isolated sensors, power supplies, and pyrotechnic channels. Beyond its fail-safe recovery role, it serves as the official competition flight data logger for post-flight evaluation.
 \end{itemize}
 
-\paragraph{Power Distribution, Protection, and Charging System}
-Avionics domain isolation is maintained using four independent $2\text{S}1\text{P}$ 18650 Li-Ion battery packs ($2500\,\text{mAh}$, $7.2\,\text{V}$ nominal), each equipped with a dedicated BMS to prevent overcharge, overdischarge, and short-circuits. While system endurance is highly sufficient for standard operations, a dedicated access hatch on the airframe allows for in-situ charging and cell balancing directly on the launch pad in extreme delay scenarios.
+\vspace{0.5em}
+\noindent\textbf{Power Distribution and Emergency Pad Charging}
+
+System isolation is maintained using four independent $2\text{S}1\text{P}$ 18650 Li-Ion battery packs ($2500\,\text{mAh}$, $7.2\,\text{V}$ nominal) \req{EuRoC-LV-RQT-0300} matching the power domain allocation defined during preliminary design (Table~\ref{tab:power_domains}). Each pack includes an integrated BMS module for overcharge, overdischarge, and short-circuit protection. While battery capacity provides extensive operational autonomy, a dedicated access hatch on the airframe allows for in-situ charging and cell balancing directly on the launch pad under extreme delay scenarios.
 
 \begin{table}[H]
 \centering
@@ -577,8 +625,10 @@ Pack 4 & 2S1P 18650 ($2500\,\text{mAh}$) & Dedicated BMS & Telemetry \& GNSS Mod
 \end{tabularx}
 \end{table}
 
-\paragraph{Pad Power Budget and Operational Autonomy Analysis}
-Decoupling the Main Flight Computer and Telemetry power domains isolates flight-critical sensors from RF transients and extends the data link runtime. Table \ref{tab:power_consumption_baseboard} and Table \ref{tab:power_consumption_telemetry} detail the maximum Pre-Launch current draw per domain.
+\vspace{0.5em}
+\noindent\textbf{Pad Power Budget and Autonomy Analysis}
+
+Isolating the Main Flight Computer and Telemetry power domains protects flight-critical sensors from RF transients while optimizing operational endurance. Table~\ref{tab:power_consumption_baseboard} and Table~\ref{tab:power_consumption_telemetry} summarize maximum pre-launch current draw.
 
 \begin{table}[H]
 \centering
@@ -609,45 +659,51 @@ MicroSD Card & Baseboard & Continuous High-Rate Writing & $30.00$ \\
 \midrule
 ESP32 MCU & Telemetry & Active Processing (WiFi/BT disabled) & $50.00$ \\
 ZOE-M8Q GNSS & Telemetry & Continuous Tracking & $25.00$ \\
-Ebyte E32 LoRa & Telemetry & Continuous Tx @ $868\,\text{MHz}$ ($25\,\text{mW}$ / $20\,\text{dBi}$) & $45.00$ \\
+Ebyte E32 LoRa & Telemetry & Continuous Tx @ $868\,\text{MHz}$ ($25\,\text{mW}$) & $130.00$ \\
 \midrule
-\textbf{Total Draw ($I_{\text{telemetry}}$)} & & \textbf{Continuous Transmission} & \textbf{$120.00\,\text{mA}$} \\
+\textbf{Total Draw ($I_{\text{telemetry}}$)} & & \textbf{Continuous Transmission} & \textbf{$205.00\,\text{mA}$} \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-Assuming a conservative $90\%$ usable capacity ($2250\,\text{mAh}$) to prevent deep discharge, the autonomies are:
+Considering a conservative $90\%$ usable capacity ($2250\,\text{mAh}$) to prevent deep discharge, nominal autonomies are calculated as:
 
 \begin{equation}
-t_{\text{baseboard}} = \frac{2250\,\text{mAh}}{141.88\,\text{mA}} \approx 15.85\,\text{hours} \quad ; \quad t_{\text{telemetry}} = \frac{2250\,\text{mAh}}{120.00\,\text{mA}} \approx 18.75\,\text{hours}
+t_{\text{baseboard}} = \frac{2250\,\text{mAh}}{141.88\,\text{mA}} \approx 15.85\,\text{hours} \quad ; \quad t_{\text{telemetry}} = \frac{2250\,\text{mAh}}{205.00\,\text{mA}} \approx 10.97\,\text{hours}
 \end{equation}
 
-The Baseboard sustains $\approx 15.85\,\text{hours}$ of continuous high-rate logging, while the Telemetry module guarantees $\approx 18.75\,\text{hours}$ of continuous transmission. In a typical low-power IDLE state awaiting the launch command, these endurance margins extend significantly further.
+The Baseboard guarantees $\approx 15.85\,\text{hours}$ of continuous high-rate logging, while the Telemetry module provides nearly $11\,\text{hours}$ of continuous transmission on the pad, comfortably satisfying the minimum 6-hour idling state autonomy required by competition safety rules \req{EuRoC-LV-RQT-0320}.
 
-\paragraph{Arming Mechanisms and External Interface}
-Safe arming operations on the launch pad are enabled by mechanical Remove Before Flight (RBF) pull-push switches and dedicated pull-pins routed through the external surface of the airframe:
+\vspace{0.5em}
+\noindent\textbf{Arming Mechanisms and External Interface}
+
+Safe launch pad operations are enforced via mechanical Remove Before Flight (RBF) pull-push switches and pull-pins accessible on the airframe exterior \req{EuRoC-LV-RQT-0540 && EuRoC-LV-RQT-0550}:
 \begin{enumerate}
     \item \textbf{Pin 1:} Baseboard and Powerboard main system power enable.
     \item \textbf{Pin 2:} Pyrotechnic charge channel physical arming.
     \item \textbf{Pin 3:} Redundant Active Control computer power enable.
-    \item \textbf{Pin 4:} Telemetry and GNSS Module launch pad pull-pin switch (arms RF transmission upon rocket arming on the launch rail).
+    \item \textbf{Pin 4:} Telemetry and GNSS Module pad pull-pin switch (arms RF transmission upon rail placement).
     \item \textbf{Pin 5:} COTS CATS Vega backup system power enable.
 \end{enumerate}
 
-\paragraph{RF Antenna Integration}
-All communications transmit through the glass-fiber section of the airframe, which provides RF transparency. The antenna suite comprises:
+\vspace{0.5em}
+\noindent\textbf{RF Antenna Integration}
+
+To maintain structural integrity while ensuring full RF transparency \req{EuRoC-LV-RQT-0780}, all antennas are integrated exclusively into the non-conductive fiberglass airframe section:
 \begin{itemize}
-    \item \textbf{GNSS Antenna:} Flexible patch antenna mounted internally around the inner surface of the fiberglass airframe.
-    \item \textbf{Telemetry Antenna:} Externally mounted ANT-868-CW-HWR-SMA antenna for the $868\,\text{MHz}$ LoRa transceiver.
+    \item \textbf{GNSS Antenna:} Flexible patch antenna mounted internally against the fiberglass inner surface.
+    \item \textbf{Telemetry Antenna:} Externally mounted ANT-868-CW-HWR-SMA antenna for $868\,\text{MHz}$ LoRa communications.
     \item \textbf{CATS Vega Antenna:} Dedicated ANT-2.4-CW antenna.
 \end{itemize}
 
-\paragraph{Mechanical CAD Layout and Sectional Integration}
-The avionics structural bay is organized into three 3D-printed modular sections integrated inside the fiberglass airframe. This modular approach allows individual sections to be serviced, tested, and inspected independently prior to final assembly:
+\vspace{0.5em}
+\noindent\textbf{Mechanical Integration and CAD Layout}
+
+The avionics bay is divided into three 3D-printed modular sections mounted within the fiberglass housing, facilitating independent maintenance and pre-flight inspection:
 \begin{itemize}
-    \item \textbf{Lower Module:} Houses the Baseboard, Powerboard, and the COTS CATS Vega flight computer.
-    \item \textbf{Middle Module:} Holds the Telemetry \& GNSS PCB together with the Redundant Active Control PCB.
-    \item \textbf{Upper Module:} Accommodates the four $2\text{S}1\text{P}$ 18650 battery packs with integrated BMS modules, external charging ports, and the RunCam Split 4 camera module.
+    \item \textbf{Lower Module:} Houses the Baseboard, Powerboard, and COTS CATS Vega flight computer.
+    \item \textbf{Middle Module:} Holds the Telemetry \& GNSS PCB along with the Redundant Active Control PCB.
+    \item \textbf{Upper Module:} Accommodates the four $2\text{S}1\text{P}$ 18650 battery packs, BMS circuitry, charging interfaces, and the RunCam Split 4 camera module.
 \end{itemize}
 
 \begin{figure}[H]
@@ -655,21 +711,21 @@ The avionics structural bay is organized into three 3D-printed modular sections 
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         % \includegraphics[width=\textwidth]{figures/lower_module.png}
-        \caption{Lower Module Assembly}
+        \caption{Lower Module}
         \label{fig:lower_module}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         % \includegraphics[width=\textwidth]{figures/middle_module.png}
-        \caption{Middle Module Assembly}
+        \caption{Middle Module}
         \label{fig:middle_module}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.31\textwidth}
         \centering
         % \includegraphics[width=\textwidth]{figures/upper_module.png}
-        \caption{Upper Module Assembly}
+        \caption{Upper Module}
         \label{fig:upper_module}
     \end{subfigure}
     \caption{Independent 3D-Printed Modular Avionics Sub-assemblies.}
@@ -681,29 +737,31 @@ The avionics structural bay is organized into three 3D-printed modular sections 
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         % \includegraphics[width=\textwidth]{figures/cad_avionics_exploded.png}
-        \caption{Exploded CAD view of the avionics bay}
+        \caption{Exploded CAD view}
         \label{fig:cad_avionics_exploded}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         % \includegraphics[width=\textwidth]{figures/cad_avionics_assembled.png}
-        \caption{Full integrated CAD assembly inside airframe}
+        \caption{Integrated assembly}
         \label{fig:cad_avionics_assembled}
     \end{subfigure}
-    \caption{Complete 3D CAD Representation of the NAOS EVO Avionics Integration.}
+    \caption{Complete 3D CAD Representation of NAOS EVO Avionics Integration.}
     \label{fig:cad_overall_avionics}
 \end{figure}
 
-\paragraph{Environmental and Thermal Validation}
-To ensure structural and electrical integrity under extreme launch environment conditions, the complete avionics bay and battery power system underwent thermal stress and environmental testing (ranging from low-temperature storage to high ambient temperature exposure during transmission). Full experimental setups, thermal degradation curves, and validation procedures are detailed in \textbf{Annex X: Functional and Environmental Testing Report}.
+\vspace{0.5em}
+\noindent\textbf{Environmental and Thermal Validation}
+
+To satisfy mandatory environmental qualification rules \req{EuRoC-LV-RQT-0510}, the complete avionics assembly underwent thermal stress testing across the operational range of $-10^\circ\text{C}$ to $+60^\circ\text{C}$. The procedure verified structural mount stability, sensor calibration drift limits, battery discharge performance, and continuous execution of the EKF state estimation without hardware resets. Experimental procedures, thermal degradation curves, and qualification outcomes are detailed in \textbf{Annex X: Functional and Environmental Testing Report}.
 \subsubsection{Communication and Ground Station} 
 
 The primary telemetry link operates in the 868 MHz ISM band, adhering to  regulations by limiting the configured transmit power to 25 mW (14 dBm). The onboard system is based on an ESP32 microcontroller carrying the Ebyte E32-900T30D LoRa transceiver.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{tel_pcb.png}
+    \includegraphics[width=0.5\textwidth]{TEL.png}
     \caption{Telemetry PCB.}
     \label{fig:telemetry_pcb}
 \end{figure}
@@ -711,7 +769,7 @@ The primary telemetry link operates in the 868 MHz ISM band, adhering to  regula
 
 \vspace{1em}
 \noindent
-The flight antenna, an ANT-868-CW-HWR-SMA dipole, is mounted internally in the fiberglass airframe section. Its proximity to adjacent electronics, wiring, and other components had increased the VSWR, which was measured about 2-2.5. This results in additional losses that are taken into account in the link budget. The internal mounting can introduce some asymmetry in the radiation pattern. Combined with the vehicle's roll during ascent, this can cause temporary changes in the antenna polarisation and signal strength. The link budget is designed to provide sufficient margin for avoid worrying about this.
+The flight antenna, an ANT-868-CW-HWR-SMA dipole, is mounted internally in the fiberglass airframe section. Its proximity to adjacent electronics, wiring, and other components had increased the VSWR, which was measured about 2-2.5. This results in additional losses that are taken into account in the link budget. The internal mounting can introduce some asymmetry in the radiation pattern. Combined with the vehicle's roll during ascent, this can cause temporary changes in the antenna polarisation and signal strength. The link budget is designed to provide sufficient margin to avoid worrying about this.
 
 \vspace{1em}
 \noindent
@@ -719,11 +777,11 @@ ESP32 acts as a bidirectional UART link in the system. The telemetry frame is tr
 
 \vspace{1em}
 \noindent
-We can also transmit critical operator commands. These commands are sent as 5-byte packets and are checked using the same validation process as the downlink frames. The LoRa data rate is set to 2.4 kbps. At this data rate, the Time on Air of  a 52-byte payload remains below the required 600 ms synchronisation window. However, if the packet transmission period is reduced below 600 ms, the telemetry loses synchronisation and stops working properly. Therefore, the transmission period is kept above this limit during operation.
+We can also transmit critical operator commands. These commands are sent as 5-byte packets and are checked using the same validation process as the downlink frames. The LoRa data rate is set to 2.4 kbps. At this data rate, the Time on Air of  a 58-byte payload remains below the required 600 ms synchronisation window. However, if the packet transmission period is reduced below 600 ms, the telemetry loses synchronisation and stops working properly. Therefore, the transmission period is kept above this limit during operation.
 
 \vspace{1em}
 \noindent
-The ground station uses the same Ebyte LoRa module together with an Arduino to receive the data and forward it to the custom PC GUI over UART. The GUI processes the incoming telemetry data byte by byte and converts the raw hexadecimal values into the corresponding physical units for real-time monitoring of the system state. At the same time, all received data is stored in a local log file for further analysis after the flight.
+The ground station uses the same Ebyte LoRa module together with an Arduino to receive the data and forward it to the custom PC GUI over UART as shown in Figure~\ref{fig:gui}. The GUI processes the incoming telemetry data byte by byte and converts the raw hexadecimal values into the corresponding physical units for real-time monitoring of the system state. At the same time, all received data is stored in a local log file for further analysis after the flight.
 \vspace{1em}
 
 \begin{figure}[H]
@@ -742,6 +800,13 @@ The ground station uses a SY-906 Yagi directional antenna with a peak gain of 11
 \vspace{1em}
 \noindent
 The main antenna characteristics considered for the communication system are summarised in Table~\ref{tab:antenna_comparison}. The flight antenna was selected mainly because of its simple integration inside the fiberglass airframe. For the ground station, a directional Yagi antenna was selected to provide higher gain and improve the received signal strength over long distances.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1\textwidth]{gui.jpg}
+    \caption{Coheteros GUI. All data shown was randomly generated.}
+    \label{fig:gui}
+\end{figure}
 
 \vspace{1em}
 \begin{table}[H]
@@ -914,7 +979,7 @@ In the \textbf{Pre-launch} state, the rocket is on the launch rail, fully calibr
 
 During the \textbf{Boost} state the motor is active and the vehicle experiences sustained positive acceleration. The transition to \emph{Coast} occurs when the measured acceleration drops below the configured threshold (\cfg{BOOST\_COAST\_ACCEL\_Y\_THRESHOLD}) for the required number of consecutive samples (\cfg{BOOST\_COAST\_CONSECUTIVE\_SAMPLES}), indicating motor burnout.
 
-The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
+The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}) \req{EuRoC-LV-RQT-0680}.
 
 During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee} \req{EuRoC-LV-RQT-0350}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
@@ -1143,8 +1208,8 @@ Anomalies detected in telemetry or control loops force an immediate transition t
 \subsubsection{Ground test demonstration of recovery system} \textcolor{red}{Responsable: Paula}
 % INTEGRATION NOTE: Recovery deployment test details go here.
 
-\subsubsection{Flight test demonstration of recovery system (optional)} \textcolor{red}{Responsable: Paula. Puede que no aplique, lo dejamos para el final}
-% INTEGRATION NOTE: If no flight test was performed, we can put the blank page here, or detail a sub-scale flight test if available.
+\subsubsection{Wind tunnel experiments} \textcolor{red}{Responsable: Paula.}
+% INTEGRATION NOTE: If no flight test was performed, we can put the blank page here, or detail a sub-scale flight test if available. 
 
 \subsubsection{Electronics thermal testing} \textcolor{red}{Responsable: Jose Reyes/Alejandro Ariza}
 % INTEGRATION NOTE: Avionics thermal validation details.
@@ -1389,29 +1454,23 @@ Permanent Pens & 4 \\
 \paragraph{5.7.3.4. Detailed electrical architecture}
 \label{para:detailed_electrical_architecture}
 
-To provide a comprehensive operational overview of the subsystem's electrical integration, Figure~\ref{fig:electrical_connection_diagram} illustrates the global wiring topology, inter-board communication channels, power isolation domains, and pad safety arming interlocks of the NAOS EVO avionics system.
+Figure~\ref{fig:electrical_connection_diagram} illustrates the overall electrical integration, isolated power domains, inter-board communication buses, and pad safety arming interlocks of the NAOS EVO avionics subsystem.
 
-The hardware interconnection is categorized into three distinct physical interface types:
+The hardware interfaces are categorized into three physical interconnection types:
 \begin{itemize}
-    \item \textbf{Soldered On-Board Connections (Cyan Lines):} High-criticality sensors and non-volatile storage modules are surface-mounted directly on their respective PCBs to ensure structural integrity under launch vibration loads. The primary STM32 MCU directly drives the Main IMU, Backup IMU, Barometer, Magnetometer, and the SD/Flash logging memory. Similarly, the Active Control Redundancy PCB incorporates dedicated soldered sensor ICs (LSM6DSV320XTR IMU, BMP581 Barometer, and IIS2MDCTR Magnetometer).
-    \item \textbf{Cabled Interconnects (Gray Lines):} Heavy-duty multi-pin wiring harnesses link modular sub-assemblies across the avionics bay. The Powerboard acts as the main power distribution unit, routing power and control signals to the STM32 MCU, the Telemetry \& GNSS computer, the Active Control Servo, the payload HD Camera, and the pyrotechnic recovery actuators. External charging ports link directly to each battery domain's integrated BMS.
-    \item \textbf{Inter-Board Discrete Communication Bus (Green Dashed Line):} A 2-bit discrete GPIO pulse line (\texttt{00}, \texttt{01}, \texttt{10}, \texttt{11}) connects the primary STM32 MCU and the Redundant Active Control PCB, facilitating Extended Kalman Filter state synchronization, error status propagation, and dynamic control authority handoff in the event of a primary system anomaly.
+    \item \textbf{Soldered Connections (Cyan Lines):} Vibration-resistant, surface-mounted sensors and non-volatile storage connected directly to their MCUs. The primary STM32 MCU drives the sensor suite (BMP581, IIM-42653, LSM6DSV32, IIS2MDCTR) and SD/Flash memory. The Active Control Redundancy PCB incorporates its own soldered sensor suite (LSM6DSV32, BMP581, IIS2MDCTR).
+    \item \textbf{Cabled Interconnects (Gray Lines):} Wiring harnesses routing power and control signals across modular units. The Powerboard supplies the primary STM32 MCU, RunCam Split 4 camera, active control servo, and pyrotechnic deployment channels.
+    \item \textbf{Communication Bus (Green Dashed Line):} Multi-node digital bus interconnecting the STM32 MCU, Redundant Active Control PCB, and Telemetry \& GNSS computer for state synchronization, error status propagation, and control authority handoff.
 \end{itemize}
 
-\paragraph{Power Domain Isolation and Arming Safety}
-Power distribution is strictly partitioned into three isolated domains, each energized by an independent $2000\,\text{mAh}$ $2\text{S}1\text{P}$ Li-Ion battery pack protected by an integrated BMS and controlled via an individual Remove-Before-Flight (RBF) pull-pin switch:
-\begin{enumerate}
-    \item \textbf{Main Electronics Domain:} Supplies power to the Powerboard, primary STM32 MCU flight computer, Telemetry \& GNSS computer, and the camera payload.
-    \item \textbf{Active Control Domain:} Supplies power exclusively to the Redundant Active Control computer and the active airbrake servomotor.
-    \item \textbf{COTS Recovery Domain:} Supplies power to the isolated CATS Vega recovery unit.
-\end{enumerate}
+\textbf{Power Domain Isolation and Arming Safety:} Electrical power is strictly partitioned into four isolated domains (Powerboard, Active Control Redundancy, CATS Vega Recovery, and Telemetry \& GNSS Computer), each powered by an independent $2500\,\text{mAh}$ $2\text{S}$ Li-Ion battery pack with its own Remove-Before-Flight (RBF) pull-pin switch. 
 
-Physical launchpad safety for pyrotechnic actuation is enforced through a dedicated \textbf{Pull Pin (Arming)} interrupt circuit. This mechanical interlock interrupts the high-current firing lines for both deployment events—\textit{Pyro 1 (Drogue Chute / $\text{CO}_2$ system)} and \textit{Pyro 2 (Main Chute / Tender Desc device)}—ensuring that neither the Powerboard nor the CATS Vega backup computer can inadvertently trigger an ejection charge until the rocket is fully armed on the launch rail.
+Pyrotechnic launchpad safety is enforced via a mechanical \textbf{Pull Pin (Arming)} interlock interrupting the firing channels for both Pyro 1 (Drogue Chute / $\text{CO}_2$) and Pyro 2 (Main Chute / Tender Desc), ensuring ejection charges cannot energize until fully armed on the rail.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\textwidth]{Conection diagram (1).png}
-    \caption{Complete electrical connection diagram and power distribution topology of the NAOS EVO avionics subsystem.}
+    \includegraphics[width=0.85\textwidth]{Conection diagram.png}
+    \caption{Complete electrical connection diagram and power topology of the NAOS EVO avionics subsystem.}
     \label{fig:electrical_connection_diagram}
 \end{figure}
 
@@ -1421,6 +1480,156 @@ Physical launchpad safety for pyrotechnic actuation is enforced through a dedica
 % RULE: Revision controlled technical drawings.
 
 \subsection{Subsystem details (optional)}
+
+\subsubsection{Error-State Kalman Filter (ESKF) Derivation}
+
+\paragraph{State Definition and IMU Propagation:}
+The ESKF distinguishes between the nominal state ($\mathbf{x}$) and the error state ($\delta\mathbf{x}$). The nominal state is defined by position, velocity, and attitude quaternion in the North-East-Down (NED) frame:
+\[
+\mathbf{x} = \begin{bmatrix} \mathbf{r}_{NED} \\ \mathbf{v}_{NED} \\ \mathbf{q}_{B \leftarrow NED} \end{bmatrix}
+\]
+
+The error state encompasses the small deviations, where attitude error is represented by a minimal 3-parameter rotation vector $\delta\boldsymbol{\theta}$:
+\[
+\delta\mathbf{x} = \begin{bmatrix} \delta\mathbf{r}_{NED} \\ \delta\mathbf{v}_{NED} \\ \delta\boldsymbol{\theta} \end{bmatrix}
+\]
+
+The nominal state is propagated forward in time using the Inertial Measurement Unit (IMU) as the control input $\mathbf{u} = [\mathbf{a}_B, \boldsymbol{\omega}_B]^T$, effectively acting as the system's dynamic model. The continuous-time propagation kinematics are:
+\[
+\dot{\mathbf{r}}_{NED} = \mathbf{v}_{NED}
+\]
+\[
+\dot{\mathbf{v}}_{NED} = DCM_{NED \leftarrow B} \mathbf{a}_B + \mathbf{g}_{NED}
+\]
+\[
+\dot{\mathbf{q}}_{B \leftarrow NED} = \frac{1}{2} \mathbf{q}_{B \leftarrow NED} \otimes \begin{bmatrix} 0 \\ \boldsymbol{\omega}_B \end{bmatrix}
+\]
+
+\paragraph{Error-State Kinematics and Covariance Propagation:}
+To propagate the covariance matrix $P$, we must linearize the error-state dynamics to find the continuous-time system Jacobian $A = \frac{\partial \mathbf{f}}{\partial \delta\mathbf{x}}$. Evaluating the partial derivatives yields:
+\[
+A = \begin{bmatrix} 
+0_{3\times3} & I_{3\times3} & 0_{3\times3} \\ 
+0_{3\times3} & 0_{3\times3} & -DCM_{NED \leftarrow B} [\mathbf{a}_B \times] \\ 
+0_{3\times3} & 0_{3\times3} & -[\boldsymbol{\omega}_B \times] 
+\end{bmatrix}
+\]
+
+This continuous-time Jacobian is discretized over the sampling interval $h = t_k - t_{k-1}$ to form the discrete State Transition Matrix ($F_k$) using a Taylor series expansion approximation:
+\[
+F_k \approx I + A h + \frac{A^2 h^2}{2}
+\]
+
+The error-state covariance matrix $P$ is then propagated to the next time step (a priori estimate):
+\[
+P_k^- = F_k P_{k-1}^+ F_k^T + Q
+\]
+
+\paragraph{Noise Matrices ($Q$ and $R$):}
+The process noise covariance matrix $Q$ and measurement noise covariance matrix $R$ quantify the uncertainty in the models and sensors:
+\begin{itemize}
+    \item \textbf{$Q$ Matrix}: Represents the uncertainty injected during IMU propagation. The diagonal values are derived from the IMU datasheet's continuous noise density parameters (e.g., Velocity Random Walk for accelerometers in $(\text{m/s})/\sqrt{\text{hr}}$, and Angular Random Walk for gyroscopes in $\text{deg}/\sqrt{\text{hr}}$). These continuous parameters are squared to form variances and scaled by the sampling time $\Delta t$ to transition into discrete-time variances.
+    \item \textbf{$R$ Matrix}: Represents the uncertainty of the external measurements. The diagonal elements correspond to the variance ($\sigma^2$) of the respective sensors (magnetometer and barometer), determined by analyzing the Root Mean Square (RMS) noise specifications via static statistical calibration.
+\end{itemize}
+
+\paragraph{Measurement Updates:}
+When a sensor provides a new measurement $\mathbf{z}_k$, the error state is updated by calculating the residual $\mathbf{y}_k = \mathbf{z}_k - \mathbf{h}(\mathbf{x}_k^-)$ and applying the Kalman Gain $K_k$:
+\[
+K_k = P_k^- H_k^T (H_k P_k^- H_k^T + R_k)^{-1}
+\]
+\[
+\delta\mathbf{x}_k^+ = K_k \mathbf{y}_k
+\]
+
+The nominal state is then updated using the composition operator (standard addition for translation, quaternion multiplication for attitude):
+\[
+\mathbf{x}_k^+ = \mathbf{x}_k^- \oplus \delta\mathbf{x}_k^+
+\]
+
+Finally, the error-state covariance is updated to reflect the newly incorporated information:
+\[
+P_k^+ = (I - K_k H_k) P_k^-
+\]
+
+\paragraph{Magnetometer Measurement Function and Jacobian:}
+The magnetometer measures the local Earth magnetic field vector in the body frame ($\mathbf{B}_B$). We map the known reference magnetic field from the NED frame ($\mathbf{B}_{NED}$) to the Body frame:
+\[
+\mathbf{B}_B = DCM_{B \leftarrow NED} \mathbf{B}_{NED}
+\]
+
+Accounting for the error state mapping $\mathbf{B}_B = DCM_{B \leftarrow NED} (I - [\delta\boldsymbol{\theta} \times]) \mathbf{B}_{NED}$, the measurement Jacobian $H_{mag} = \frac{\partial \mathbf{h}_{mag}}{\partial \delta\mathbf{x}}$ becomes:
+\[
+H_{mag} = \begin{bmatrix} 0_{3\times3} & 0_{3\times3} & [DCM_{B \leftarrow NED} \mathbf{B}_{NED} \times] \end{bmatrix}
+\]
+
+\paragraph{Barometer Measurement Function and Jacobian:}
+The barometer measures ambient pressure $p$ to derive relative altitude $h_{baro}$ above a ground datum $p_0$:
+\[
+h_{baro} = \left(\left(\frac{p}{p_0}\right)^{\frac{1}{5.256}} - 1\right)\frac{T_0 + 273.15}{L}
+\]
+
+Where $L = -0.0065 K/m$ and $T_0 = 15 C$. In the NED frame, the Down component ($r_D$) represents negative altitude. Therefore, the measurement model mapping the nominal state to the barometer observation is $h(\mathbf{x}) = -r_{NED, D}$.
+
+The corresponding $1 \times 9$ measurement Jacobian $H_{baro} = \frac{\partial h_{baro}}{\partial \delta\mathbf{x}}$ directly targets the Z-axis (Down) component of the position error state:
+\[
+H_{baro} = \begin{bmatrix} 0 & 0 & -1 & 0_{1\times3} & 0_{1\times3} \end{bmatrix}
+\]
+
+\subsubsection{Derivation of Algebraic Apogee Altitude Prediction}
+
+To derive the apogee altitude, we begin with Newton's Second Law of Motion for a projectile in unpowered vertical ascent. The two forces acting on the body are gravity and aerodynamic drag, both of which act downwards (in the negative $z$ direction) opposing the upward velocity $v_z$. 
+
+The equation of motion is:
+\begin{equation}
+    m \frac{dv_z}{dt} = -mg - F_D
+\end{equation}
+
+Where the aerodynamic drag force $F_D$ is defined as:
+\begin{equation}
+    F_D = \frac{1}{2} \rho S_{REF} C_D v_z^2
+\end{equation}
+
+Substituting the drag force into the equation of motion yields:
+\begin{equation}
+    m \frac{dv_z}{dt} = -mg - \frac{1}{2} \rho S_{REF} C_D v_z^2
+\end{equation}
+
+Since we want to find the apogee altitude as a function of distance rather than time, we can apply the chain rule to the acceleration term to relate velocity directly to altitude $z$:
+\begin{equation}
+    \frac{dv_z}{dt} = \frac{dv_z}{dz} \frac{dz}{dt} = v_z \frac{dv_z}{dz}
+\end{equation}
+
+Substituting this into the equation of motion gives:
+\begin{equation}
+    m v_z \frac{dv_z}{dz} = -mg - \frac{1}{2} \rho S_{REF} C_D v_z^2
+\end{equation}
+
+Next, we separate the variables $v_z$ and $z$ to prepare for integration:
+\begin{equation}
+    dz = \frac{m v_z}{-mg - \frac{1}{2} \rho S_{REF} C_D v_z^2} dv_z
+\end{equation}
+
+We integrate both sides from the initial state (altitude $z_0$, velocity $v_{z0}$) to the apogee state. At apogee, the altitude is $h_{apogee}$ and the vertical velocity is zero ($0$):
+\begin{equation}
+    \int_{z_0}^{h_{apogee}} dz = \int_{v_{z0}}^{0} \frac{m v_z}{-mg - \frac{1}{2} \rho S_{REF} C_D v_z^2} dv_z
+\end{equation}
+
+The left side evaluates simply to $h_{apogee} - z_0$. For the right side, we can factor out a negative sign and perform a $u$-substitution. Let $u = mg + \frac{1}{2} \rho S_{REF} C_D v_z^2$. The differential is $du = \rho S_{REF} C_D v_z dv_z$, which means $v_z dv_z = \frac{du}{\rho S_{REF} C_D}$. 
+
+Applying this substitution, the integral evaluates to a natural logarithm:
+\begin{equation}
+    h_{apogee} - z_0 = -\frac{m}{\rho S_{REF} C_D} \left[ \ln \left( mg + \frac{1}{2} \rho S_{REF} C_D v_z^2 \right) \right]_{v_{z0}}^{0}
+\end{equation}
+
+Evaluating at the bounds (from $v_{z0}$ to $0$):
+\begin{equation}
+    h_{apogee} - z_0 = -\frac{m}{\rho S_{REF} C_D} \left( \ln(mg) - \ln \left( mg + \frac{1}{2} \rho S_{REF} C_D v_{z0}^2 \right) \right)
+\end{equation}
+
+Finally, some algebraic manipulation gives the completed derived equation for the apogee altitude:
+\begin{equation}
+    h_{apogee} = z_0 + \frac{m}{\rho S_{REF} C_D} \ln \left( 1 + \frac{v_{z0}^2 \rho S_{REF} C_D}{2mg} \right)
+\end{equation}
 
 
 This redundant architecture was specifically implemented to comply with \req{EuRoC-LV-RQT-0250}, ensuring dual-fault tolerance across all recovery ignition lines.

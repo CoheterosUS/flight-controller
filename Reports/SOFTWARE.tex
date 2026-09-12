@@ -85,9 +85,9 @@ In the \textbf{Pre-launch} state, the rocket is on the launch rail, fully calibr
 
 During the \textbf{Boost} state the motor is active and the vehicle experiences sustained positive acceleration. The transition to \emph{Coast} occurs when the measured acceleration drops below the configured threshold (\cfg{BOOST\_COAST\_ACCEL\_Y\_THRESHOLD}) for the required number of consecutive samples (\cfg{BOOST\_COAST\_CONSECUTIVE\_SAMPLES}), indicating motor burnout.
 
-The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}).
+The \textbf{Coast} state represents the unpowered ascent phase after motor burnout. The transition to \emph{Active Control} occurs when the barometric altitude exceeds a configurable height threshold (\cfg{COAST\_ACTIVE\_CONTROL\_BAROM\_ALT\_THRESHOLD}) \req{EuRoC-LV-RQT-0680}.
 
-During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee} (EuRoC-LV-RQT-0350). Each criterion can be individually enabled or disabled via its corresponding configuration flag:
+During the \textbf{Active Control} phase the vehicle is in ascending ballistic flight. The active airbrake control algorithm (detailed in Section~\ref{subsec:active_flight_control}) modulates drag to converge on the target apogee. Multiple apogee detection criteria are monitored redundantly in a logical OR configuration, any single criterion triggers the transition to \emph{Apogee} \req{EuRoC-LV-RQT-0350}. Each criterion can be individually enabled or disabled via its corresponding configuration flag:
 \begin{itemize}
     \item Barometric altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_BAROM\_ALT\_THRESHOLD}).
     \item GPS altitude $\geq$ threshold (\cfg{ACTIVE\_CONTROL\_APOGEE\_GPS\_ALT\_THRESHOLD}).
@@ -99,7 +99,7 @@ During the \textbf{Active Control} phase the vehicle is in ascending ballistic f
 
 On entry to the \textbf{Apogee} state, the drogue parachute pyrotechnic channel is immediately fired via the Powerboard relay driver (see Section~\ref{subsubsection:avionics_bay}). The transition to \emph{Main Parachute} occurs when either the barometric altitude descends to the configured threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}) or the configured timeout elapses (\cfg{APOGEE\_MAIN\_PARACHUTE\_DELAY\_MS}, enabled via \cfg{APOGEE\_MAIN\_PARACHUTE\_DELAY\_ENABLED}).
 
-On entry to the \textbf{Main Parachute} state, the main parachute pyrotechnic channel is fired. Per EuRoC competition rules, the main parachute must not be deployed at an altitude higher than 450\,m AGL (EuRoC-LV-RQT-0370); this limit is enforced through the configurable threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}). A landing confirmation counter is initialized. The transition to \emph{Landed} requires both conditions to be satisfied simultaneously for the configured number of consecutive samples (\cfg{MAIN\_PARACHUTE\_LANDED\_CONSECUTIVE\_SAMPLES}):
+On entry to the \textbf{Main Parachute} state, the main parachute pyrotechnic channel is fired. Per EuRoC competition rules, the main parachute must not be deployed at an altitude higher than 450\,m AGL \req{EuRoC-LV-RQT-0370}; this limit is enforced through the configurable threshold (\cfg{APOGEE\_MAIN\_PARACHUTE\_BAROM\_ALT\_THRESHOLD}). A landing confirmation counter is initialized. The transition to \emph{Landed} requires both conditions to be satisfied simultaneously for the configured number of consecutive samples (\cfg{MAIN\_PARACHUTE\_LANDED\_CONSECUTIVE\_SAMPLES}):
 \begin{itemize}
     \item Barometric altitude $\leq$ threshold (\cfg{MAIN\_PARACHUTE\_LANDED\_BAROM\_ALT\_THRESHOLD}).
     \item Barometric vertical velocity $\leq$ threshold (\cfg{MAIN\_PARACHUTE\_LANDED\_BAROM\_VEL\_Y\_THRESHOLD}).
@@ -136,7 +136,7 @@ The 2-pin interface encodes a 2-bit status word driven by the primary controller
 
 Under nominal operation, the primary controller holds both pins high (\texttt{11}). If the primary detects a serious sensor fault or becomes unresponsive (connection loss), the signal defaults to \texttt{00}, triggering automatic handover. The redundant computer, running the state machine independently using its own sensor suite, then assumes active control of the airbrake servos for the remainder of the flight.
 
-Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. The CATS Vega must fly the specific firmware version mandated by the EuRoC organization (EuRoC-LV-RQT-0450). It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
+Separately, a COTS CATS Vega flight computer (Section~\ref{subsubsection:avionics_bay}) runs its own open-source firmware with independent apogee detection and has dedicated access to the recovery pyrotechnic channels. The CATS Vega must fly the specific firmware version mandated by the EuRoC organization \req{EuRoC-LV-RQT-0450}. It operates fully decoupled from the SRAD flight software and serves as a last-resort recovery backup.
 
 \paragraph{Confirmation Counter Mechanism}
 
