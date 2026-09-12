@@ -14,6 +14,7 @@ void MainParachuteStateEntry(SystemContext_t *Context);
 void LandedStateEntry(SystemContext_t *Context);
 void GroundAbortStateEntry(SystemContext_t *Context);
 void DescentAbortStateEntry(SystemContext_t *Context);
+void AscentAbortStateEntry(SystemContext_t *Context);
 
 SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData);
 SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t FlightData);
@@ -26,5 +27,6 @@ SystemState_t MainParachuteStateHandler(SystemContext_t *Context, FlightData_t F
 SystemState_t LandedStateHandler(SystemContext_t *Context, FlightData_t FlightData);
 SystemState_t GroundAbortStateHandler(SystemContext_t *Context, FlightData_t FlightData);
 SystemState_t DescentAbortStateHandler(SystemContext_t *Context, FlightData_t FlightData);
+SystemState_t AscentAbortStateHandler(SystemContext_t *Context, FlightData_t FlightData);
 
 #endif // STATEHANDLERS_H

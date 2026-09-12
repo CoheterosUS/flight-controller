@@ -4,7 +4,7 @@ The primary flight software running on the Baseboard's STM32H723VGT6 microcontro
 
 \paragraph{State Machine Overview}
 
-The flight state machine comprises 11~states organized into four functional groups: ground operations, powered and ballistic flight, recovery, and terminal states. Figure~\ref{fig:state_machine} illustrates the complete state diagram with all transition conditions.
+The flight state machine comprises 12~states organized into four functional groups: ground operations, powered and ballistic flight, recovery, and terminal states. Figure~\ref{fig:state_machine} illustrates the complete state diagram with all transition conditions.
 
 \begin{figure}[H]
 \centering
@@ -23,19 +23,20 @@ The flight state machine comprises 11~states organized into four functional grou
 ]
 
 % --- Nominal flow: vertical column ---
-\node[groundst]   at (0, 0)     (idle)   {1. Idle};
-\node[groundst]   at (0, -2.4)  (cal)    {2. Calibration};
-\node[groundst]   at (0, -4.8)  (pre)    {3. Pre-launch};
-\node[flightst]   at (0, -7.2)  (boost)  {4. Boost};
-\node[flightst]   at (0, -9.6)  (coast)  {5. Coast};
-\node[flightst]   at (0, -12.0) (actrl)  {6. Active\\Control};
-\node[pyrost]     at (0, -14.4) (apogee) {7. Apogee\\{\scriptsize\textit{Drogue}}};
-\node[pyrost]     at (0, -16.8) (main)   {8. Main\\Parachute};
-\node[terminalst] at (0, -19.2) (landed) {9. Landed};
+\node[groundst]   at (0, 0)     (idle)   {Idle};
+\node[groundst]   at (0, -2.4)  (cal)    {Calibration};
+\node[groundst]   at (0, -4.8)  (pre)    {Pre-launch};
+\node[flightst]   at (0, -7.2)  (boost)  {Boost};
+\node[flightst]   at (0, -9.6)  (coast)  {Coast};
+\node[flightst]   at (0, -12.0) (actrl)  {Active\\Control};
+\node[pyrost]     at (0, -14.4) (apogee) {Apogee\\{\scriptsize\textit{Drogue}}};
+\node[pyrost]     at (0, -16.8) (main)   {Main\\Parachute};
+\node[terminalst] at (0, -19.2) (landed) {Landed};
 
 % --- Abort states (right column) ---
-\node[abortst] at (6, -4.8)  (gabort) {10. Ground\\Abort};
-\node[abortst] at (6, -14.4) (dabort) {11. Descent\\Abort};
+\node[abortst] at (6, -4.8)  (gabort) {Ground\\Abort};
+\node[abortst] at (6, -9.6)  (aabort) {Coast/Control\\Abort};
+\node[abortst] at (6, -14.4) (dabort) {Descent\\Abort};
 
 % --- Nominal transitions (black solid, vertical) ---
 \draw[arr] (idle)   -- node[lbl, right] {Auto-start} (cal);
@@ -56,7 +57,14 @@ The flight state machine comprises 11~states organized into four functional grou
 \draw[cmd] (gabort.north) |- node[lbl, above, pos=0.8] {CMD Reset} (idle.east);
 
 % --- Descent abort (red solid, from Apogee) ---
-\draw[faultarr] (apogee.east) -- node[lbl, above] {Serious sensor\\fault} (dabort.west);
+\draw[faultarr] (apogee.east) -- node[lbl, above] {Fault} (dabort.west);
+
+% --- Coast/Control abort (red solid, diagonal from Coast and Active Control) ---
+\draw[faultarr] (coast.east) -- node[lbl, above, sloped] {Fault} (aabort.west);
+\draw[faultarr] (actrl.east) -- node[lbl, above, sloped] {Fault} (aabort.west);
+
+% --- Coast/Control abort to apogee (black solid, diagonal) ---
+\draw[arr] (aabort.south) -- node[lbl, above, sloped] {Apogee\\detected} (apogee.east);
 
 % --- Descent abort to landed (black solid) ---
 \draw[arr] (dabort.south) |- node[lbl, above, pos=0.2] {Landing\\detected} (landed.east);
@@ -111,7 +119,9 @@ On entry to the \textbf{Landed} state, all pyrotechnic channels are disarmed. Af
 
 The \textbf{Ground Abort} state is activated by system fault detection (sensor initialization failures or SD card errors) during any ground state. On entry, all pyrotechnic channels are disarmed, SD logging is stopped, and the file is closed. The operator can recover the system from this state by issuing a remote reset command, which forces a return to \emph{Idle}.
 
-The \textbf{Descent Abort} state is entered when a serious sensor fault is detected during descent. Unlike the nominal recovery sequence, this state skips the main parachute deployment, allowing the vehicle to descend under the drogue parachute alone at a higher descent rate. The flight controller can continue to operate on descent with only the barometer if needed. The state monitors barometric altitude and velocity and transitions to \emph{Landed} upon landing detection.
+The \textbf{Coast/Control Abort} state is entered when a fault is detected during the unpowered ascent phase (Coast or Active Control). On entry, the airbrake servo is commanded to full deployment to maximise aerodynamic drag and rapidly dissipate the remaining kinetic energy. The vehicle continues its ballistic arc under full braking until apogee is reached. \req{EuRoC-LV-RQT-0670}
+
+The \textbf{Descent Abort} state is entered when a fault is detected during descent. Unlike the nominal recovery sequence, this state skips the main parachute deployment, allowing the vehicle to descend under the drogue parachute alone at a higher descent rate. The flight controller can continue to operate on descent with only the barometer if needed. The state monitors barometric altitude and velocity and transitions to \emph{Landed} upon landing detection.
 
 \paragraph{Redundant Flight Computer}
 
@@ -201,7 +211,7 @@ To optimize power consumption, the flight software dynamically reconfigures the 
 \midrule
 Idle & Low power (idle) & Stopped \\
 Calibration through Main Parachute & High performance & Active (100\,Hz) \\
-Landed / Ground Abort / Descent Abort & Low power (idle) & Stopped \\
+Landed / Ground Abort / Descent Abort / Coast/Control Abort & Low power (idle) & Stopped \\
 \bottomrule
 \end{tabularx}
 \end{table}

@@ -58,6 +58,9 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
         case STATE_DESCENT_ABORT:
             DescentAbortStateEntry(SystemContext);
             break;
+        case STATE_ASCENT_ABORT:
+            AscentAbortStateEntry(SystemContext);
+            break;
         default:
             break;
     }
@@ -99,6 +102,7 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 			break;
 		case STATE_GROUND_ABORT:
 		case STATE_DESCENT_ABORT:
+		case STATE_ASCENT_ABORT:
 		case STATE_LANDED:
 			StopSensorTimers();
 			if (BMP581_Mode_Idle(BMP581_HANDLE) != HAL_OK) {
@@ -175,6 +179,9 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 			break;
 		case STATE_DESCENT_ABORT:
 			return DescentAbortStateHandler(SystemContext, SensorData);
+			break;
+		case STATE_ASCENT_ABORT:
+			return AscentAbortStateHandler(SystemContext, SensorData);
 			break;
 		default:
 			// Should not be able to reach

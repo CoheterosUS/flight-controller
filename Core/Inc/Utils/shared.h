@@ -31,6 +31,7 @@ typedef enum {
 
     STATE_GROUND_ABORT,
     STATE_DESCENT_ABORT,
+    STATE_ASCENT_ABORT,
 
     STATE_MAX           // Table size
 } SystemState_t;
