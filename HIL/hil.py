@@ -11,12 +11,21 @@ PACKET_FOOTER = 0xBE
 COMMAND_RESET = 0x01
 COMMAND_GROUND_ABORT = 0x02
 COMMAND_CALIBRATION = 0x03
+COMMAND_DROGUE = 0x04
+COMMAND_LANDED = 0x05
 COMMAND_HIL_DATA = 0x10
+COMMAND_GPS_DATA = 0x20
 
 GRAVITY = 9.81
 SEA_LEVEL_PRESSURE = 101325.0
 TEMPERATURE_C = 25.0
 SEND_RATE_HZ = 100
+GPS_SEND_RATE_HZ = 5
+
+GPS_LATITUDE = 286082000
+GPS_LONGITUDE = -812000000
+GPS_ALTITUDE_ASL_BASELINE_M = 90.0
+GPS_SATELLITES = 8
 
 
 def build_packet(command, payload=b""):
@@ -35,6 +44,19 @@ def build_hil_packet(accel, gyro, mag, pressure, temperature):
     return build_packet(COMMAND_HIL_DATA, payload)
 
 
+def build_gps_packet(unix_time, milliseconds, latitude, longitude, altitude_mm, satellites):
+    payload = struct.pack(
+        "<IHiiib",
+        unix_time,
+        milliseconds,
+        latitude,
+        longitude,
+        altitude_mm,
+        satellites,
+    )
+    return build_packet(COMMAND_GPS_DATA, payload)
+
+
 def build_command_packet(command):
     return build_packet(command)
 
@@ -51,7 +73,7 @@ class FlightProfile:
         self.landed_time = 5.0
         self.drogue_descent_rate = 15.0
         self.main_descent_rate = 5.0
-        self.main_deploy_alt = 500.0
+        self.main_deploy_alt = 450.0
 
         self.burn_end_vel = (self.thrust_accel - GRAVITY) * self.burn_time
         self.burn_end_alt = 0.5 * (self.thrust_accel - GRAVITY) * self.burn_time ** 2
@@ -84,7 +106,7 @@ class FlightProfile:
             t_phase -= self.ground_time
 
             if t_phase < self.burn_time:
-                phase = "burn"
+                phase = "boost"
                 accel[1] = self.thrust_accel - GRAVITY
                 altitude = 0.5 * (self.thrust_accel - GRAVITY) * t_phase ** 2
                 gyro[0] = math.sin(t_phase / self.burn_time * math.pi) * 5.0
@@ -93,7 +115,7 @@ class FlightProfile:
                 t_phase -= self.burn_time
 
                 if t_phase < self.coast_time:
-                    phase = "coast"
+                    phase = "active_control"
                     accel[1] = -GRAVITY
                     altitude = (self.burn_end_alt
                                 + self.burn_end_vel * t_phase
@@ -103,7 +125,7 @@ class FlightProfile:
                     t_phase -= self.coast_time
 
                     if t_phase < self.drogue_time:
-                        phase = "drogue"
+                        phase = "apogee"
                         altitude = self.apogee_alt - self.drogue_descent_rate * t_phase
                         accel[1] = -GRAVITY
 
@@ -111,7 +133,7 @@ class FlightProfile:
                         t_phase -= self.drogue_time
 
                         if t_phase < self.main_time:
-                            phase = "main"
+                            phase = "main_parachute"
                             altitude = self.main_deploy_alt - self.main_descent_rate * t_phase
                             accel[1] = -GRAVITY
 
@@ -128,25 +150,36 @@ def run(port, baud):
     ser = serial.Serial(port, baud, timeout=1)
     profile = FlightProfile()
     interval = 1.0 / SEND_RATE_HZ
+    gps_interval = 1.0 / GPS_SEND_RATE_HZ
 
     print(f"Connected to {port} at {baud} baud")
     print(f"Flight profile: {profile.total_time:.1f}s total")
-    print(f"  Burn:   {profile.burn_time:.1f}s  (accel {profile.thrust_accel:.0f} m/s²)")
-    print(f"  Coast:  {profile.coast_time:.1f}s  (apogee {profile.apogee_alt:.0f}m)")
-    print(f"  Drogue: {profile.drogue_time:.1f}s  ({profile.drogue_descent_rate:.0f} m/s to {profile.main_deploy_alt:.0f}m)")
-    print(f"  Main:   {profile.main_time:.1f}s  ({profile.main_descent_rate:.0f} m/s to ground)")
+    print(f"  Boost:          {profile.burn_time:.1f}s  (accel {profile.thrust_accel:.0f} m/s²)")
+    print(f"  Active Control: {profile.coast_time:.1f}s  (apogee {profile.apogee_alt:.0f}m)")
+    print(f"  Apogee:         {profile.drogue_time:.1f}s  ({profile.drogue_descent_rate:.0f} m/s to {profile.main_deploy_alt:.0f}m)")
+    print(f"  Main Parachute: {profile.main_time:.1f}s  ({profile.main_descent_rate:.0f} m/s to ground)")
     print()
 
     input("Press Enter to send CALIBRATION command...")
     ser.write(build_command_packet(COMMAND_CALIBRATION))
     print("Sent CALIBRATION command")
 
-    print("Sending ground data for calibration (40s)...")
+    print("Sending ground data + GPS for calibration (40s)...")
     calibration_time = 40.0
     t = 0.0
+    last_gps_t = -gps_interval
+    base_unix_time = int(time.time())
     while t < calibration_time:
         accel, gyro, mag, pressure, temperature, _, _ = profile.sample(0.0)
         ser.write(build_hil_packet(accel, gyro, mag, pressure, temperature))
+
+        if t - last_gps_t >= gps_interval:
+            unix_time = base_unix_time + int(t)
+            ms = int((t % 1.0) * 1000)
+            altitude_mm = int(GPS_ALTITUDE_ASL_BASELINE_M * 1000)
+            ser.write(build_gps_packet(unix_time, ms, GPS_LATITUDE, GPS_LONGITUDE, altitude_mm, GPS_SATELLITES))
+            last_gps_t = t
+
         time.sleep(interval)
         t += interval
         if int(t) != int(t - interval):
@@ -158,13 +191,22 @@ def run(port, baud):
 
     t = 0.0
     last_phase = ""
+    last_gps_t = -gps_interval
+    base_unix_time = int(time.time())
     while t < profile.total_time:
         accel, gyro, mag, pressure, temperature, phase, altitude = profile.sample(t)
         packet = build_hil_packet(accel, gyro, mag, pressure, temperature)
         ser.write(packet)
 
+        if t - last_gps_t >= gps_interval:
+            unix_time = base_unix_time + int(t)
+            ms = int((t % 1.0) * 1000)
+            altitude_asl_mm = int((altitude + GPS_ALTITUDE_ASL_BASELINE_M) * 1000)
+            ser.write(build_gps_packet(unix_time, ms, GPS_LATITUDE, GPS_LONGITUDE, altitude_asl_mm, GPS_SATELLITES))
+            last_gps_t = t
+
         if phase != last_phase:
-            print(f"[{t:6.2f}s] Phase: {phase:<12s}  Altitude: {altitude:8.1f}m  AccelY: {accel[1]:7.2f} m/s²")
+            print(f"[{t:6.2f}s] Phase: {phase:<16s}  Altitude: {altitude:8.1f}m  AccelY: {accel[1]:7.2f} m/s²")
             last_phase = phase
 
         time.sleep(interval)
