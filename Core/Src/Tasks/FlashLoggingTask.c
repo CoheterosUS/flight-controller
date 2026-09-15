@@ -17,6 +17,8 @@ static uint8_t ActiveCount = 0;
 
 static SemaphoreHandle_t PageReadySemaphore;
 
+volatile uint32_t dbg_flash_pages_written = 0;
+
 SemaphoreHandle_t FlashSPISemaphore;
 
 void CreateFlashLoggingTask(SystemContext_t *SystemContext, const UBaseType_t Priority, const uint16_t StackSize) {
@@ -78,6 +80,7 @@ void FlashWriterTask(void *pvParameters) {
         if (W25Q_PageProgramDMA(W25Q_HANDLE, Address, W25Q_DMABuffer, W25Q_PAGE_SIZE) == HAL_OK) {
             xSemaphoreTake(FlashSPISemaphore, pdMS_TO_TICKS(10));
             W25Q_AdvanceWritePointer(W25Q_PAGE_SIZE);
+            dbg_flash_pages_written++;
         }
     }
 }

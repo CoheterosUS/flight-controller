@@ -1,7 +1,9 @@
 #include "Sensors/W25Q32JV.h"
 #include "Utils/shared.h"
 #include "Managers/StructManager.h"
+#include "fatfs.h"
 #include <string.h>
+#include <stdio.h>
 
 #define FLASH_HEADER_MAGIC      0x464C5348
 #define FLASH_HEADER_ADDRESS    0x00000000
@@ -139,4 +141,52 @@ void W25Q_LoggingStop(void) {
     W25Q_UpdateHeader();
     W25Q_ProtectAll(W25Q_HANDLE);
     W25Q_Initialized = false;
+}
+
+bool W25Q_MaintenanceMode(void) {
+#if FLASH_DUMP_TO_SD && !FLASH_ERASE_ALL
+    W25Q_DumpToSD();
+    return true;
+#elif FLASH_ERASE_ALL && !FLASH_DUMP_TO_SD
+    W25Q_Init();
+    W25Q_EraseAll();
+    return true;
+#else
+    return false;
+#endif
+}
+
+bool W25Q_DumpToSD(void) {
+    if (!W25Q_Init()) return false;
+
+    if (f_mount(&SDFatFS, SDPath, 1) != FR_OK) return false;
+
+    uint32_t Address = FLASH_DATA_START;
+    uint32_t End = Header.WritePointer;
+    uint32_t PrevTick = 0;
+    uint16_t FlightNum = 0;
+    bool FileOpen = false;
+    FIL File;
+    FlashLogRecord_t Record;
+
+    while (Address < End) {
+        if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Record, sizeof(FlashLogRecord_t)) != HAL_OK) break;
+
+        if (Address == FLASH_DATA_START || Record.Tick < PrevTick) {
+            if (FileOpen) f_close(&File);
+            char Name[16];
+            snprintf(Name, sizeof(Name), "FLASH_%u.BIN", FlightNum++);
+            if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
+            FileOpen = true;
+        }
+
+        UINT BytesWritten;
+        f_write(&File, &Record, sizeof(FlashLogRecord_t), &BytesWritten);
+        PrevTick = Record.Tick;
+        Address += sizeof(FlashLogRecord_t);
+    }
+
+    if (FileOpen) f_close(&File);
+    f_mount(NULL, SDPath, 1);
+    return true;
 }
