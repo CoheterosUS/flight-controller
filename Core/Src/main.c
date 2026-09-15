@@ -34,6 +34,7 @@
 #include <Tasks/SensorConfigTask.h>
 #include <Tasks/FlashLoggingTask.h>
 #include "Sensors/Sensors.h"
+#include "Sensors/W25Q32JV.h"
 #include "Protocol/Protocol.h"
 
 #include <timers.h>
@@ -197,6 +198,8 @@ int main(void)
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
+  if (W25Q_MaintenanceMode()) for (;;) {}
+
   HAL_TIM_Base_Start(&htim2);
 
   SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(SDLogRecord_t));
