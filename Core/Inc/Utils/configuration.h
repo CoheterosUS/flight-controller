@@ -26,7 +26,7 @@
 #define GYRO_CALIBRATION_SAMPLES                1000
 
 // GPS Configuration
-#define GPS_FIX_REQUIRED             1
+#define GPS_FIX_REQUIRED             0
 #define GPS_FIX_MIN_SATELLITES       1
 #define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
@@ -46,7 +46,7 @@
 // Flash Configuration
 #define FLASH_DUMP_TO_SD                    0
 #define FLASH_ERASE_ALL                     0
-#define FLASH_LOGGING_DIVIDER               10
+#define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
 #define STACK_SIZE_FLASH_LOGGING            512
 #define FLASH_LOGGING_QUEUE_LENGTH          10
 #define FLASH_RECORDS_PER_PAGE              8
