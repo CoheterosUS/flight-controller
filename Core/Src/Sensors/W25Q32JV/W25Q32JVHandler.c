@@ -89,6 +89,16 @@ bool W25Q_Init(void) {
 void W25Q_NewFlight(void) {
     Header.FlightCount++;
     W25Q_WriteHeader(W25Q_HANDLE);
+
+    FlashLogRecord_t Marker = {0};
+    Marker.Sync = 0xCAFE;
+    Marker.State = 0xFF;
+    Marker.SyncEnd = 0xBE;
+
+    if (W25Q_HasSpace(W25Q_PAGE_SIZE)) {
+        W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
+        Header.WritePointer += W25Q_PAGE_SIZE;
+    }
 }
 
 uint32_t W25Q_GetWritePointer(void) {
@@ -163,7 +173,6 @@ bool W25Q_DumpToSD(void) {
 
     uint32_t Address = FLASH_DATA_START;
     uint32_t End = Header.WritePointer;
-    uint32_t PrevTick = 0;
     uint16_t FlightNum = 0;
     bool FileOpen = false;
     FIL File;
@@ -172,17 +181,20 @@ bool W25Q_DumpToSD(void) {
     while (Address < End) {
         if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Record, sizeof(FlashLogRecord_t)) != HAL_OK) break;
 
-        if (Address == FLASH_DATA_START || Record.Tick < PrevTick) {
+        if (Record.State == 0xFF) {
             if (FileOpen) f_close(&File);
             char Name[16];
             snprintf(Name, sizeof(Name), "FLASH_%u.BIN", FlightNum++);
             if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
             FileOpen = true;
+            Address += sizeof(FlashLogRecord_t);
+            continue;
         }
 
-        UINT BytesWritten;
-        f_write(&File, &Record, sizeof(FlashLogRecord_t), &BytesWritten);
-        PrevTick = Record.Tick;
+        if (FileOpen) {
+            UINT BytesWritten;
+            f_write(&File, &Record, sizeof(FlashLogRecord_t), &BytesWritten);
+        }
         Address += sizeof(FlashLogRecord_t);
     }
 
