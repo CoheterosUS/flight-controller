@@ -155,12 +155,10 @@ void W25Q_LoggingStop(void) {
 
 bool W25Q_MaintenanceMode(void) {
 #if FLASH_DUMP_TO_SD && !FLASH_ERASE_ALL
-    W25Q_DumpToSD();
-    return true;
+    return W25Q_DumpToSD();
 #elif FLASH_ERASE_ALL && !FLASH_DUMP_TO_SD
-    W25Q_Init();
-    W25Q_EraseAll();
-    return true;
+    if (!W25Q_Init()) return false;
+    return W25Q_EraseAll() == HAL_OK;
 #else
     return false;
 #endif
