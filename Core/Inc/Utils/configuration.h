@@ -44,7 +44,7 @@
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
 
 // Flash Configuration
-#define FLASH_DUMP_TO_SD                    0
+#define FLASH_DUMP_TO_SD                    1
 #define FLASH_ERASE_ALL                     0
 #define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
 #define STACK_SIZE_FLASH_LOGGING            512
