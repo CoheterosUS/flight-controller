@@ -44,6 +44,17 @@ void CreateFlashLoggingTask(SystemContext_t *SystemContext, const UBaseType_t Pr
     );
 }
 
+void CreateFlashMaintenanceTask(const UBaseType_t Priority, const uint16_t StackSize) {
+    xTaskCreate(
+        FlashMaintenanceTask,
+        "FLASH_MAINT",
+        StackSize,
+        NULL,
+        Priority,
+        NULL
+    );
+}
+
 void FlashProducerTask(void *pvParameters) {
     SystemContext_t *SystemContext = pvParameters;
 
@@ -83,4 +94,12 @@ void FlashWriterTask(void *pvParameters) {
             dbg_flash_pages_written++;
         }
     }
+}
+
+void FlashMaintenanceTask(void *pvParameters) {
+    (void)pvParameters;
+
+    W25Q_MaintenanceMode();
+
+    for (;;) vTaskDelay(portMAX_DELAY);
 }

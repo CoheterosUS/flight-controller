@@ -48,6 +48,7 @@
 #define FLASH_ERASE_ALL                     0
 #define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
 #define STACK_SIZE_FLASH_LOGGING            512
+#define STACK_SIZE_FLASH_MAINTENANCE        1024
 #define FLASH_LOGGING_QUEUE_LENGTH          10
 #define FLASH_RECORDS_PER_PAGE              8
 

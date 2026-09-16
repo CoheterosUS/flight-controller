@@ -198,8 +198,9 @@ int main(void)
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
-  if (W25Q_MaintenanceMode()) for (;;) {}
-
+#if FLASH_DUMP_TO_SD || FLASH_ERASE_ALL
+  CreateFlashMaintenanceTask(tskIDLE_PRIORITY + 1, STACK_SIZE_FLASH_MAINTENANCE);
+#else
   HAL_TIM_Base_Start(&htim2);
 
   SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(SDLogRecord_t));
@@ -217,6 +218,7 @@ int main(void)
   TimerBMP581 = xTimerCreate("BMP581", pdMS_TO_TICKS(25), pdTRUE, NULL, BMP581_Timer_Callback);
   TimerIIS2MDCTR = xTimerCreate("IIS2MDCTR", pdMS_TO_TICKS(50), pdTRUE, NULL, IIS2MDCTR_Timer_Callback);
   TimerBattery = xTimerCreate("Battery", pdMS_TO_TICKS(500), pdTRUE, NULL, Battery_Timer_Callback);
+#endif
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
 
