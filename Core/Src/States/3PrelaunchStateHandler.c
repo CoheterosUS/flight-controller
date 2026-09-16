@@ -5,7 +5,7 @@
 static ConfirmCounter_t BoostConfirm;
 
 void PrelaunchStateEntry(SystemContext_t *ctx) {
-    BurnConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BURN_CONSECUTIVE_SAMPLES };
+    BoostConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES };
     ctx->FlashLoggingEnabled = true;
 }
 
