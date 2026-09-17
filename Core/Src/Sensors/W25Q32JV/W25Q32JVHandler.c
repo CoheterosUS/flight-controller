@@ -9,15 +9,7 @@
 #define FLASH_HEADER_ADDRESS    0x00000000
 #define FLASH_DATA_START        W25Q_SECTOR_SIZE
 
-#pragma pack(push, 1)
-typedef struct {
-    uint32_t Magic;
-    uint32_t FlightCount;
-    uint32_t WritePointer;
-} FlashHeader_t;
-#pragma pack(pop)
-
-static FlashHeader_t Header;
+static uint32_t WritePointer;
 static bool W25Q_Initialized = false;
 
 static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
@@ -26,22 +18,29 @@ static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
     return (MFR == W25Q_JEDEC_MFR && Type == W25Q_JEDEC_TYPE && Cap == W25Q_JEDEC_CAPACITY);
 }
 
-static uint32_t W25Q_ScanForWritePointer(SPI_HandleTypeDef *Handle, uint32_t StartAddress) {
-    uint8_t Byte;
-    uint32_t Address = StartAddress;
+static HAL_StatusTypeDef W25Q_FindWritePointer(SPI_HandleTypeDef *Handle, uint32_t *Result) {
+    uint32_t Low = FLASH_DATA_START / W25Q_PAGE_SIZE;
+    uint32_t High = W25Q_PAGE_COUNT;
 
-    while (Address < W25Q_TOTAL_SIZE) {
-        if (W25Q_ReadData(Handle, Address, &Byte, 1) != HAL_OK) break;
-        if (Byte == 0xFF) return Address;
-        Address += sizeof(FlashLogRecord_t);
+    while (Low < High) {
+        uint32_t Mid = Low + (High - Low) / 2;
+        uint8_t Byte;
+        if (W25Q_ReadData(Handle, Mid * W25Q_PAGE_SIZE, &Byte, 1) != HAL_OK) return HAL_ERROR;
+
+        if (Byte == 0xFF) {
+            High = Mid;
+        } else {
+            Low = Mid + 1;
+        }
     }
 
-    return Address;
+    *Result = Low * W25Q_PAGE_SIZE;
+    return HAL_OK;
 }
 
-static HAL_StatusTypeDef W25Q_WriteHeader(SPI_HandleTypeDef *Handle) {
-    if (W25Q_SectorErase(Handle, FLASH_HEADER_ADDRESS) != HAL_OK) return HAL_ERROR;
-    return W25Q_PageProgram(Handle, FLASH_HEADER_ADDRESS, (const uint8_t *)&Header, sizeof(FlashHeader_t));
+static HAL_StatusTypeDef W25Q_WriteMagic(SPI_HandleTypeDef *Handle) {
+    const uint32_t Magic = FLASH_HEADER_MAGIC;
+    return W25Q_PageProgram(Handle, FLASH_HEADER_ADDRESS, (const uint8_t *)&Magic, sizeof(Magic));
 }
 
 bool W25Q_Init(void) {
@@ -59,26 +58,23 @@ bool W25Q_Init(void) {
         return false;
     }
 
-    FlashHeader_t ReadHeader;
-    if (W25Q_ReadData(Handle, FLASH_HEADER_ADDRESS, (uint8_t *)&ReadHeader, sizeof(FlashHeader_t)) != HAL_OK) {
+    uint32_t Magic;
+    if (W25Q_ReadData(Handle, FLASH_HEADER_ADDRESS, (uint8_t *)&Magic, sizeof(Magic)) != HAL_OK) {
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
 
-    if (ReadHeader.Magic == 0xFFFFFFFF) {
-        Header.Magic = FLASH_HEADER_MAGIC;
-        Header.FlightCount = 0;
-        Header.WritePointer = FLASH_DATA_START;
-
-
-        if (W25Q_WriteHeader(Handle) != HAL_OK) {
+    if (Magic == 0xFFFFFFFF) {
+        if (W25Q_WriteMagic(Handle) != HAL_OK) {
             SystemFaultFlags |= W25Q_INIT_FAILED;
             return false;
         }
-    } else if (ReadHeader.Magic == FLASH_HEADER_MAGIC) {
-        Header = ReadHeader;
-        Header.WritePointer = W25Q_ScanForWritePointer(Handle, Header.WritePointer);
-    } else {
+    } else if (Magic != FLASH_HEADER_MAGIC) {
+        SystemFaultFlags |= W25Q_INIT_FAILED;
+        return false;
+    }
+
+    if (W25Q_FindWritePointer(Handle, &WritePointer) != HAL_OK) {
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
@@ -87,38 +83,27 @@ bool W25Q_Init(void) {
 }
 
 void W25Q_NewFlight(void) {
-    Header.FlightCount++;
-    W25Q_WriteHeader(W25Q_HANDLE);
-
     FlashLogRecord_t Marker = {0};
-    Marker.Sync = 0xCAFE;
+    Marker.Sync = PACKET_HEADER;
     Marker.State = 0xFF;
-    Marker.SyncEnd = 0xBE;
+    Marker.SyncEnd = PACKET_FOOTER;
 
     if (W25Q_HasSpace(W25Q_PAGE_SIZE)) {
-        W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
-        Header.WritePointer += W25Q_PAGE_SIZE;
+        W25Q_PageProgram(W25Q_HANDLE, WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
+        WritePointer += W25Q_PAGE_SIZE;
     }
 }
 
 uint32_t W25Q_GetWritePointer(void) {
-    return Header.WritePointer;
+    return WritePointer;
 }
 
 void W25Q_AdvanceWritePointer(uint16_t Bytes) {
-    Header.WritePointer += Bytes;
-}
-
-HAL_StatusTypeDef W25Q_UpdateHeader(void) {
-    return W25Q_WriteHeader(W25Q_HANDLE);
-}
-
-const FlashHeader_t *W25Q_GetHeader(void) {
-    return &Header;
+    WritePointer += Bytes;
 }
 
 bool W25Q_HasSpace(uint16_t Bytes) {
-    return (Header.WritePointer + Bytes) <= W25Q_TOTAL_SIZE;
+    return (WritePointer + Bytes) <= W25Q_TOTAL_SIZE;
 }
 
 HAL_StatusTypeDef W25Q_EraseAll(void) {
@@ -129,11 +114,8 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
     if (W25Q_UnprotectAll(Handle) != HAL_OK) return HAL_ERROR;
     if (W25Q_ChipErase(Handle) != HAL_OK) return HAL_ERROR;
 
-    Header.Magic = FLASH_HEADER_MAGIC;
-    Header.FlightCount = 0;
-    Header.WritePointer = FLASH_DATA_START;
-
-    return W25Q_WriteHeader(Handle);
+    WritePointer = FLASH_DATA_START;
+    return W25Q_WriteMagic(Handle);
 }
 
 bool W25Q_LoggingInit(void) {
@@ -148,7 +130,6 @@ void W25Q_LoggingStop(void) {
     if (!W25Q_Initialized) return;
 
     W25Q_WaitBusy(W25Q_HANDLE, 5);
-    W25Q_UpdateHeader();
     W25Q_ProtectAll(W25Q_HANDLE);
     W25Q_Initialized = false;
 }
@@ -170,7 +151,7 @@ bool W25Q_DumpToSD(void) {
     if (f_mount(&SDFatFS, SDPath, 1) != FR_OK) return false;
 
     uint32_t Address = FLASH_DATA_START;
-    uint32_t End = Header.WritePointer;
+    uint32_t End = WritePointer;
     uint16_t FlightNum = 0;
     bool FileOpen = false;
     FIL File;
@@ -179,17 +160,17 @@ bool W25Q_DumpToSD(void) {
     while (Address < End) {
         if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Record, sizeof(FlashLogRecord_t)) != HAL_OK) break;
 
-        if (Record.State == 0xFF) {
+        if (Record.Sync == PACKET_HEADER && Record.State == 0xFF) {
             if (FileOpen) f_close(&File);
             char Name[16];
             snprintf(Name, sizeof(Name), "FLASH_%u.BIN", FlightNum++);
             if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
             FileOpen = true;
-            Address += sizeof(FlashLogRecord_t);
+            Address += W25Q_PAGE_SIZE;
             continue;
         }
 
-        if (FileOpen) {
+        if (FileOpen && Record.Sync == PACKET_HEADER) {
             UINT BytesWritten;
             f_write(&File, &Record, sizeof(FlashLogRecord_t), &BytesWritten);
         }

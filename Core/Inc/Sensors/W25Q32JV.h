@@ -89,7 +89,6 @@ void W25Q_LoggingStop(void);
 void W25Q_NewFlight(void);
 uint32_t W25Q_GetWritePointer(void);
 void W25Q_AdvanceWritePointer(uint16_t Bytes);
-HAL_StatusTypeDef W25Q_UpdateHeader(void);
 bool W25Q_HasSpace(uint16_t Bytes);
 HAL_StatusTypeDef W25Q_EraseAll(void);
 bool W25Q_MaintenanceMode(void);
