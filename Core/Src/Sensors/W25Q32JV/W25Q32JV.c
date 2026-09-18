@@ -112,7 +112,10 @@ HAL_StatusTypeDef W25Q_ReadData(SPI_HandleTypeDef *Handle, uint32_t Address, uin
     W25Q_SelectCS();
     HAL_StatusTypeDef Status = HAL_SPI_Transmit(Handle, Cmd, 4, W25Q_SPI_TIMEOUT);
     if (Status == HAL_OK) {
-        Status = HAL_SPI_Receive(Handle, Data, Length, W25Q_SPI_TIMEOUT);
+        // HAL_SPI_Receive puts the H7 master in RX-only mode with a free-running clock, so any ISR
+        // longer than the 8-byte FIFO overruns it and returns HAL_ERROR. Full duplex only clocks
+        // a byte once the CPU has written one; the flash ignores DI while outputting read data.
+        Status = HAL_SPI_TransmitReceive(Handle, Data, Data, Length, W25Q_SPI_TIMEOUT);
     }
     W25Q_DeselectCS();
 
