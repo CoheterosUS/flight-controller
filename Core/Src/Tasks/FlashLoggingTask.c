@@ -91,6 +91,8 @@ void FlashWriterTask(void *pvParameters) {
 
         if (W25Q_PageProgramDMA(W25Q_HANDLE, Address, W25Q_DMABuffer, W25Q_PAGE_SIZE) == HAL_OK) {
             xSemaphoreTake(FlashSPISemaphore, pdMS_TO_TICKS(10));
+            // DMA completion only means the bytes left the MCU; the chip is still programming (tPP <= 3 ms).
+            W25Q_WaitBusy(W25Q_HANDLE, 5);
             W25Q_AdvanceWritePointer(W25Q_PAGE_SIZE);
             dbg_flash_pages_written++;
         }
