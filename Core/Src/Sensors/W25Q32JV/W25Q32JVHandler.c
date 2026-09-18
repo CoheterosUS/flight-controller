@@ -90,7 +90,8 @@ bool W25Q_Init(void) {
         dbg_w25q_init_step = 4;
         Header.Magic = FLASH_HEADER_MAGIC;
         Header.FlightCount = 0;
-        Header.WritePointer = FLASH_DATA_START;
+        // The header is only a hint; a lost header must not hide data still present in the array.
+        Header.WritePointer = W25Q_ScanForWritePointer(Handle, FLASH_DATA_START);
 
         if (W25Q_WriteHeader(Handle) != HAL_OK) {
             SystemFaultFlags |= W25Q_INIT_FAILED;
