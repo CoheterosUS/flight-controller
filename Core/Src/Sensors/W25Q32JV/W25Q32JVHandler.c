@@ -58,14 +58,6 @@ bool W25Q_Init(void) {
 
     W25Q_WP_Disable();
 
-    // A chip erase started by the previously loaded firmware survives an MCU reset and runs for up to
-    // tCE = 50 s; while BUSY the chip ignores every instruction except Read Status Register.
-    dbg_w25q_init_step = 0;
-    if (W25Q_WaitBusy(Handle, 60000) != HAL_OK) {
-        SystemFaultFlags |= W25Q_INIT_FAILED;
-        return false;
-    }
-
     dbg_w25q_init_step = 1;
     if (!W25Q_VerifyJEDECID(Handle)) {
         SystemFaultFlags |= W25Q_JEDEC_ID_FAILED;
