@@ -52,7 +52,9 @@ static HAL_StatusTypeDef W25Q_WriteHeader(SPI_HandleTypeDef *Handle) {
 bool W25Q_Init(void) {
     SPI_HandleTypeDef *Handle = W25Q_HANDLE;
 
+    W25Q_DeselectCS();
     W25Q_WP_Disable();
+    W25Q_WaitBusy(Handle, 60000);
 
     if (!W25Q_VerifyJEDECID(Handle)) {
         SystemFaultFlags |= W25Q_JEDEC_ID_FAILED;
@@ -69,6 +71,7 @@ bool W25Q_Init(void) {
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
+
     if (ReadHeader.Magic == 0xFFFFFFFF) {
         Header.Magic = FLASH_HEADER_MAGIC;
         Header.FlightCount = 0;
