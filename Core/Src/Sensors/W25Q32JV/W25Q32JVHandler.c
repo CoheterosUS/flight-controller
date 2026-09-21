@@ -2,7 +2,6 @@
 #include "Utils/shared.h"
 #include "Managers/StructManager.h"
 #include "fatfs.h"
-#include <string.h>
 #include <stdio.h>
 
 #define FLASH_HEADER_MAGIC      0x464C5348
@@ -19,9 +18,6 @@ typedef struct {
 
 static FlashHeader_t Header;
 static bool W25Q_Initialized = false;
-
-volatile uint8_t dbg_w25q_init_step = 0;
-volatile uint32_t dbg_w25q_header_magic = 0;
 
 static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
     uint8_t MFR, Type, Cap;
@@ -58,28 +54,22 @@ bool W25Q_Init(void) {
 
     W25Q_WP_Disable();
 
-    dbg_w25q_init_step = 1;
     if (!W25Q_VerifyJEDECID(Handle)) {
         SystemFaultFlags |= W25Q_JEDEC_ID_FAILED;
         return false;
     }
 
-    dbg_w25q_init_step = 2;
     if (W25Q_UnprotectAll(Handle) != HAL_OK) {
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
 
-    dbg_w25q_init_step = 3;
     FlashHeader_t ReadHeader;
     if (W25Q_ReadData(Handle, FLASH_HEADER_ADDRESS, (uint8_t *)&ReadHeader, sizeof(FlashHeader_t)) != HAL_OK) {
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
-    dbg_w25q_header_magic = ReadHeader.Magic;
-
     if (ReadHeader.Magic == 0xFFFFFFFF) {
-        dbg_w25q_init_step = 4;
         Header.Magic = FLASH_HEADER_MAGIC;
         Header.FlightCount = 0;
         // The header is only a hint; a lost header must not hide data still present in the array.
@@ -90,32 +80,27 @@ bool W25Q_Init(void) {
             return false;
         }
     } else if (ReadHeader.Magic == FLASH_HEADER_MAGIC) {
-        dbg_w25q_init_step = 5;
         Header = ReadHeader;
         Header.WritePointer = W25Q_ScanForWritePointer(Handle, Header.WritePointer);
     } else {
-        dbg_w25q_init_step = 6;
         SystemFaultFlags |= W25Q_INIT_FAILED;
         return false;
     }
 
-    dbg_w25q_init_step = 7;
     return true;
 }
 
 void W25Q_NewFlight(void) {
-    Header.FlightCount++;
+    if (!W25Q_HasSpace(W25Q_PAGE_SIZE)) return;
 
     FlashLogRecord_t Marker = {0};
     Marker.Sync = PACKET_HEADER;
     Marker.State = 0xFF;
     Marker.SyncEnd = PACKET_FOOTER;
 
-    if (W25Q_HasSpace(W25Q_PAGE_SIZE)) {
-        W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
-        Header.WritePointer += W25Q_PAGE_SIZE;
-    }
-
+    W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
+    Header.WritePointer += W25Q_PAGE_SIZE;
+    Header.FlightCount++;
     W25Q_WriteHeader(W25Q_HANDLE);
 }
 
@@ -125,14 +110,6 @@ uint32_t W25Q_GetWritePointer(void) {
 
 void W25Q_AdvanceWritePointer(uint16_t Bytes) {
     Header.WritePointer += Bytes;
-}
-
-HAL_StatusTypeDef W25Q_UpdateHeader(void) {
-    return W25Q_WriteHeader(W25Q_HANDLE);
-}
-
-const FlashHeader_t *W25Q_GetHeader(void) {
-    return &Header;
 }
 
 bool W25Q_HasSpace(uint16_t Bytes) {
@@ -167,7 +144,7 @@ void W25Q_LoggingStop(void) {
     if (!W25Q_Initialized) return;
 
     W25Q_WaitBusy(W25Q_HANDLE, 5);
-    W25Q_UpdateHeader();
+    W25Q_WriteHeader(W25Q_HANDLE);
     W25Q_ProtectAll(W25Q_HANDLE);
     W25Q_Initialized = false;
 }
@@ -192,27 +169,29 @@ bool W25Q_DumpToSD(void) {
     uint16_t FlightNum = 0;
     bool FileOpen = false;
     FIL File;
-    FlashLogRecord_t Record;
+    FlashPage_t Page;
 
     while (Address < End) {
-        if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Record, sizeof(FlashLogRecord_t)) != HAL_OK) break;
+        if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Page, sizeof(FlashPage_t)) != HAL_OK) break;
 
-        if (W25Q_IsFlightMarker(&Record)) {
+        if (W25Q_IsFlightMarker(&Page.Records[0])) {
             if (FileOpen) f_close(&File);
             char Name[16];
             snprintf(Name, sizeof(Name), "F_%02u.BIN", FlightNum++);
             if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
             FileOpen = true;
-            // The marker owns its whole page; the remaining records in it are erased.
             Address += W25Q_PAGE_SIZE;
             continue;
         }
 
-        if (FileOpen && Record.Sync == PACKET_HEADER) {
-            UINT BytesWritten;
-            f_write(&File, &Record, sizeof(FlashLogRecord_t), &BytesWritten);
+        if (FileOpen) {
+            for (uint8_t i = 0; i < FLASH_PAGE_RECORDS; i++) {
+                if (Page.Records[i].Sync != PACKET_HEADER) break;
+                UINT BytesWritten;
+                f_write(&File, &Page.Records[i], sizeof(FlashLogRecord_t), &BytesWritten);
+            }
         }
-        Address += sizeof(FlashLogRecord_t);
+        Address += W25Q_PAGE_SIZE;
     }
 
     if (FileOpen) f_close(&File);
