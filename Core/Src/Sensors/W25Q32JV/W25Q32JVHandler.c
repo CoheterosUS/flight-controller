@@ -152,6 +152,7 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
 
     W25Q_WP_Disable();
 
+    if (!W25Q_VerifyJEDECID(Handle)) return HAL_ERROR;
     if (W25Q_UnprotectAll(Handle) != HAL_OK) return HAL_ERROR;
     if (W25Q_ChipErase(Handle) != HAL_OK) return HAL_ERROR;
 
@@ -183,7 +184,6 @@ bool W25Q_MaintenanceMode(void) {
 #if FLASH_DUMP_TO_SD && !FLASH_ERASE_ALL
     return W25Q_DumpToSD();
 #elif FLASH_ERASE_ALL && !FLASH_DUMP_TO_SD
-    if (!W25Q_Init()) return false;
     return W25Q_EraseAll() == HAL_OK;
 #else
     return false;
@@ -225,5 +225,5 @@ bool W25Q_DumpToSD(void) {
 
     if (FileOpen) f_close(&File);
     f_mount(NULL, SDPath, 1);
-    return true;
+    return FlightNum > 0;
 }
