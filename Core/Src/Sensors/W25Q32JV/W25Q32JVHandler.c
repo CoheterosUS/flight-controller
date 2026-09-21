@@ -208,7 +208,7 @@ bool W25Q_DumpToSD(void) {
         if (W25Q_IsFlightMarker(&Record)) {
             if (FileOpen) f_close(&File);
             char Name[16];
-            snprintf(Name, sizeof(Name), "FLASH_%u.BIN", FlightNum++);
+            snprintf(Name, sizeof(Name), "F_%02u.BIN", FlightNum++);
             if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
             FileOpen = true;
             // The marker owns its whole page; the remaining records in it are erased.
