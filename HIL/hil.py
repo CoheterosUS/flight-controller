@@ -21,6 +21,14 @@ SEND_RATE_HZ = 100
 TELEMETRY_PACKET_SIZE = 52
 STATE_PRELAUNCH = 2
 
+PROFILE_THRUST_ACCEL = 90.0
+PROFILE_BURN_TIME = 3.0
+PROFILE_GROUND_TIME = 5.0
+PROFILE_LANDED_TIME = 5.0
+PROFILE_DROGUE_DESCENT_RATE = 25.0
+PROFILE_MAIN_DESCENT_RATE = 5.0
+PROFILE_MAIN_DEPLOY_ALT = 450.0
+
 STATE_NAMES = {
     0: "IDLE", 1: "CALIBRATION", 2: "PRELAUNCH", 3: "BOOST",
     4: "COAST", 5: "ACTIVE_CTRL", 6: "APOGEE", 7: "MAIN_CHUTE",
@@ -68,13 +76,13 @@ def pressure_from_altitude(altitude_m):
 
 class FlightProfile:
     def __init__(self):
-        self.thrust_accel = 90.0
-        self.burn_time = 3.0
-        self.ground_time = 5.0
-        self.landed_time = 5.0
-        self.drogue_descent_rate = 25.0
-        self.main_descent_rate = 5.0
-        self.main_deploy_alt = 450.0
+        self.thrust_accel = PROFILE_THRUST_ACCEL
+        self.burn_time = PROFILE_BURN_TIME
+        self.ground_time = PROFILE_GROUND_TIME
+        self.landed_time = PROFILE_LANDED_TIME
+        self.drogue_descent_rate = PROFILE_DROGUE_DESCENT_RATE
+        self.main_descent_rate = PROFILE_MAIN_DESCENT_RATE
+        self.main_deploy_alt = PROFILE_MAIN_DEPLOY_ALT
 
         self.burn_end_vel = (self.thrust_accel - GRAVITY) * self.burn_time
         self.burn_end_alt = 0.5 * (self.thrust_accel - GRAVITY) * self.burn_time ** 2
