@@ -7,7 +7,7 @@ static FRESULT NextLogName(char *Out, size_t Size) {
     FILINFO FileInfo;
 
     for (uint32_t Index = 0; Index < 100; Index++) {
-        snprintf(Out, Size, "LOG_%02lu.BIN", (unsigned long)Index);
+        snprintf(Out, Size, "S_%02lu.BIN", (unsigned long)Index);
 
         FRESULT Result = f_stat(Out, &FileInfo);
         if (Result == FR_NO_FILE) {

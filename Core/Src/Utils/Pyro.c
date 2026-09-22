@@ -1,9 +1,10 @@
 #include "Utils/Pyro.h"
+#include "Tasks/PyroTask.h"
 #include "FreeRTOS.h"
 #include "task.h"
 #include "main.h"
 
-#define PYRO_PULSE_MS 50
+#include "Utils/configuration.h"
 
 typedef struct {
     GPIO_TypeDef *SRPort;
@@ -19,21 +20,25 @@ static const PyroChannelConfig_t Channels[] = {
     [PYRO_CHANNEL_PARACHUTE] = { PCHUTE_SR_3V3_GPIO_Port, PCHUTE_RS_3V3_GPIO_Port, PCHUTE_SR_3V3_Pin, PCHUTE_RS_3V3_Pin },
 };
 
-void PyroFire(PyroChannel_t Channel) {
+void PyroSetPin(uint32_t Channel) {
     const PyroChannelConfig_t *Config = &Channels[Channel];
     HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_SET);
-//    HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_SET);
-//    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
-//    HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_RESET);
     RelayState |= (1u << Channel);
+}
+
+void PyroResetPin(uint32_t Channel) {
+    const PyroChannelConfig_t *Config = &Channels[Channel];
+    HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
+    RelayState &= ~(1u << Channel);
+}
+
+void PyroFire(PyroChannel_t Channel) {
+    xTaskNotify(PyroTaskHandle, (1u << Channel), eSetBits);
 }
 
 void PyroSafe(PyroChannel_t Channel) {
     const PyroChannelConfig_t *Config = &Channels[Channel];
-//    HAL_GPIO_WritePin(Config->SRPort, Config->SRPin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
-//    vTaskDelay(pdMS_TO_TICKS(PYRO_PULSE_MS));
-//    HAL_GPIO_WritePin(Config->RSPort, Config->RSPin, GPIO_PIN_RESET);
     RelayState &= ~(1u << Channel);
 }
 

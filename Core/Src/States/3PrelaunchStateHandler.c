@@ -6,6 +6,7 @@ static ConfirmCounter_t BoostConfirm;
 
 void PrelaunchStateEntry(SystemContext_t *ctx) {
     BoostConfirm = (ConfirmCounter_t){ .Required = PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES };
+    ctx->FlashLoggingEnabled = true;
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

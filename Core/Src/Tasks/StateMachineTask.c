@@ -32,6 +32,7 @@ void StateMachineTask(void *pvParameters) {
     FlightData_t FlightData = {0};
     SystemState_t CurrentSystemState = STATE_IDLE;
     CommandType_t Command = COMMAND_NONE;
+    uint8_t FlashLogDivider = 0;
 
     OnStateEntry(CurrentSystemState, SystemContext);
 
@@ -74,6 +75,12 @@ void StateMachineTask(void *pvParameters) {
             SDLogRecord_t Record = BuildSDLogRecord(&FlightData);
 			xQueueSend(SDLoggingQueue, &Record, 0);
 		}
+
+        if (FlashLoggingQueue != NULL && !StateChanged && ++FlashLogDivider >= FLASH_LOGGING_DIVIDER) {
+            FlashLogDivider = 0;
+            FlashLogRecord_t FlashRecord = BuildFlashLogRecord(&FlightData);
+            xQueueSend(FlashLoggingQueue, &FlashRecord, 0);
+        }
 
         TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
         SerialSendFlightData(&Packet, CurrentSystemState);

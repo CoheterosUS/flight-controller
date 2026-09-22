@@ -18,6 +18,15 @@ SEA_LEVEL_PRESSURE = 101325.0
 TEMPERATURE_C = 25.0
 SEND_RATE_HZ = 100
 
+TELEMETRY_PACKET_SIZE = 52
+STATE_PRELAUNCH = 2
+
+STATE_NAMES = {
+    0: "IDLE", 1: "CALIBRATION", 2: "PRELAUNCH", 3: "BOOST",
+    4: "COAST", 5: "ACTIVE_CTRL", 6: "APOGEE", 7: "MAIN_CHUTE",
+    8: "LANDED", 9: "GND_ABORT", 10: "DESC_ABORT",
+}
+
 
 def build_packet(command, payload=b""):
     return bytes([PACKET_HEADER_LSB, PACKET_HEADER_MSB, command, len(payload)]) + payload + bytes([PACKET_FOOTER])
@@ -39,17 +48,31 @@ def build_command_packet(command):
     return build_packet(command)
 
 
+def parse_telemetry(ser):
+    buf = ser.read(ser.in_waiting or 0)
+    result = None
+    for i in range(len(buf) - TELEMETRY_PACKET_SIZE + 1):
+        if buf[i] == 0xFE and buf[i + 1] == 0xCA and buf[i + TELEMETRY_PACKET_SIZE - 1] == 0xBE:
+            pkt = buf[i:i + TELEMETRY_PACKET_SIZE]
+            accel_y = struct.unpack_from("<h", pkt, 8)[0]
+            baro_alt = struct.unpack_from("<i", pkt, 34)[0] / 100.0
+            baro_vel = struct.unpack_from("<i", pkt, 38)[0] / 100.0
+            state = pkt[48]
+            result = {"accel_y": accel_y, "alt": baro_alt, "vel": baro_vel, "state": state}
+    return result
+
+
 def pressure_from_altitude(altitude_m):
     return SEA_LEVEL_PRESSURE * (1.0 - 2.25577e-5 * altitude_m) ** 5.25588
 
 
 class FlightProfile:
     def __init__(self):
-        self.thrust_accel = 40.0
+        self.thrust_accel = 90.0
         self.burn_time = 3.0
         self.ground_time = 5.0
         self.landed_time = 5.0
-        self.drogue_descent_rate = 15.0
+        self.drogue_descent_rate = 25.0
         self.main_descent_rate = 5.0
         self.main_deploy_alt = 500.0
 
@@ -141,16 +164,27 @@ def run(port, baud):
     ser.write(build_command_packet(COMMAND_CALIBRATION))
     print("Sent CALIBRATION command")
 
-    print("Sending ground data for calibration (40s)...")
+    print("Sending ground data for calibration (up to 40s, stops on PRELAUNCH)...")
     calibration_time = 40.0
     t = 0.0
+    last_print = -1.0
     while t < calibration_time:
         accel, gyro, mag, pressure, temperature, _, _ = profile.sample(0.0)
         ser.write(build_hil_packet(accel, gyro, mag, pressure, temperature))
         time.sleep(interval)
         t += interval
-        if int(t) != int(t - interval):
-            print(f"  Calibrating... {t:.0f}s / {calibration_time:.0f}s")
+        telem = parse_telemetry(ser)
+        if telem:
+            if telem["state"] == STATE_PRELAUNCH:
+                print(f"  Board transitioned to PRELAUNCH at {t:.1f}s")
+                break
+            if int(t) != int(last_print):
+                sname = STATE_NAMES.get(telem["state"], f"?{telem['state']}")
+                print(f"  [{t:5.1f}s] state={sname:<12s} alt={telem['alt']:7.1f}m  vel={telem['vel']:6.1f}m/s  accelY={telem['accel_y']}m/s2")
+                last_print = t
+        elif int(t) != int(last_print):
+            print(f"  [{t:5.1f}s] (no telemetry)")
+            last_print = t
 
     print()
     input("Press Enter to start flight simulation...")
@@ -158,14 +192,21 @@ def run(port, baud):
 
     t = 0.0
     last_phase = ""
+    last_print = -1.0
     while t < profile.total_time:
         accel, gyro, mag, pressure, temperature, phase, altitude = profile.sample(t)
         packet = build_hil_packet(accel, gyro, mag, pressure, temperature)
         ser.write(packet)
 
         if phase != last_phase:
-            print(f"[{t:6.2f}s] Phase: {phase:<12s}  Altitude: {altitude:8.1f}m  AccelY: {accel[1]:7.2f} m/s²")
+            print(f"[{t:6.2f}s] SIM phase: {phase}")
             last_phase = phase
+
+        telem = parse_telemetry(ser)
+        if telem and int(t) != int(last_print):
+            sname = STATE_NAMES.get(telem["state"], f"?{telem['state']}")
+            print(f"  [{t:5.1f}s] state={sname:<12s} alt={telem['alt']:7.1f}m  vel={telem['vel']:6.1f}m/s  accelY={telem['accel_y']}m/s2")
+            last_print = t
 
         time.sleep(interval)
         t += interval
