@@ -6,7 +6,4 @@
 /.venv
 
 /.settings
-
-/Graphs/**/*.png
-/Graphs/**/*.csv
-/Graphs/**/*.bin
+/.claude
