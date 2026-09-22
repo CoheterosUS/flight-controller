@@ -74,7 +74,7 @@ class FlightProfile:
         self.landed_time = 5.0
         self.drogue_descent_rate = 25.0
         self.main_descent_rate = 5.0
-        self.main_deploy_alt = 500.0
+        self.main_deploy_alt = 450.0
 
         self.burn_end_vel = (self.thrust_accel - GRAVITY) * self.burn_time
         self.burn_end_alt = 0.5 * (self.thrust_accel - GRAVITY) * self.burn_time ** 2
@@ -108,7 +108,7 @@ class FlightProfile:
 
             if t_phase < self.burn_time:
                 phase = "burn"
-                accel[1] = self.thrust_accel - GRAVITY
+                accel[1] = -self.thrust_accel
                 altitude = 0.5 * (self.thrust_accel - GRAVITY) * t_phase ** 2
                 gyro[0] = math.sin(t_phase / self.burn_time * math.pi) * 5.0
 
@@ -117,7 +117,7 @@ class FlightProfile:
 
                 if t_phase < self.coast_time:
                     phase = "coast"
-                    accel[1] = -GRAVITY
+                    accel[1] = 0.0
                     altitude = (self.burn_end_alt
                                 + self.burn_end_vel * t_phase
                                 - 0.5 * GRAVITY * t_phase ** 2)
@@ -128,7 +128,7 @@ class FlightProfile:
                     if t_phase < self.drogue_time:
                         phase = "drogue"
                         altitude = self.apogee_alt - self.drogue_descent_rate * t_phase
-                        accel[1] = -GRAVITY
+                        accel[1] = self.drogue_descent_rate * 0.1
 
                     else:
                         t_phase -= self.drogue_time
@@ -136,7 +136,7 @@ class FlightProfile:
                         if t_phase < self.main_time:
                             phase = "main"
                             altitude = self.main_deploy_alt - self.main_descent_rate * t_phase
-                            accel[1] = -GRAVITY
+                            accel[1] = self.main_descent_rate * 0.1
 
                         else:
                             phase = "landed"
