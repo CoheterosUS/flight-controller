@@ -13,6 +13,8 @@ typedef enum {
 } PyroChannel_t;
 
 void PyroFire(PyroChannel_t Channel);
+void PyroSetPin(uint32_t Channel);
+void PyroResetPin(uint32_t Channel);
 void PyroSafe(PyroChannel_t Channel);
 void PyroSafeAll(void);
 uint8_t PyroGetState(void);

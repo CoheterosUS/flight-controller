@@ -36,6 +36,7 @@
 #define STACK_SIZE_SENSOR_CONFIG        256
 #define STACK_SIZE_STATE_MACHINE        512
 #define STACK_SIZE_SD_LOGGING           1024
+#define STACK_SIZE_PYRO                 128
 
 // Telemetry Configuration (main loop at 100Hz)
 #define TELEMETRY_DIVIDER                   100  // 1Hz in active states
