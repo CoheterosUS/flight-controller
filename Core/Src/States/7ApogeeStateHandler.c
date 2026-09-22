@@ -8,14 +8,17 @@ void ApogeeStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t ApogeeStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	// Altitude Threshold
 	if (FlightData.BarometricAltitude <= APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD) {
 		return STATE_MAIN_PARACHUTE;
 	}
 
-	// TODO: Discuss if GPS Altitude too
+#if APOGEE_MAIN_PARACHUTE_GPS_ALT_ENABLED
+	if (FlightData.GPSAltitude <= APOGEE_MAIN_PARACHUTE_GPS_ALT_THRESHOLD) {
+		return STATE_MAIN_PARACHUTE;
+	}
+#endif
 
-	// Delay
+
 #if APOGEE_MAIN_PARACHUTE_DELAY_ENABLED
 	if (GetStateElapsedMs(Context, STATE_APOGEE) >= APOGEE_MAIN_PARACHUTE_DELAY_MS) {
 		return STATE_MAIN_PARACHUTE;

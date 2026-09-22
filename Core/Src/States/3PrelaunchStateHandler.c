@@ -10,7 +10,7 @@ void PrelaunchStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (ConfirmCounterCheck(&BoostConfirm, FlightData.AccelY > PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD)) {
+	if (ConfirmCounterCheck(&BoostConfirm, FlightData.AccelY < PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD)) {
 		return STATE_BOOST;
 	}
 

@@ -57,14 +57,16 @@
 // Transition Configuration
 
 // Prelaunch to Boost Acceleration Threshold
-#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	20.0f
+#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	-20.0f // IMU Y-axis is inverted, so negative is upwards
 #define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      5
 
 // Boost to Coast Acceleration Threshold
-#define BOOST_COAST_ACCEL_Y_THRESHOLD          5.0f
+#define BOOST_COAST_ACCEL_Y_THRESHOLD          -5.0f // IMU Y-axis is inverted, so negative is upwards
 #define BOOST_COAST_CONSECUTIVE_SAMPLES        5
 
-// Coast to Active Control Automatic
+// Coast to Active Control Altitude Threshold
+#define COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD    2000.0f // Barometric altitude threshold for active control
+#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    5
 
 // Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
 #define ACTIVE_CONTROL_APOGEE_BAROM_ALT_ENABLED			0
@@ -78,7 +80,9 @@
 #define ACTIVE_CONTROL_APOGEE_DELAY_MS					10000
 
 // Apogee to Main Parachute
-#define APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f
+#define APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f // WARN: AGL
+#define APOGEE_MAIN_PARACHUTE_GPS_ALT_ENABLED		0
+#define APOGEE_MAIN_PARACHUTE_GPS_ALT_THRESHOLD		450.0f // WARN: ASL
 #define APOGEE_MAIN_PARACHUTE_DELAY_ENABLED			0
 #define APOGEE_MAIN_PARACHUTE_DELAY_MS				30000
 

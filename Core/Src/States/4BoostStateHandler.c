@@ -9,7 +9,7 @@ void BoostStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t BoostStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (ConfirmCounterCheck(&CoastConfirm, FlightData.AccelY < BOOST_COAST_ACCEL_Y_THRESHOLD)) {
+	if (ConfirmCounterCheck(&CoastConfirm, FlightData.AccelY > BOOST_COAST_ACCEL_Y_THRESHOLD)) {
 		return STATE_COAST;
 	}
 
