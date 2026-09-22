@@ -1,8 +1,0 @@
-% ============================================================================
-% Section 2.4.6: Recovery Avionics and Redundancy
-% Paste into TECHNICAL REPORT.tex at the Recovery Avionics subsubsection.
-% ============================================================================
-
-The flight state machine (Section~\ref{subsubsec:software}) governs both recovery deployment events: drogue activation at apogee and main parachute activation at the configured altitude. Pyrotechnic firing, redundant apogee detection, confirmation counters, and the automatic handover to the redundant flight computer are detailed in that section.
-
-Two independent redundancy layers complement the primary flight computer. The Redundant Active Control PCB (Section~\ref{subsubsection:avionics_bay}) has access to the airbrake servo actuator but not to the recovery pyrotechnic channels; its role is to preserve active control authority if the primary computer fails. The COTS CATS Vega flight computer has dedicated sensors, power supply, and independent access to the recovery pyrotechnic channels, but no connection to the active control servos. In addition to backup recovery deployment, the CATS Vega serves as the official flight data logger for competition-evaluated metrics. This complementary split ensures that both active control and recovery activation are each backed by a separate, fully isolated redundant system \req{EuRoC-LV-RQT-0240}.
