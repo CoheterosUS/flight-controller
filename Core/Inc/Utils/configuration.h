@@ -34,7 +34,7 @@
 // Stack Sizes (words)
 #define STACK_SIZE_TELEMETRY            256
 #define STACK_SIZE_SENSOR_CONFIG        256
-#define STACK_SIZE_STATE_MACHINE        512
+#define STACK_SIZE_STATE_MACHINE        1024
 #define STACK_SIZE_SD_LOGGING           1024
 #define STACK_SIZE_PYRO                 128
 
