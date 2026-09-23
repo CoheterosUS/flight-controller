@@ -3,12 +3,10 @@
 #include <Sensors/Sensors.h>
 #include <task.h>
 #include <timers.h>
-#include <Tasks/TelemetryTask.h>
 #include "Callbacks/Callbacks.h"
 #include "Sensors/BMP581.h"
 #include "Sensors/IIM42653.h"
 #include "Sensors/IIS2MDCTR.h"
-#include "Sensors/W25Q32JV.h"
 
 #include "Utils/shared.h"
 
@@ -23,24 +21,6 @@ uint8_t BMP581_RXBuf[BMP581_SENSOR_DATA_SIZE];
 
 __attribute__((section(".dma_buffer"), aligned(32)))
 uint8_t IIS2MDCTR_RXBuf[IIS2MDCTR_SENSOR_DATA_SIZE];
-
-void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
-    if (huart->Instance == USART1) {
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-
-        if (TelemetryTaskHandle != NULL) {
-            xTaskNotifyFromISR(TelemetryTaskHandle, Size, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
-            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-        }
-    }
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart) {
-    if (huart->Instance == USART1) {
-        HAL_UART_AbortReceive_IT(huart);
-        HAL_UARTEx_ReceiveToIdle_DMA(huart, TELEMETRY_RX_BUFFER, TELEMETRY_RX_BUFFER_SIZE);
-    }
-}
 
 void IIM42653_Timer_Callback(TimerHandle_t xTimer) {
 	// bool Ready = false;
@@ -58,15 +38,6 @@ void BMP581_Timer_Callback(TimerHandle_t xTimer) {
 
 void IIS2MDCTR_Timer_Callback(TimerHandle_t xTimer) {
     HAL_I2C_Mem_Read_DMA(IIS2MDCTR_HANDLE, IIS2MDCTR_I2C_ADDRESS, IIS2MDCTR_REG_OUTX_L_REG | IIS2MDCTR_AUTO_INCREMENT_MASK, I2C_MEMADD_SIZE_8BIT, IIS2MDCTR_RXBuf, IIS2MDCTR_SENSOR_DATA_SIZE);
-}
-
-void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
-    if (hspi->Instance == SPI4) {
-        W25Q_DeselectCS();
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        xSemaphoreGiveFromISR(FlashSPISemaphore, &xHigherPriorityTaskWoken);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    }
 }
 
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {

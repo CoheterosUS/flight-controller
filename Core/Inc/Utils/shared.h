@@ -106,14 +106,7 @@ typedef struct {
 } FlightData_t;
 #pragma pack(pop)
 
-extern QueueHandle_t SDLoggingQueue;
-extern QueueHandle_t FlashLoggingQueue;
-extern QueueHandle_t CommandQueue;
-
 extern TimerHandle_t TimerIIM42653;
-extern TimerHandle_t TimerBMP581;
-extern TimerHandle_t TimerIIS2MDCTR;
-extern TimerHandle_t TimerBattery;
 
 extern SystemFaultFlags_t SystemFaultFlags;
 

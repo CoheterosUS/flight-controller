@@ -2,6 +2,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+SemaphoreHandle_t FlashSPISemaphore;
+
 void W25Q_SelectCS(void) {
     HAL_GPIO_WritePin(W25Q_CS_GPIO_PORT, W25Q_CS_GPIO_PIN, GPIO_PIN_RESET);
 }
