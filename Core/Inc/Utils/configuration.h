@@ -22,9 +22,20 @@
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    1000
 #define PRESSURE_CALIBRATION_SAMPLES            1000
 
-// Gyroscope Configuration
+// IMU Configuration
 #define GYRO_CALIBRATION_DISCARD_SAMPLES        1000
 #define GYRO_CALIBRATION_SAMPLES                1000
+
+#define IMU_ROTATION_ENABLED              0
+#define IMU_ROT_XX  +1.00000000f
+#define IMU_ROT_XY  +0.00000000f
+#define IMU_ROT_XZ  +0.00000000f
+#define IMU_ROT_YX  +0.00000000f
+#define IMU_ROT_YY  +1.00000000f
+#define IMU_ROT_YZ  +0.00000000f
+#define IMU_ROT_ZX  +0.00000000f
+#define IMU_ROT_ZY  +0.00000000f
+#define IMU_ROT_ZZ  +1.00000000f
 
 // GPS Configuration
 #define GPS_FIX_REQUIRED             0
