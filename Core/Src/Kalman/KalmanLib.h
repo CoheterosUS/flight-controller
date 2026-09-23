@@ -43,7 +43,7 @@
 
 typedef enum kalman_ErrorCode {
 
-    SUCCESS = 0,
+    KALMAN_SUCCESS = 0,
     INVALID_MATRIX_SIZE_SKEW = -1,
     P_INVALID_SIZE_PROPAGATE = -2,
     A_INVALID_SIZE_PROPAGATE = -3,

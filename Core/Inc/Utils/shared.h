@@ -49,6 +49,7 @@ typedef struct {
     volatile bool FlashLoggingEnabled;
     volatile bool SensorsIdleFinished;
     bool GPSFixValid;
+    bool KalmanInitialized;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
