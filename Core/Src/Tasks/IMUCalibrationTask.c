@@ -45,9 +45,9 @@ static void WriteCalibrationFile(float R[3][3]) {
     f_write(&File, Buf, strlen(Buf), &Written);
 
     const char *Names[] = {
-        "IMU_R00", "IMU_R01", "IMU_R02",
-        "IMU_R10", "IMU_R11", "IMU_R12",
-        "IMU_R20", "IMU_R21", "IMU_R22"
+        "IMU_ROT_XX", "IMU_ROT_XY", "IMU_ROT_XZ",
+        "IMU_ROT_YX", "IMU_ROT_YY", "IMU_ROT_YZ",
+        "IMU_ROT_ZX", "IMU_ROT_ZY", "IMU_ROT_ZZ"
     };
 
     for (int Row = 0; Row < 3; Row++) {
