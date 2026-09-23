@@ -1,0 +1,1 @@
+Añadir los .c de las funciones que se quieran usar a esta carpeta, eliminando 'ARM_DSP_ATTRIBUTE ' del código.
