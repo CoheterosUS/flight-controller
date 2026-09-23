@@ -56,17 +56,32 @@ def build_command_packet(command):
     return build_packet(command)
 
 
+rx_buf = bytearray()
+
 def parse_telemetry(ser):
-    buf = ser.read(ser.in_waiting or 0)
+    global rx_buf
+    rx_buf += ser.read(ser.in_waiting or 0)
     result = None
-    for i in range(len(buf) - TELEMETRY_PACKET_SIZE + 1):
-        if buf[i] == 0xFE and buf[i + 1] == 0xCA and buf[i + TELEMETRY_PACKET_SIZE - 1] == 0xBE:
-            pkt = buf[i:i + TELEMETRY_PACKET_SIZE]
-            accel_y = struct.unpack_from("<h", pkt, 8)[0]
-            baro_alt = struct.unpack_from("<i", pkt, 34)[0] / 100.0
-            baro_vel = struct.unpack_from("<i", pkt, 38)[0] / 100.0
-            state = pkt[48]
-            result = {"accel_y": accel_y, "alt": baro_alt, "vel": baro_vel, "state": state}
+    while len(rx_buf) >= TELEMETRY_PACKET_SIZE:
+        idx = rx_buf.find(bytes([PACKET_HEADER_LSB, PACKET_HEADER_MSB]))
+        if idx < 0:
+            rx_buf.clear()
+            break
+        if idx > 0:
+            rx_buf = rx_buf[idx:]
+        if len(rx_buf) < TELEMETRY_PACKET_SIZE:
+            break
+        if rx_buf[TELEMETRY_PACKET_SIZE - 1] != PACKET_FOOTER:
+            rx_buf = rx_buf[1:]
+            continue
+        pkt = bytes(rx_buf[:TELEMETRY_PACKET_SIZE])
+        rx_buf = rx_buf[TELEMETRY_PACKET_SIZE:]
+        result = {
+            "accel_y": struct.unpack_from("<h", pkt, 8)[0],
+            "alt": struct.unpack_from("<i", pkt, 34)[0] / 100.0,
+            "vel": struct.unpack_from("<i", pkt, 38)[0] / 100.0,
+            "state": pkt[48],
+        }
     return result
 
 
