@@ -43,11 +43,12 @@
 #define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
 // Stack Sizes (words)
-#define STACK_SIZE_TELEMETRY            256
-#define STACK_SIZE_SENSOR_CONFIG        256
-#define STACK_SIZE_STATE_MACHINE        512
+#define STACK_SIZE_TELEMETRY            512
+#define STACK_SIZE_SENSOR_CONFIG        512
+#define STACK_SIZE_STATE_MACHINE        1024
 #define STACK_SIZE_SD_LOGGING           1024
-#define STACK_SIZE_PYRO                 128
+#define STACK_SIZE_PYRO                 256
+#define STACK_SIZE_FLASH_LOGGING        768
 
 // Telemetry Configuration (main loop at 100Hz)
 #define TELEMETRY_DIVIDER                   100  // 1Hz in active states
@@ -60,7 +61,6 @@
 #define FLASH_DUMP_TO_SD                    0
 #define FLASH_ERASE_ALL                     0
 #define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
-#define STACK_SIZE_FLASH_LOGGING            512
 #define STACK_SIZE_FLASH_MAINTENANCE        1024
 #define FLASH_LOGGING_QUEUE_LENGTH          10
 #define FLASH_RECORDS_PER_PAGE              8
