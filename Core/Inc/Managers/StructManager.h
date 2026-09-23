@@ -4,6 +4,11 @@
 #include "Utils/shared.h"
 
 #pragma pack(push, 1)
+// Pos Filtro
+// Vel Filtro
+// Quat Filtro
+// Mat P Filtro
+// Barom Alt
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
@@ -32,6 +37,10 @@ typedef struct {
     uint8_t SyncEnd;
 } SDLogRecord_t;
 
+// Alt Filtro Kalman, 2 bytes
+// Vel Filtro Kalman, Quitar BaromVel, 2 bytes cada uno Vel
+// Quaternion Filtro Kalman (opt), 2 decimales, 1 byte por uno
+// Tercer Valor Diagonal Mat P Filtro Kalman, 2 decimales, 2 bytes
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
