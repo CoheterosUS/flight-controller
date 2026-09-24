@@ -95,9 +95,17 @@ typedef struct {
     float BarometricAltitude;
     float BarometricVelocity;
     float GPSVelocity;
+    float PosX;
+    float PosY;
+    float PosZ;
     float VelX;
     float VelY;
     float VelZ;
+    float QuatW;
+    float QuatX;
+    float QuatY;
+    float QuatZ;
+    float PDiag[9];
     uint32_t Flags;
     float BatteryVoltage;
     uint8_t State;

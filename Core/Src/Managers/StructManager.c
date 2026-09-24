@@ -1,4 +1,5 @@
 #include "Managers/StructManager.h"
+#include <string.h>
 
 SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     SDLogRecord_t Record;
@@ -22,6 +23,18 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     Record.UnixTime = FlightData->UnixTime;
     Record.Milliseconds = FlightData->Milliseconds;
     Record.Satellites = FlightData->Satellites;
+    Record.PosX = FlightData->PosX;
+    Record.PosY = FlightData->PosY;
+    Record.PosZ = FlightData->PosZ;
+    Record.VelX = FlightData->VelX;
+    Record.VelY = FlightData->VelY;
+    Record.VelZ = FlightData->VelZ;
+    Record.QuatW = FlightData->QuatW;
+    Record.QuatX = FlightData->QuatX;
+    Record.QuatY = FlightData->QuatY;
+    Record.QuatZ = FlightData->QuatZ;
+    Record.BarometricAltitude = FlightData->BarometricAltitude;
+    memcpy(Record.PDiag, FlightData->PDiag, sizeof(Record.PDiag));
     Record.Flags = FlightData->Flags;
     Record.BatteryVoltage = FlightData->BatteryVoltage;
     Record.State = FlightData->State;

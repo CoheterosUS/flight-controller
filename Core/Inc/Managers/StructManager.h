@@ -29,6 +29,22 @@ typedef struct {
     uint32_t UnixTime;
     uint16_t Milliseconds;
     uint8_t Satellites;
+    float BarometricAltitude;
+
+    // KALMAN
+    float PosX;
+    float PosY;
+    float PosZ;
+    float VelX;
+    float VelY;
+    float VelZ;
+    float QuatW;
+    float QuatX;
+    float QuatY;
+    float QuatZ;
+
+    float PDiag[9];
+
     uint32_t Flags;
     float BatteryVoltage;
     uint8_t State;

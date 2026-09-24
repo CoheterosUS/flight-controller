@@ -218,7 +218,7 @@ int main(void)
   CreateFlashLoggingTask(&SystemContext, tskIDLE_PRIORITY + 2, STACK_SIZE_FLASH_LOGGING);
 
   // TODO: Revise rate
-  TimerIIM42653 = xTimerCreate("IIM42653", pdMS_TO_TICKS(10), pdTRUE, NULL, IIM42653_Timer_Callback);
+  TimerIIM42653 = xTimerCreate("IIM42653", pdMS_TO_TICKS(2), pdTRUE, NULL, IIM42653_Timer_Callback);
   TimerBMP581 = xTimerCreate("BMP581", pdMS_TO_TICKS(25), pdTRUE, NULL, BMP581_Timer_Callback);
   TimerIIS2MDCTR = xTimerCreate("IIS2MDCTR", pdMS_TO_TICKS(50), pdTRUE, NULL, IIS2MDCTR_Timer_Callback);
   TimerBattery = xTimerCreate("Battery", pdMS_TO_TICKS(500), pdTRUE, NULL, Battery_Timer_Callback);

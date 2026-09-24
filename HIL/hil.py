@@ -1,6 +1,7 @@
 import struct
 import time
 import math
+import random
 import argparse
 import serial
 
@@ -28,6 +29,12 @@ PROFILE_LANDED_TIME = 5.0
 PROFILE_DROGUE_DESCENT_RATE = 25.0
 PROFILE_MAIN_DESCENT_RATE = 5.0
 PROFILE_MAIN_DEPLOY_ALT = 450.0
+
+NOISE_ACCEL = 0.05
+NOISE_GYRO = 0.01
+NOISE_MAG = 0.5
+NOISE_PRESSURE = 2.0
+NOISE_TEMPERATURE = 0.1
 
 STATE_NAMES = {
     0: "IDLE", 1: "CALIBRATION", 2: "PRELAUNCH", 3: "BOOST",
@@ -90,7 +97,9 @@ def pressure_from_altitude(altitude_m):
 
 
 class FlightProfile:
-    def __init__(self):
+    def __init__(self, launch_angle_deg=0.0):
+        self.launch_angle_deg = launch_angle_deg
+        self.launch_angle_rad = math.radians(launch_angle_deg)
         self.thrust_accel = PROFILE_THRUST_ACCEL
         self.burn_time = PROFILE_BURN_TIME
         self.ground_time = PROFILE_GROUND_TIME
@@ -99,8 +108,9 @@ class FlightProfile:
         self.main_descent_rate = PROFILE_MAIN_DESCENT_RATE
         self.main_deploy_alt = PROFILE_MAIN_DEPLOY_ALT
 
-        self.burn_end_vel = (self.thrust_accel - GRAVITY) * self.burn_time
-        self.burn_end_alt = 0.5 * (self.thrust_accel - GRAVITY) * self.burn_time ** 2
+        vert_thrust = self.thrust_accel * math.cos(self.launch_angle_rad)
+        self.burn_end_vel = (vert_thrust - GRAVITY) * self.burn_time
+        self.burn_end_alt = 0.5 * (vert_thrust - GRAVITY) * self.burn_time ** 2
         self.coast_time = self.burn_end_vel / GRAVITY
         self.apogee_alt = (self.burn_end_alt
                            + self.burn_end_vel * self.coast_time
@@ -119,11 +129,16 @@ class FlightProfile:
         mag = [20.0, 5.0, -40.0]
         phase = "ground"
 
+        sin_a = math.sin(self.launch_angle_rad)
+        cos_a = math.cos(self.launch_angle_rad)
+        vert_thrust = self.thrust_accel * cos_a
+
         t_phase = t
 
         if t_phase < self.ground_time:
             phase = "ground"
-            accel[1] = -GRAVITY
+            accel[0] = -GRAVITY * sin_a
+            accel[1] = -GRAVITY * cos_a
             altitude = 0.0
 
         else:
@@ -132,7 +147,7 @@ class FlightProfile:
             if t_phase < self.burn_time:
                 phase = "burn"
                 accel[1] = -self.thrust_accel
-                altitude = 0.5 * (self.thrust_accel - GRAVITY) * t_phase ** 2
+                altitude = 0.5 * (vert_thrust - GRAVITY) * t_phase ** 2
                 gyro[0] = math.sin(t_phase / self.burn_time * math.pi) * 5.0
 
             else:
@@ -167,16 +182,23 @@ class FlightProfile:
                             accel[1] = -GRAVITY
 
         pressure = pressure_from_altitude(max(altitude, 0.0))
-        return accel, gyro, mag, pressure, TEMPERATURE_C, phase, max(altitude, 0.0)
+
+        accel = [a + random.gauss(0, NOISE_ACCEL) for a in accel]
+        gyro = [g + random.gauss(0, NOISE_GYRO) for g in gyro]
+        mag = [m + random.gauss(0, NOISE_MAG) for m in mag]
+        pressure += random.gauss(0, NOISE_PRESSURE)
+        temperature = TEMPERATURE_C + random.gauss(0, NOISE_TEMPERATURE)
+
+        return accel, gyro, mag, pressure, temperature, phase, max(altitude, 0.0)
 
 
-def run(port, baud):
+def run(port, baud, angle):
     ser = serial.Serial(port, baud, timeout=1)
-    profile = FlightProfile()
+    profile = FlightProfile(launch_angle_deg=angle)
     interval = 1.0 / SEND_RATE_HZ
 
     print(f"Connected to {port} at {baud} baud")
-    print(f"Flight profile: {profile.total_time:.1f}s total")
+    print(f"Flight profile: {profile.total_time:.1f}s total, launch angle {profile.launch_angle_deg:.1f}° from vertical")
     print(f"  Burn:   {profile.burn_time:.1f}s  (accel {profile.thrust_accel:.0f} m/s²)")
     print(f"  Coast:  {profile.coast_time:.1f}s  (apogee {profile.apogee_alt:.0f}m)")
     print(f"  Drogue: {profile.drogue_time:.1f}s  ({profile.drogue_descent_rate:.0f} m/s to {profile.main_deploy_alt:.0f}m)")
@@ -243,5 +265,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="HIL flight simulator for STM32 flight controller")
     parser.add_argument("--port", required=True, help="Serial port (e.g. COM3, /dev/ttyUSB0)")
     parser.add_argument("--baud", type=int, default=115200, help="Baud rate (default: 115200)")
+    parser.add_argument("--angle", type=float, default=0.0, help="Launch angle from vertical in degrees (default: 0)")
     args = parser.parse_args()
-    run(args.port, args.baud)
+    run(args.port, args.baud, args.angle)
