@@ -212,7 +212,9 @@ int main(void)
   CreateTelemetryTask(&huart1, tskIDLE_PRIORITY + 4, STACK_SIZE_TELEMETRY);
   CreateSensorConfigTask(&SystemContext, tskIDLE_PRIORITY + 3, STACK_SIZE_SENSOR_CONFIG);
   CreateStateMachineTask(&SystemContext, tskIDLE_PRIORITY + 6, STACK_SIZE_STATE_MACHINE);
+#if SD_LOGGING_ENABLED
   CreateSDLoggingTask(&SystemContext, tskIDLE_PRIORITY + 1, STACK_SIZE_SD_LOGGING);
+#endif
   CreateFlashLoggingTask(&SystemContext, tskIDLE_PRIORITY + 2, STACK_SIZE_FLASH_LOGGING);
 
   // TODO: Revise rate
@@ -477,7 +479,9 @@ static void MX_SDMMC1_SD_Init(void)
 {
 
   /* USER CODE BEGIN SDMMC1_Init 0 */
-
+#if !SD_LOGGING_ENABLED
+  return;
+#endif
   /* USER CODE END SDMMC1_Init 0 */
 
   /* USER CODE BEGIN SDMMC1_Init 1 */

@@ -24,7 +24,7 @@ FATFS SDFatFS;    /* File system object for SD logical drive */
 FIL SDFile;       /* File object for SD */
 
 /* USER CODE BEGIN Variables */
-
+#include "Utils/configuration.h"
 /* USER CODE END Variables */
 
 void MX_FATFS_Init(void)
@@ -33,7 +33,9 @@ void MX_FATFS_Init(void)
   retSD = FATFS_LinkDriver(&SD_Driver, SDPath);
 
   /* USER CODE BEGIN Init */
-  /* additional user code for init */
+#if !SD_LOGGING_ENABLED
+  return;
+#endif
   /* USER CODE END Init */
 }
 

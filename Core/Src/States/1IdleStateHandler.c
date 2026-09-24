@@ -8,7 +8,9 @@
 void IdleStateEntry(SystemContext_t *ctx) {
 	PyroSafeAll();
     ResetCalibrationContext(ctx);
+#if SD_LOGGING_ENABLED
     MountAndOpen();
+#endif
     W25Q_LoggingInit();
 }
 

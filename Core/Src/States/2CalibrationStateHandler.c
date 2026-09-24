@@ -2,7 +2,9 @@
 #include "Utils/Calibrations.h"
 
 void CalibrationStateEntry(SystemContext_t *ctx) {
+#if SD_LOGGING_ENABLED
     ctx->SDLoggingEnabled = true;
+#endif
     ResetCalibrationContext(ctx);
 }
 
