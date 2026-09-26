@@ -88,6 +88,6 @@ void StateMachineTask(void *pvParameters) {
         dbg_current_state = CurrentSystemState;
         dbg_system_faults = SystemFaultFlags;
 
-        vTaskDelay(pdMS_TO_TICKS(10));
+        vTaskDelay(pdMS_TO_TICKS(LOOP_PERIOD_MS));
     }
 }

@@ -2,6 +2,7 @@
 #include "Utils/Calculations.h"
 
 static float PressureSumPa;
+static float TemperatureSumC;
 static uint16_t PressureSampleCount;
 static uint16_t PressureDiscardCount;
 
@@ -11,6 +12,7 @@ static uint16_t GyroDiscardCount;
 
 void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->ReferencePressurePa = 0.0f;
+    ctx->ReferenceTemperatureC = 0.0f;
     ctx->ReferencePressurePaValid = false;
     ctx->GyroBiasX = 0.0f;
     ctx->GyroBiasY = 0.0f;
@@ -23,6 +25,7 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ResetGPSVerticalVelocity();
 
     PressureSumPa = 0.0f;
+    TemperatureSumC = 0.0f;
     PressureSampleCount = 0;
     PressureDiscardCount = 0;
 
@@ -43,10 +46,13 @@ void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext) 
         }
 
         PressureSumPa += PressurePa;
+        TemperatureSumC += FlightData.TemperatureC;
         PressureSampleCount++;
 
         if (PressureSampleCount >= PRESSURE_CALIBRATION_SAMPLES) {
-            SystemContext->ReferencePressurePa = PressureSumPa / (float)PressureSampleCount;
+            float InvCount = 1.0f / (float)PressureSampleCount;
+            SystemContext->ReferencePressurePa = PressureSumPa * InvCount;
+            SystemContext->ReferenceTemperatureC = TemperatureSumC * InvCount;
             SystemContext->ReferencePressurePaValid = true;
         }
     }

@@ -16,8 +16,17 @@
 #define BUZZER_ENABLED				1
 #define PYRO_PULSE_MS				3000
 
+// Main loop rate
+#define LOOP_RATE_HZ                250
+#define LOOP_PERIOD_MS              (1000 / LOOP_RATE_HZ)
+#define LOOP_DT                     (1.0f / LOOP_RATE_HZ)
+
 // Altitude configuration
-#define ALTITUDE_IIR_FILTER_ALPHA    0.1f
+#define KALMAN_INITIAL_ROLL_DEG      0.0f
+#define KALMAN_INITIAL_PITCH_DEG     90.0f
+#define KALMAN_INITIAL_YAW_DEG       0.0f
+
+#define ALTITUDE_IIR_FILTER_ALPHA    (10.0f / LOOP_RATE_HZ)
 
 // Barometer Configuration
 #define PRESSURE_CALIBRATION_DISCARD_SAMPLES    1000
@@ -51,9 +60,9 @@
 #define STACK_SIZE_PYRO                 256
 #define STACK_SIZE_FLASH_LOGGING        768
 
-// Telemetry Configuration (main loop at 100Hz)
-#define TELEMETRY_DIVIDER                   100  // 1Hz in active states
-#define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
+// Telemetry Configuration
+#define TELEMETRY_DIVIDER                   LOOP_RATE_HZ  // 1Hz in active states
+#define TELEMETRY_DIVIDER_IDLE              LOOP_RATE_HZ  // 1Hz in IDLE
 
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
@@ -61,24 +70,24 @@
 // Flash Configuration
 #define FLASH_DUMP_TO_SD                    0
 #define FLASH_ERASE_ALL                     0
-#define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
+#define FLASH_LOGGING_DIVIDER               (LOOP_RATE_HZ / 10)
 #define STACK_SIZE_FLASH_MAINTENANCE        1024
 #define FLASH_LOGGING_QUEUE_LENGTH          10
-#define FLASH_RECORDS_PER_PAGE              8
+#define FLASH_RECORDS_PER_PAGE              4
 
 // Transition Configuration
 
 // Prelaunch to Boost Acceleration Threshold
 #define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	-20.0f // IMU Y-axis is inverted, so negative is upwards
-#define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      5
+#define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      (LOOP_RATE_HZ / 20)
 
 // Boost to Coast Acceleration Threshold
 #define BOOST_COAST_ACCEL_Y_THRESHOLD          -5.0f // IMU Y-axis is inverted, so negative is upwards
-#define BOOST_COAST_CONSECUTIVE_SAMPLES        5
+#define BOOST_COAST_CONSECUTIVE_SAMPLES        (LOOP_RATE_HZ / 20)
 
 // Coast to Active Control Altitude Threshold
 #define COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD    2000.0f // Barometric altitude threshold for active control
-#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    5
+#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (LOOP_RATE_HZ / 20)
 
 // Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
 #define ACTIVE_CONTROL_APOGEE_BAROM_ALT_ENABLED			0
@@ -101,7 +110,7 @@
 // Main Parachute to Landed
 #define MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
 #define MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD		2.0f
-#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		100
+#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		LOOP_RATE_HZ
 
 #define LANDED_SD_STOP_DELAY_ENABLED            1
 #define LANDED_SD_STOP_DELAY_MS                 5000

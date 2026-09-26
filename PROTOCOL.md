@@ -247,17 +247,29 @@ Command `0x10` (COMMAND_HIL_DATA). Received over UART from external device (Lapt
 
 ## Wire Flash Log Record (Structure, Packed)
 
-Stored on W25Q32JV external flash at 10 Hz. 8 records per 256-byte page. Flight boundaries marked by a marker record where State = `0xFF` and all sensor fields are zero. Marker is page-aligned (occupies first 32 bytes of a 256-byte page, rest is `0xFF` padding).
+Stored on W25Q32JV external flash at 10 Hz. 4 records per 256-byte page. Flight boundaries marked by a marker record where State = `0xFF` and all sensor fields are zero. Marker is page-aligned (occupies first 56 bytes of a 256-byte page, rest is `0xFF` padding).
 
-| Offset | Size | Type    | Field    | Encoding |
-|--------|------|---------|----------|----------|
-| 0      | 2    | uint16  | Sync     | `0xCAFE` |
-| 2      | 4    | uint32  | Tick     | Raw      |
-| 6      | 4    | float32 | AccelX   | Native   |
-| 10     | 4    | float32 | AccelY   | Native   |
-| 14     | 4    | float32 | AccelZ   | Native   |
-| 18     | 4    | float32 | GyroX    | Native   |
-| 22     | 4    | float32 | GyroY    | Native   |
-| 26     | 4    | float32 | GyroZ    | Native   |
-| 30     | 1    | uint8   | State    | Enum     |
-| 31     | 1    | uint8   | SyncEnd  | `0xBE`   |
+| Offset | Size | Type    | Field      | Encoding |
+|--------|------|---------|------------|----------|
+| 0      | 2    | uint16  | Sync       | `0xCAFE` |
+| 2      | 4    | uint32  | Tick       | Raw      |
+| 6      | 4    | float32 | AccelX     | Native   |
+| 10     | 4    | float32 | AccelY     | Native   |
+| 14     | 4    | float32 | AccelZ     | Native   |
+| 18     | 4    | float32 | GyroX      | Native   |
+| 22     | 4    | float32 | GyroY      | Native   |
+| 26     | 4    | float32 | GyroZ      | Native   |
+| 30     | 2    | int16   | PosX       | x1 m     |
+| 32     | 2    | int16   | PosY       | x1 m     |
+| 34     | 2    | int16   | PosZ       | x1 m     |
+| 36     | 2    | int16   | VelX       | x10      |
+| 38     | 2    | int16   | VelY       | x10      |
+| 40     | 2    | int16   | VelZ       | x10      |
+| 42     | 2    | int16   | QuatW      | x10000   |
+| 44     | 2    | int16   | QuatX      | x10000   |
+| 46     | 2    | int16   | QuatY      | x10000   |
+| 48     | 2    | int16   | QuatZ      | x10000   |
+| 50     | 2    | int16   | PDiag2     | x10      |
+| 52     | 2    | uint16  | PressurePa | /10      |
+| 54     | 1    | uint8   | State      | Enum     |
+| 55     | 1    | uint8   | SyncEnd    | `0xBE`   |

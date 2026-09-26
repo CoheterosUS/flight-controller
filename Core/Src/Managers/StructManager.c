@@ -79,12 +79,24 @@ FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData) {
 
     Record.Sync = FlightData->Sync;
     Record.Tick = FlightData->Tick;
-    Record.AccelX = FlightData->AccelX;
-    Record.AccelY = FlightData->AccelY;
-    Record.AccelZ = FlightData->AccelZ;
-    Record.GyroX = FlightData->GyroX;
-    Record.GyroY = FlightData->GyroY;
-    Record.GyroZ = FlightData->GyroZ;
+    Record.AccelX = FlightData->CalAccelX;
+    Record.AccelY = FlightData->CalAccelY;
+    Record.AccelZ = FlightData->CalAccelZ;
+    Record.GyroX = FlightData->CalGyroX;
+    Record.GyroY = FlightData->CalGyroY;
+    Record.GyroZ = FlightData->CalGyroZ;
+    Record.PosX = (int16_t)FlightData->PosX;
+    Record.PosY = (int16_t)FlightData->PosY;
+    Record.PosZ = (int16_t)FlightData->PosZ;
+    Record.VelX = (int16_t)(FlightData->VelX * 10.0f);
+    Record.VelY = (int16_t)(FlightData->VelY * 10.0f);
+    Record.VelZ = (int16_t)(FlightData->VelZ * 10.0f);
+    Record.QuatW = (int16_t)(FlightData->QuatW * 10000.0f);
+    Record.QuatX = (int16_t)(FlightData->QuatX * 10000.0f);
+    Record.QuatY = (int16_t)(FlightData->QuatY * 10000.0f);
+    Record.QuatZ = (int16_t)(FlightData->QuatZ * 10000.0f);
+    Record.PDiag2 = (int16_t)(FlightData->PDiag[2] * 10.0f);
+    Record.PressurePa = (uint16_t)(FlightData->PressurePa / 10.0f);
     Record.State = FlightData->State;
     Record.SyncEnd = FlightData->SyncEnd;
 

@@ -60,6 +60,7 @@
 
 typedef struct {
     FlashLogRecord_t Records[FLASH_PAGE_RECORDS];
+    uint8_t _padding[W25Q_PAGE_SIZE - sizeof(FlashLogRecord_t) * FLASH_PAGE_RECORDS];
 } FlashPage_t;
 
 extern SemaphoreHandle_t FlashSPISemaphore;

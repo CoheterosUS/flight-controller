@@ -39,6 +39,7 @@ typedef enum {
 // TODO: Refine
 typedef struct {
     float ReferencePressurePa;
+    float ReferenceTemperatureC;
     bool ReferencePressurePaValid;
     float GyroBiasX;
     float GyroBiasY;
@@ -95,6 +96,12 @@ typedef struct {
     float BarometricAltitude;
     float BarometricVelocity;
     float GPSVelocity;
+    float CalAccelX;
+    float CalAccelY;
+    float CalAccelZ;
+    float CalGyroX;
+    float CalGyroY;
+    float CalGyroZ;
     float PosX;
     float PosY;
     float PosZ;

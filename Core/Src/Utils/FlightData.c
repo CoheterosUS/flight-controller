@@ -8,7 +8,7 @@
 #include "KalmanLib.h"
 
 #define MM_TO_METERS 0.001f
-#define KALMAN_DT 0.01f
+#define KALMAN_DT LOOP_DT
 
 static arm_matrix_instance_f32 KalmanP, KalmanQ, KalmanRGPS, KalmanRMAG, KalmanRBAR;
 static float32_t KalmanPData[H_P_A_Q_COLS * H_P_A_Q_COLS];
@@ -29,7 +29,7 @@ static float KalmanLastPressure = 0.0f;
 static float KalmanLastAccelX = 0.0f;
 
 void KalmanFilter_Init(SystemContext_t *SystemContext) {
-	float32_t EulDeg0[3] = {0.0f, 90.0f, 0.0f};
+	float32_t EulDeg0[3] = {KALMAN_INITIAL_ROLL_DEG, KALMAN_INITIAL_PITCH_DEG, KALMAN_INITIAL_YAW_DEG};
 
 	for (int i = 0; i < H_GPS_ROWS; i++) {
 		KalmanRGPSData[i + i * H_GPS_ROWS] = 1.0f;
@@ -39,6 +39,15 @@ void KalmanFilter_Init(SystemContext_t *SystemContext) {
 	kalman_init(&KalmanP, &KalmanQ, &KalmanRGPS, &KalmanRMAG, &KalmanRBAR,
 		&KalmanPData, &KalmanQData, &KalmanRMAGData, &KalmanRBARData,
 		&EulDeg0, &KalmanQuat, KALMAN_DT);
+}
+
+void KalmanFilter_IMU_Cal(float32_t *accelIn, float32_t *gyroIn, float32_t *accelOut, float32_t *gyroOut) {
+	accelOut[0] = accelIn[0];
+	accelOut[1] = accelIn[1];
+	accelOut[2] = accelIn[2];
+	gyroOut[0] = gyroIn[0];
+	gyroOut[1] = gyroIn[1];
+	gyroOut[2] = gyroIn[2];
 }
 
 FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemContext, IIM42653_SensorData_t IIM42653_FlightData, BMP581_SensorData_t BMP581_FlightData, IIS2MDCTR_SensorData_t IIS2MDCTR_FlightData, ZOEM8Q_SensorData_t ZOEM8Q_FlightData, CommandType_t LastCommand) {
@@ -74,7 +83,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.Satellites = ZOEM8Q_FlightData.Satellites;
 
 	FlightData.BarometricAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
-	FlightData.BarometricAltitude = CalculateFilteredAltitude(SystemContext, FlightData.BarometricAltitude);
+	// FlightData.BarometricAltitude = CalculateFilteredAltitude(SystemContext, FlightData.BarometricAltitude);
 	FlightData.BarometricVelocity = CalculateBarometricVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick);
 	FlightData.GPSVelocity = CalculateGPSVerticalVelocity(FlightData.GPSAltitude, FlightData.Tick);
 
@@ -84,15 +93,26 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 		KalmanLastAccelX = FlightData.AccelX;
 		KalmanLastPressure = FlightData.PressurePa;
 
-		float32_t AccelIMU[3] = {FlightData.AccelX, FlightData.AccelY, FlightData.AccelZ};
-		float32_t OmegaIMU[3] = {FlightData.GyroX, FlightData.GyroY, FlightData.GyroZ};
+		float32_t AccelRaw[3] = {FlightData.AccelX, FlightData.AccelY, FlightData.AccelZ};
+		float32_t GyroRaw[3] = {FlightData.GyroX, FlightData.GyroY, FlightData.GyroZ};
+		float32_t AccelIMU[3];
+		float32_t OmegaIMU[3];
 		float32_t ZBAR[1] = {FlightData.PressurePa};
+
+		KalmanFilter_IMU_Cal(AccelRaw, GyroRaw, AccelIMU, OmegaIMU);
+
+		FlightData.CalAccelX = AccelIMU[0];
+		FlightData.CalAccelY = AccelIMU[1];
+		FlightData.CalAccelZ = AccelIMU[2];
+		FlightData.CalGyroX = OmegaIMU[0];
+		FlightData.CalGyroY = OmegaIMU[1];
+		FlightData.CalGyroZ = OmegaIMU[2];
 
 		kalman_filter(IMU_Available, false, false, BAR_Available,
 			&AccelIMU, &OmegaIMU, &KalmanZGPS, &KalmanZMAG, &ZBAR,
 			&KalmanPos, &KalmanVel, &KalmanQuat,
 			&KalmanBe, &KalmanP, &KalmanQ, &KalmanRGPS, &KalmanRMAG, &KalmanRBAR,
-			SystemContext->ReferencePressurePa, KALMAN_DT
+			SystemContext->ReferencePressurePa, CalculateKelvinFromCelsius(SystemContext->ReferenceTemperatureC), KALMAN_DT
     );
 
 		FlightData.PosX = KalmanPos[0];
@@ -120,6 +140,12 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 		FlightData.QuatY = 0;
 		FlightData.QuatZ = 0;
 		memset(FlightData.PDiag, 0, sizeof(FlightData.PDiag));
+		FlightData.CalAccelX = FlightData.AccelX;
+		FlightData.CalAccelY = FlightData.AccelY;
+		FlightData.CalAccelZ = FlightData.AccelZ;
+		FlightData.CalGyroX = FlightData.GyroX;
+		FlightData.CalGyroY = FlightData.GyroY;
+		FlightData.CalGyroZ = FlightData.GyroZ;
 	}
 
 	FlightData.Flags = SystemFaultFlags;

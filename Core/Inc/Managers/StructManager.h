@@ -91,6 +91,18 @@ typedef struct {
     float GyroX;
     float GyroY;
     float GyroZ;
+    int16_t PosX;
+    int16_t PosY;
+    int16_t PosZ;
+    int16_t VelX;
+    int16_t VelY;
+    int16_t VelZ;
+    int16_t QuatW;
+    int16_t QuatX;
+    int16_t QuatY;
+    int16_t QuatZ;
+    int16_t PDiag2;
+    uint16_t PressurePa;
     uint8_t State;
     uint8_t SyncEnd;
 } FlashLogRecord_t;
