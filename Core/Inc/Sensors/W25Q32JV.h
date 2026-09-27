@@ -2,6 +2,7 @@
 #define W25Q32JV_H
 
 #include <stdbool.h>
+#include "Utils/configuration.h"
 #include "stm32h7xx_hal.h"
 #include "FreeRTOS.h"
 #include "semphr.h"
@@ -20,6 +21,11 @@
 #define W25Q_TOTAL_SIZE         (4 * 1024 * 1024)
 #define W25Q_PAGE_COUNT         (W25Q_TOTAL_SIZE / W25Q_PAGE_SIZE)
 #define W25Q_SECTOR_COUNT       (W25Q_TOTAL_SIZE / W25Q_SECTOR_SIZE)
+#define W25Q_LOG_END            FLASH_CAL_SECTOR_ADDRESS
+
+static inline bool W25Q_LogHasSpaceAt(uint32_t Address, uint32_t Bytes) {
+    return Address <= W25Q_LOG_END && Bytes <= W25Q_LOG_END - Address;
+}
 
 #define W25Q_JEDEC_MFR          0xEF
 #define W25Q_JEDEC_TYPE         0x40
@@ -56,12 +62,32 @@
 #define W25Q_SR1_PROTECT_ALL            0x9C
 #define W25Q_SR1_PROTECT_NONE           0x00
 
+#define W25Q_SNAPSHOT_VERSION           1
+#define W25Q_SNAPSHOT_FLAG_HIL_PRESEED  (1u << 0)
+
 #define FLASH_PAGE_RECORDS              FLASH_RECORDS_PER_PAGE
 
 typedef struct {
     FlashLogRecord_t Records[FLASH_PAGE_RECORDS];
     uint8_t _padding[W25Q_PAGE_SIZE - sizeof(FlashLogRecord_t) * FLASH_PAGE_RECORDS];
 } FlashPage_t;
+
+#pragma pack(push, 1)
+typedef struct {
+    uint16_t Magic;
+    uint16_t Version;
+    uint16_t Flags;
+    uint32_t ImuCalSequence;
+    float M[9];
+    float AccelBiasCal[3];
+    float GyroBiasRaw[3];
+    float ReferencePressurePa;
+    float ReferenceTemperatureC;
+    uint16_t ImuOdrHz;
+    uint16_t ConfigVersion;
+    uint32_t Crc32;
+} FlightSnapshot_t;
+#pragma pack(pop)
 
 extern SemaphoreHandle_t FlashSPISemaphore;
 
@@ -80,6 +106,7 @@ HAL_StatusTypeDef W25Q_ReadData(SPI_HandleTypeDef *Handle, uint32_t Address, uin
 HAL_StatusTypeDef W25Q_PageProgram(SPI_HandleTypeDef *Handle, uint32_t Address, const uint8_t *Data, uint16_t Length);
 HAL_StatusTypeDef W25Q_PageProgramDMA(SPI_HandleTypeDef *Handle, uint32_t Address, uint8_t *DMABuffer, uint16_t Length);
 HAL_StatusTypeDef W25Q_SectorErase(SPI_HandleTypeDef *Handle, uint32_t SectorAddress);
+HAL_StatusTypeDef W25Q_BlockErase64K(SPI_HandleTypeDef *Handle, uint32_t BlockAddress);
 HAL_StatusTypeDef W25Q_ChipErase(SPI_HandleTypeDef *Handle);
 HAL_StatusTypeDef W25Q_ProtectAll(SPI_HandleTypeDef *Handle);
 HAL_StatusTypeDef W25Q_UnprotectAll(SPI_HandleTypeDef *Handle);
@@ -91,8 +118,14 @@ void W25Q_NewFlight(void);
 uint32_t W25Q_GetWritePointer(void);
 void W25Q_AdvanceWritePointer(uint16_t Bytes);
 bool W25Q_HasSpace(uint16_t Bytes);
+uint32_t W25Q_LogEndAddress(void);
 HAL_StatusTypeDef W25Q_EraseAll(void);
 bool W25Q_MaintenanceMode(void);
 bool W25Q_DumpToSD(void);
+
+bool W25Q_CalLoad(float M[9]);
+bool W25Q_CalAppend(const float M[9]);
+uint32_t W25Q_CalGetSequence(void);
+bool W25Q_SnapshotWrite(const FlightSnapshot_t *S);
 
 #endif //W25Q32JV_H

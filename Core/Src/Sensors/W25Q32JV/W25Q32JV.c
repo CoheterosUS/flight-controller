@@ -179,6 +179,25 @@ HAL_StatusTypeDef W25Q_SectorErase(SPI_HandleTypeDef *Handle, uint32_t SectorAdd
     return W25Q_WaitBusy(Handle, 500);
 }
 
+HAL_StatusTypeDef W25Q_BlockErase64K(SPI_HandleTypeDef *Handle, uint32_t BlockAddress) {
+    if (W25Q_WriteEnable(Handle) != HAL_OK) return HAL_ERROR;
+
+    uint8_t Cmd[4] = {
+        W25Q_CMD_BLOCK_ERASE_64K,
+        (BlockAddress >> 16) & 0xFF,
+        (BlockAddress >> 8) & 0xFF,
+        BlockAddress & 0xFF
+    };
+
+    W25Q_SelectCS();
+    HAL_StatusTypeDef Status = HAL_SPI_Transmit(Handle, Cmd, 4, W25Q_SPI_TIMEOUT);
+    W25Q_DeselectCS();
+
+    if (Status != HAL_OK) return Status;
+
+    return W25Q_WaitBusy(Handle, 2000);
+}
+
 HAL_StatusTypeDef W25Q_ChipErase(SPI_HandleTypeDef *Handle) {
     if (W25Q_WriteEnable(Handle) != HAL_OK) return HAL_ERROR;
 

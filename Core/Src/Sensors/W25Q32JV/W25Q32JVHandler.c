@@ -2,7 +2,9 @@
 #include "Utils/shared.h"
 #include "Managers/StructManager.h"
 #include "fatfs.h"
+#include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 #define FLASH_HEADER_MAGIC      0x464C5348
 #define FLASH_HEADER_ADDRESS    0x00000000
@@ -19,6 +21,8 @@ typedef struct {
 static FlashHeader_t Header;
 static bool W25Q_Initialized = false;
 
+_Static_assert(sizeof(FlightSnapshot_t) <= W25Q_PAGE_SIZE, "snapshot must fit in one page");
+
 static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
     uint8_t MFR, Type, Cap;
     if (W25Q_ReadJEDECID(Handle, &MFR, &Type, &Cap) != HAL_OK) return false;
@@ -29,19 +33,49 @@ static bool W25Q_IsFlightMarker(const FlashLogRecord_t *Record) {
     return Record->Sync == PACKET_HEADER && Record->State == 0xFF && Record->SyncEnd == PACKET_FOOTER;
 }
 
+// Reflected CRC-32 with polynomial 0xEDB88320.
+static uint32_t W25Q_SnapshotCrc32(const uint8_t *Data, size_t Length) {
+    uint32_t Crc = 0xFFFFFFFFu;
+
+    for (size_t i = 0; i < Length; i++) {
+        Crc ^= Data[i];
+        for (uint8_t Bit = 0; Bit < 8; Bit++) {
+            Crc = (Crc >> 1) ^ (0xEDB88320u & (uint32_t)-(int32_t)(Crc & 1u));
+        }
+    }
+
+    return ~Crc;
+}
+
+static bool W25Q_IsSnapshotPage(const uint8_t *Page) {
+    const FlightSnapshot_t *Snapshot = (const FlightSnapshot_t *)Page;
+
+    // The fixed version, valid CRC and erased tail distinguish snapshots from log pages.
+    if (Snapshot->Magic != PACKET_HEADER || Snapshot->Version != W25Q_SNAPSHOT_VERSION) return false;
+    if (Snapshot->Crc32 != W25Q_SnapshotCrc32(Page, offsetof(FlightSnapshot_t, Crc32))) return false;
+
+    for (size_t i = sizeof(FlightSnapshot_t); i < W25Q_PAGE_SIZE; i++) {
+        if (Page[i] != 0xFFu) return false;
+    }
+
+    return true;
+}
+
 // Every written page (marker or data) starts with PACKET_HEADER_LSB; an erased page starts with 0xFF.
 // The marker only occupies the first record of its page, so scanning must step by whole pages.
 static uint32_t W25Q_ScanForWritePointer(SPI_HandleTypeDef *Handle, uint32_t StartAddress) {
     uint8_t Byte;
     uint32_t Address = StartAddress & ~(uint32_t)(W25Q_PAGE_SIZE - 1);
 
-    while (Address < W25Q_TOTAL_SIZE) {
+    if (Address >= W25Q_LOG_END) return W25Q_LOG_END;
+
+    while (Address < W25Q_LOG_END) {
         if (W25Q_ReadData(Handle, Address, &Byte, 1) != HAL_OK) break;
         if (Byte == 0xFF) return Address;
         Address += W25Q_PAGE_SIZE;
     }
 
-    return Address;
+    return Address < W25Q_LOG_END ? Address : W25Q_LOG_END;
 }
 
 static HAL_StatusTypeDef W25Q_WriteHeader(SPI_HandleTypeDef *Handle) {
@@ -101,10 +135,11 @@ void W25Q_NewFlight(void) {
     Marker.State = 0xFF;
     Marker.SyncEnd = PACKET_FOOTER;
 
-    W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t));
-    Header.WritePointer += W25Q_PAGE_SIZE;
-    Header.FlightCount++;
-    W25Q_WriteHeader(W25Q_HANDLE);
+    if (W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t)) == HAL_OK) {
+        Header.WritePointer += W25Q_PAGE_SIZE;
+        Header.FlightCount++;
+        W25Q_WriteHeader(W25Q_HANDLE);
+    }
 }
 
 uint32_t W25Q_GetWritePointer(void) {
@@ -112,11 +147,15 @@ uint32_t W25Q_GetWritePointer(void) {
 }
 
 void W25Q_AdvanceWritePointer(uint16_t Bytes) {
-    Header.WritePointer += Bytes;
+    if (W25Q_LogHasSpaceAt(Header.WritePointer, Bytes)) Header.WritePointer += Bytes;
 }
 
 bool W25Q_HasSpace(uint16_t Bytes) {
-    return (Header.WritePointer + Bytes) <= W25Q_TOTAL_SIZE;
+    return W25Q_LogHasSpaceAt(Header.WritePointer, Bytes);
+}
+
+uint32_t W25Q_LogEndAddress(void) {
+    return W25Q_LOG_END;
 }
 
 HAL_StatusTypeDef W25Q_EraseAll(void) {
@@ -126,7 +165,16 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
 
     if (!W25Q_VerifyJEDECID(Handle)) return HAL_ERROR;
     if (W25Q_UnprotectAll(Handle) != HAL_OK) return HAL_ERROR;
-    if (W25Q_ChipErase(Handle) != HAL_OK) return HAL_ERROR;
+
+    for (uint32_t Address = 0; Address < W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE; Address += W25Q_BLOCK_SIZE) {
+        if (W25Q_BlockErase64K(Handle, Address) != HAL_OK) return HAL_ERROR;
+    }
+
+    for (uint32_t Address = W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE;
+         Address < W25Q_LOG_END;
+         Address += W25Q_SECTOR_SIZE) {
+        if (W25Q_SectorErase(Handle, Address) != HAL_OK) return HAL_ERROR;
+    }
 
     Header.Magic = FLASH_HEADER_MAGIC;
     Header.FlightCount = 0;
@@ -177,6 +225,11 @@ bool W25Q_DumpToSD(void) {
     while (Address < End) {
         if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Page, sizeof(FlashPage_t)) != HAL_OK) break;
 
+        if (W25Q_IsSnapshotPage((const uint8_t *)&Page)) {
+            Address += W25Q_PAGE_SIZE;
+            continue;
+        }
+
         if (W25Q_IsFlightMarker(&Page.Records[0])) {
             if (FileOpen) f_close(&File);
             char Name[16];
@@ -200,4 +253,27 @@ bool W25Q_DumpToSD(void) {
     if (FileOpen) f_close(&File);
     f_mount(NULL, SDPath, 1);
     return FlightNum > 0;
+}
+
+bool W25Q_SnapshotWrite(const FlightSnapshot_t *S) {
+    FlightSnapshot_t Snapshot;
+    uint8_t Page[W25Q_PAGE_SIZE];
+
+    if (S == NULL || !W25Q_HasSpace(W25Q_PAGE_SIZE)) return false;
+    if ((W25Q_GetWritePointer() & (W25Q_PAGE_SIZE - 1u)) != 0) return false;
+
+    memset(Page, 0xFF, sizeof(Page));
+    memcpy(&Snapshot, S, sizeof(Snapshot));
+    Snapshot.Magic = PACKET_HEADER;
+    Snapshot.Version = W25Q_SNAPSHOT_VERSION;
+    Snapshot.Crc32 = W25Q_SnapshotCrc32((const uint8_t *)&Snapshot, offsetof(FlightSnapshot_t, Crc32));
+    memcpy(Page, &Snapshot, sizeof(Snapshot));
+
+    if (W25Q_PageProgram(W25Q_HANDLE,
+                         W25Q_GetWritePointer(),
+                         Page,
+                         W25Q_PAGE_SIZE) != HAL_OK) return false;
+
+    W25Q_AdvanceWritePointer(W25Q_PAGE_SIZE);
+    return true;
 }
