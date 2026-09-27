@@ -58,6 +58,7 @@ typedef struct {
     uint8_t LastCommand;
     uint16_t CalStatus;
     uint8_t SyncEnd;
+    uint8_t ApogeeTrigger;
 } SDLogRecord_t;
 
 // Alt Filtro Kalman, 2 bytes
@@ -113,13 +114,14 @@ typedef struct {
     uint16_t PressurePa;
     uint8_t State;
     uint8_t SyncEnd;
+    uint8_t ApogeeTrigger;
 } FlashLogRecord_t;
 #pragma pack(pop)
 
-_Static_assert(sizeof(FlashLogRecord_t) == 56, "FlashLogRecord_t layout changed");
+_Static_assert(sizeof(FlashLogRecord_t) == 57, "FlashLogRecord_t layout changed");
 _Static_assert(sizeof(FlashLogRecord_t) <= (256 / FLASH_RECORDS_PER_PAGE), "FlashLogRecord_t exceeds flash page slot");
 _Static_assert(sizeof(TelemetryPacket_t) == 54, "TelemetryPacket_t layout changed");
-_Static_assert(sizeof(SDLogRecord_t) == 187, "SDLogRecord_t layout changed");
+_Static_assert(sizeof(SDLogRecord_t) == 188, "SDLogRecord_t layout changed");
 
 SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData);
 TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData);

@@ -3,12 +3,22 @@
 #include "Utils/Pyro.h"
 #include "stm32h7xx_hal.h"
 
+static ConfirmCounter_t MainParachuteConfirm;
+static uint32_t LastBaroSampleId;
+
 void ApogeeStateEntry(SystemContext_t *ctx) {
     PyroFire(PYRO_CHANNEL_DROGUE);
+    MainParachuteConfirm = (ConfirmCounter_t){ .Required = APOGEE_CONFIRM_SAMPLES };
+    LastBaroSampleId = 0;
 }
 
 SystemState_t ApogeeStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (FlightData.BarometricAltitude <= APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD) {
+	bool NewBaroSample = FlightData.BaroSampleId != 0 && FlightData.BaroSampleId != LastBaroSampleId;
+	if (NewBaroSample) {
+		LastBaroSampleId = FlightData.BaroSampleId;
+	}
+
+	if (NewBaroSample && FlightData.BaroValid && ConfirmCounterCheck(&MainParachuteConfirm, FlightData.BarometricAltitude <= APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD)) {
 		return STATE_MAIN_PARACHUTE;
 	}
 

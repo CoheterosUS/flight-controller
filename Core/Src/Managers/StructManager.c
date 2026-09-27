@@ -48,6 +48,7 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     Record.LastCommand = FlightData->LastCommand;
     Record.CalStatus = FlightData->CalStatus;
     Record.SyncEnd = FlightData->SyncEnd;
+    Record.ApogeeTrigger = FlightData->ApogeeTrigger;
 
     return Record;
 }
@@ -107,6 +108,7 @@ FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData) {
     Record.PressurePa = (uint16_t)(FlightData->PressurePa / 10.0f);
     Record.State = FlightData->State;
     Record.SyncEnd = FlightData->SyncEnd;
+    Record.ApogeeTrigger = FlightData->ApogeeTrigger;
 
     return Record;
 }
