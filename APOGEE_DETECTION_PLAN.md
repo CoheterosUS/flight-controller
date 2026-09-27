@@ -109,7 +109,7 @@ New sample detection: the BMP581 mailbox (`BMP581Mailbox.c`) has no sequence num
 | `APOGEE_DROP_M` | 15.0 | drop below the filtered peak (was 7.0, changed by the user) |
 | `APOGEE_CONFIRM_SAMPLES` | 5 | new barometer samples, about 100 ms at 50 Hz |
 | `APOGEE_TIMER_MS` | 28000 | from BOOST entry. Decided by the user. WARNING: the old HIL profile apogee is at about 27.5 s, so D would beat B. The HIL default profile must be rescaled so the nominal apogee is well before 28 s (25 s), see `HIL/APOGEE_HIL.md`. |
-| `BARO_ODR_HZ` | 50 | real barometer rate. Confirm the configured BMP581 ODR in performance mode matches |
+| `BARO_ODR_HZ` | 46 | real barometer rate: BMP581 continuous mode ignores the ODR register, pressure x32 and temperature x2 give about 46 Hz typical (datasheet section 4.3.6 and Table 9). 5 confirmation samples are about 110 ms |
 | `APOGEE_BARO_MAX_SPEED_MPS`, `APOGEE_BARO_SLEW_MARGIN_M` | 400, 10 | slew gate |
 | `BARO_VALID_MIN_PA`, `BARO_VALID_MAX_PA`, `BARO_VALID_MIN_TEMP_C`, `BARO_VALID_MAX_TEMP_C` | 30000, 125000, -40, 85 | sample plausibility |
 
@@ -156,3 +156,5 @@ Accepted or open, decided by the user:
 - The 5 s and 60 s main parachute barometer-loss backstop values are placeholders to tune with the descent simulation.
 - Records changed size: SD 188 bytes, flash 57 bytes. Ground software reading the SD log and any flash dump tool must be updated, and the flash must be erased before flight.
 - Pad calibration now counts unique barometer samples: about 6 s of averaging at the sensor rate. HIL must send the barometer during calibration for at least that long.
+
+Update after the audit fixes: the mailbox ignores a repeated raw frame (the 50 Hz read is faster than the 46 Hz sensor), so a sample id means one physical conversion. APOGEE has a main parachute backstop when the barometer is lost: no new valid sample for `APOGEE_MAIN_BARO_LOSS_MS` (5 s) and at least `APOGEE_MAIN_BARO_LOSS_DELAY_MS` (60 s) in APOGEE. It never acts while the barometer is healthy. Both values are placeholders.

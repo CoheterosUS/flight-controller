@@ -44,6 +44,11 @@ Branch `baro-apogee-fix`. Read this first, then `APOGEE_HIL.md` (scenarios) and 
 - Default profile: apogee at **25 s** after launch, about 3000 m. B should fire at about 26.9 s, only 1.1 s before the 28 s timer. Add `--apogee-time`, `--apogee-alt`, `--scenario`, `--seed`, `--dry-run`.
 - 15 scenarios (H1 to H15) with pass criteria in `APOGEE_HIL.md`. The most important ones: no early fire (H1, H2, H3, H4, H9), invalid pressure including 0 Pa and NaN (H14, this is the regression test for the fatal failure), timer backstop with a frozen or missing barometer or a stuck IMU (H5, H6), apogee without ACTIVE_CONTROL (H7), main chute must not fire early on a bad sample (H15).
 
+- Main parachute backstop: if the barometer is lost after apogee (no new valid sample for 5 s) and at least 60 s have passed in APOGEE, the main parachute fires. Add a HIL scenario: barometer stops or turns invalid right after apogee, expect MAIN_PARACHUTE at about 60 s after apogee. Never while the barometer is healthy.
+- Manual `COMMAND_DROGUE` is only accepted in BOOST, COAST and ACTIVE_CONTROL (`DROGUE_COMMAND_ANY_STATE 0`).
+- Pad calibration averages 250 unique barometer samples after discarding 50: the HIL must send the barometer for at least about 7 s during calibration.
+- Records: SD 188 bytes, flash 57 bytes, `SyncEnd` last.
+
 ## Parameters (`configuration.h`)
 
 | Macro | Value |
@@ -51,7 +56,7 @@ Branch `baro-apogee-fix`. Read this first, then `APOGEE_HIL.md` (scenarios) and 
 | `APOGEE_DROP_M` | 15.0 |
 | `APOGEE_CONFIRM_SAMPLES` | 5 |
 | `APOGEE_TIMER_MS` | 28000 |
-| `BARO_ODR_HZ` | 50 |
+| `BARO_ODR_HZ` | 46 (real sensor rate, HIL sends 50) |
 | `APOGEE_BARO_MAX_SPEED_MPS`, `APOGEE_BARO_SLEW_MARGIN_M` | 400, 10 |
 | `BARO_VALID_MIN_PA`, `BARO_VALID_MAX_PA` | 30000, 125000 |
 | `BARO_VALID_MIN_TEMP_C`, `BARO_VALID_MAX_TEMP_C` | -40, 85 |
