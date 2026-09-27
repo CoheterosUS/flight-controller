@@ -58,12 +58,12 @@ Channel B:
 - Only acts when `new_baro_sample` is true (once per barometer publish, not per loop iteration).
 - `peak = max(peak, alt)`. If `alt < peak - APOGEE_DROP_M` the counter increments, otherwise it resets. Returns `BARO` when the counter reaches `APOGEE_CONFIRM_SAMPLES`. Only evaluated when `baro_allowed` (state is not `BOOST`).
 - Non-finite `alt` is ignored (counter unchanged), never treated as a drop.
-- No derivative, no low-pass filter needed at first. The drop margin and the confirmation absorb noise. The unfiltered altitude noise is about 0.2 to 0.3 m, so the default margin has a large safety factor.
+- Filter (decided): a median of the last 3 accepted samples, nothing else. It removes isolated outliers without smoothing lag (one sample, 20 ms). No low-pass, no derivative. The BMP581 IIR and oversampling configuration is NOT touched: the raw data is shared with the Kalman filter. The drop margin and the confirmation absorb the remaining noise. The unfiltered altitude noise is about 0.2 to 0.3 m, so the default margin has a large safety factor.
 
 Channel D:
 - Returns `TIMER` when `elapsed_since_launch_ms >= APOGEE_TIMER_MS`. Independent of every sensor. `elapsed` is measured from `BOOST` entry (`StateEntryTicks[STATE_BOOST]`).
 
-Expected latency of B (ballistic, near apogee): a 7 m drop takes about 1.2 s (`0.5 * g * t^2`), so the drogue fires about 1.3 s after true apogee, at about 12 m/s descent and 7 m below the peak. That is acceptable for deployment speed. Increasing the margin increases the latency.
+Expected latency of B (ballistic, near apogee): a 15 m drop takes about 1.75 s (`0.5 * g * t^2`), plus 5 samples (100 ms) and 1 median sample (20 ms), so the drogue fires about 1.9 s after true apogee, at about 17 m/s descent and about 17 m below the peak. With apogee at 25 s in HIL, B fires at about 26.9 s, only about 1.1 s before the 28 s timer. Tight: the timer must stay a backstop.
 
 ### 4.1 Invalid barometer data (must never cause a drogue or main chute)
 
@@ -91,7 +91,7 @@ New sample detection: the BMP581 mailbox (`BMP581Mailbox.c`) has no sequence num
 
 | Macro | Default | Note |
 |---|---|---|
-| `APOGEE_DROP_M` | 7.0 | drop below peak |
+| `APOGEE_DROP_M` | 15.0 | drop below the filtered peak (was 7.0, changed by the user) |
 | `APOGEE_CONFIRM_SAMPLES` | 5 | new barometer samples, about 100 ms at 50 Hz |
 | `APOGEE_TIMER_MS` | 28000 | from BOOST entry. Decided by the user. WARNING: the old HIL profile apogee is at about 27.5 s, so D would beat B. The HIL default profile must be rescaled so the nominal apogee is well before 28 s (25 s), see `HIL/APOGEE_HIL.md`. |
 | `BARO_ODR_HZ` | 50 | real barometer rate. Confirm the configured BMP581 ODR in performance mode matches |

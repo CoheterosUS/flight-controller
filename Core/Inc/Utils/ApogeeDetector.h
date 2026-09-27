@@ -2,7 +2,8 @@
 #define APOGEE_DETECTOR_H
 
 // Pure C apogee detector (no HAL, no RTOS, host testable). See APOGEE_DETECTION_PLAN.md.
-// Channel B: barometric altitude below (peak - APOGEE_DROP_M) for APOGEE_CONFIRM_SAMPLES new valid samples.
+// Channel B: filtered barometric altitude below (peak - APOGEE_DROP_M) for APOGEE_CONFIRM_SAMPLES new valid samples.
+// The only filter is a median of the last 3 accepted samples (light: removes isolated outliers, adds one sample of lag).
 // Channel D: time since launch (BOOST entry) reaches APOGEE_TIMER_MS.
 // Config macros come from Utils/configuration.h. For host tests, define APOGEE_DETECTOR_HOST_TEST and
 // provide the same macros (with #ifndef defaults in the .c file).
@@ -26,7 +27,10 @@ typedef struct {
 } ApogeeInput_t;
 
 typedef struct {
-    float Peak;                     // highest ACCEPTED altitude since Reset
+    float Window[3];                // last accepted RAW altitudes (median filter input), oldest overwritten first
+    uint8_t WindowCount;            // number of samples in Window, saturates at 3
+    uint8_t WindowIndex;
+    float Peak;                     // highest FILTERED altitude since Reset
     float LastAcceptedAltitude;
     uint32_t LastAcceptedTickMs;
     bool HaveAnchor;                // at least one accepted sample
@@ -54,9 +58,11 @@ void ApogeeDetector_Reset(ApogeeDetector_t *Detector, uint32_t LaunchTickMs);
 //    (dt = seconds since the last accepted sample, from NowMs) the sample is rejected like an invalid one
 //    (so a single bad spike, up or down, can neither poison the peak nor count as a drop).
 //    The gate widens with dt, so it recovers by itself after a real gap.
-//  - accepted: Peak = max(Peak, Altitude). If Altitude < Peak - APOGEE_DROP_M the DropCount increments, otherwise
-//    it resets to 0. BARO fires when DropCount reaches APOGEE_CONFIRM_SAMPLES and BaroAllowed is true.
-//  - while BaroAllowed is false (BOOST) accepted samples still update Peak and anchor but the drop counter stays 0.
+//  - accepted: the raw altitude enters the 3 sample window. Until 3 accepted samples exist nothing is evaluated for B.
+//    Filtered = median of the window. Peak = max(Peak, Filtered). If Filtered < Peak - APOGEE_DROP_M the DropCount
+//    increments, otherwise it resets to 0. BARO fires when DropCount reaches APOGEE_CONFIRM_SAMPLES and BaroAllowed is true.
+//    The slew gate always compares the RAW altitude with the last accepted RAW altitude (LastAcceptedAltitude), not the filtered one.
+//  - while BaroAllowed is false (BOOST) accepted samples still update the window, Peak and anchor but the drop counter stays 0.
 // Channel D: TIMER fires when (NowMs - LaunchTickMs) >= APOGEE_TIMER_MS, evaluated every call, independent of the barometer.
 // If both are true in the same call, BARO wins (it is the more precise event).
 ApogeeTrigger_t ApogeeDetector_Update(ApogeeDetector_t *Detector, const ApogeeInput_t *Input);
