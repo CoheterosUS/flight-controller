@@ -3,6 +3,7 @@
 #include "Managers/Managers.h"
 #include "Utils/shared.h"
 #include "Utils/Pyro.h"
+#include "Utils/DeepCalGesture.h"
 #include "timers.h"
 #include <Tasks/SensorConfigTask.h>
 
@@ -22,6 +23,9 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
     uint32_t Now = xTaskGetTickCount();
     SystemContext->StateEntryTick = Now;
     SystemContext->StateEntryTicks[CurrentSystemState] = Now;
+    if (CurrentSystemState == STATE_IDLE) {
+        SystemContext->SensorsIdleFinished = false;
+    }
     xTaskNotify(SensorConfigTaskHandle, (uint32_t)CurrentSystemState, eSetValueWithOverwrite);
 
     switch (CurrentSystemState) {
@@ -71,8 +75,15 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
 
 void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemState) {
 #if HIL_MODE
-	(void)SystemContext;
-	(void)CurrentSystemState;
+	switch (CurrentSystemState) {
+		case STATE_IDLE:
+#if AUTO_START_CALIBRATION
+			SystemContext->SensorsIdleFinished = true;
+#endif
+			break;
+		default:
+			break;
+	}
 #else
 	switch (CurrentSystemState) {
 		case STATE_IDLE:
@@ -91,6 +102,7 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 #endif
 			break;
 		case STATE_CALIBRATION:
+		case STATE_DEEP_CALIBRATION:
 			if (BMP581_Mode_Performance(BMP581_HANDLE) != HAL_OK) {
 				SystemFaultFlags |= BMP581_MODE_PERFORMANCE_FAILED;
 			}
@@ -129,6 +141,13 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t Comm
         return CurrentSystemState;
     }
 
+    if (CurrentSystemState == STATE_DEEP_CALIBRATION
+        && (CommantType == COMMAND_DROGUE
+            || CommantType == COMMAND_LANDED
+            || CommantType == COMMAND_CALIBRATION)) {
+        return CurrentSystemState;
+    }
+
     switch (CommantType) {
         case COMMAND_RESET:
             return STATE_IDLE;
@@ -149,49 +168,66 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t Comm
 }
 
 SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *SystemContext, FlightData_t SensorData) {
+	static DeepCalGesture_t DeepCalibrationGesture;
+	SystemState_t NextState;
+	float RawAccel[3] = {SensorData.RawAccelX, SensorData.RawAccelY, SensorData.RawAccelZ};
+	float RawGyro[3] = {SensorData.RawGyroX, SensorData.RawGyroY, SensorData.RawGyroZ};
+
 	switch (CurrentSystemState) {
 		case STATE_IDLE:
-			return IdleStateHandler(SystemContext, SensorData);
+			NextState = IdleStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_CALIBRATION:
-			return CalibrationStateHandler(SystemContext, SensorData);
+			NextState = CalibrationStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_PRELAUNCH:
-			return PrelaunchStateHandler(SystemContext, SensorData);
+			NextState = PrelaunchStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_BOOST:
-			return BoostStateHandler(SystemContext, SensorData);
+			NextState = BoostStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_COAST:
-			return CoastStateHandler(SystemContext, SensorData);
+			NextState = CoastStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_ACTIVE_CONTROL:
-			return ActiveControlStateHandler(SystemContext, SensorData);
+			NextState = ActiveControlStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_APOGEE:
-			return ApogeeStateHandler(SystemContext, SensorData);
+			NextState = ApogeeStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_MAIN_PARACHUTE:
-			return MainParachuteStateHandler(SystemContext, SensorData);
+			NextState = MainParachuteStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_LANDED:
-			return LandedStateHandler(SystemContext, SensorData);
+			NextState = LandedStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_GROUND_ABORT:
-			return GroundAbortStateHandler(SystemContext, SensorData);
+			NextState = GroundAbortStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_DESCENT_ABORT:
-			return DescentAbortStateHandler(SystemContext, SensorData);
+			NextState = DescentAbortStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_ASCENT_ABORT:
-			return AscentAbortStateHandler(SystemContext, SensorData);
+			NextState = AscentAbortStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_DEEP_CALIBRATION:
-			return DeepCalibrationStateHandler(SystemContext, SensorData);
+			NextState = DeepCalibrationStateHandler(SystemContext, SensorData);
 			break;
 		default:
 			// Should not be able to reach
-			return STATE_IDLE;
+			NextState = STATE_IDLE;
 			break;
 	}
+
+	if (CurrentSystemState == STATE_IDLE || CurrentSystemState == STATE_CALIBRATION
+		|| CurrentSystemState == STATE_PRELAUNCH) {
+		if (NextState == CurrentSystemState
+			&& DeepCalGesture_Update(&DeepCalibrationGesture, RawAccel, RawGyro, SensorData.Tick)) {
+			return STATE_DEEP_CALIBRATION;
+		}
+	} else {
+		DeepCalGesture_Reset(&DeepCalibrationGesture);
+	}
+
+	return NextState;
 }
