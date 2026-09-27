@@ -15,6 +15,12 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     Record.RawMagX = FlightData->RawMagX;
     Record.RawMagY = FlightData->RawMagY;
     Record.RawMagZ = FlightData->RawMagZ;
+    Record.CalAccelX = FlightData->CalAccelX;
+    Record.CalAccelY = FlightData->CalAccelY;
+    Record.CalAccelZ = FlightData->CalAccelZ;
+    Record.CalGyroX = FlightData->CalGyroX;
+    Record.CalGyroY = FlightData->CalGyroY;
+    Record.CalGyroZ = FlightData->CalGyroZ;
     Record.PressurePa = FlightData->PressurePa;
     Record.TemperatureC = FlightData->TemperatureC;
     Record.Latitude = FlightData->Latitude;
@@ -40,6 +46,7 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
     Record.State = FlightData->State;
     Record.RelayState = FlightData->RelayState;
     Record.LastCommand = FlightData->LastCommand;
+    Record.CalStatus = FlightData->CalStatus;
     Record.SyncEnd = FlightData->SyncEnd;
 
     return Record;
@@ -69,6 +76,7 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
     Packet.State = FlightData->State;
     Packet.RelayState = FlightData->RelayState;
     Packet.LastCommand = FlightData->LastCommand;
+    Packet.CalStatus = FlightData->CalStatus;
     Packet.SyncEnd = FlightData->SyncEnd;
 
     return Packet;
