@@ -11,6 +11,21 @@
 #define SD_LOGGING_ENABLED          0
 #define HIL_MODE                    1
 
+// FLIGHT_BUILD must be 1 for any image that goes on a rocket. It refuses to compile with HIL switches on,
+// because HIL_MODE 1 never configures or starts the real sensors (no launch detection, no parachutes).
+// Pre-flight checklist: FLIGHT_BUILD 1, HIL_MODE 0, HIL_PRESEED_M 0, erase the flash log (old records use another layout).
+#define FLIGHT_BUILD                0
+#if FLIGHT_BUILD && (HIL_MODE || HIL_PRESEED_M)
+#error "FLIGHT_BUILD requires HIL_MODE 0 and HIL_PRESEED_M 0"
+#endif
+
+// Manual drogue command (COMMAND_DROGUE): 0 = only accepted in BOOST, COAST, ACTIVE_CONTROL (a stray UART frame
+// must not fire the drogue on the pad), 1 = accepted in every state (bench pyro tests).
+#define DROGUE_COMMAND_ANY_STATE    0
+#if FLIGHT_BUILD && DROGUE_COMMAND_ANY_STATE
+#error "FLIGHT_BUILD requires DROGUE_COMMAND_ANY_STATE 0"
+#endif
+
 // HIL only (see BRINGUP_AND_HIL.md)
 #define HIL_PRESEED_M                       0
 #if HIL_PRESEED_M && !HIL_MODE
@@ -35,8 +50,9 @@
 #define ALTITUDE_IIR_FILTER_ALPHA    (10.0f / LOOP_RATE_HZ)
 
 // Barometer Configuration
-#define PRESSURE_CALIBRATION_DISCARD_SAMPLES    1000
-#define PRESSURE_CALIBRATION_SAMPLES            1000
+// Counted in UNIQUE barometer samples (not loop iterations): about 1 s discard and 5 s average at the sensor rate
+#define PRESSURE_CALIBRATION_DISCARD_SAMPLES    50
+#define PRESSURE_CALIBRATION_SAMPLES            250
 
 // IMU Configuration
 // IMU timing (WP-E)

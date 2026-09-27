@@ -1,10 +1,12 @@
 #include "Utils/Calibrations.h"
 #include "Utils/Calculations.h"
+#include <math.h>
 
 static float PressureSumPa;
 static float TemperatureSumC;
 static uint16_t PressureSampleCount;
 static uint16_t PressureDiscardCount;
+static uint32_t PressureLastSampleId;
 
 static float GyroSumX, GyroSumY, GyroSumZ;
 static uint16_t GyroSampleCount;
@@ -32,6 +34,7 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     TemperatureSumC = 0.0f;
     PressureSampleCount = 0;
     PressureDiscardCount = 0;
+    PressureLastSampleId = 0;
 
     GyroSumX = 0.0f;
     GyroSumY = 0.0f;
@@ -40,24 +43,52 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     GyroDiscardCount = 0;
 }
 
+static bool CalibrationBaroInRange(float PressurePa, float TemperatureC) {
+    return isfinite(PressurePa) && PressurePa >= BARO_VALID_MIN_PA && PressurePa <= BARO_VALID_MAX_PA &&
+           isfinite(TemperatureC) && TemperatureC >= BARO_VALID_MIN_TEMP_C && TemperatureC <= BARO_VALID_MAX_TEMP_C;
+}
+
 void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext) {
-    float PressurePa = FlightData.PressurePa;
+    if (SystemContext->ReferencePressurePaValid) {
+        return;
+    }
 
-    if (PressurePa > 0.0f && !SystemContext->ReferencePressurePaValid) {
-        if (PressureDiscardCount < PRESSURE_CALIBRATION_DISCARD_SAMPLES) {
-            PressureDiscardCount++;
-            return;
-        }
+    // Only a NEW published barometer sample counts (a repeated read of the same conversion must not be averaged twice)
+    if (FlightData.BaroSampleId == 0 || FlightData.BaroSampleId == PressureLastSampleId) {
+        return;
+    }
+    PressureLastSampleId = FlightData.BaroSampleId;
 
-        PressureSumPa += PressurePa;
-        TemperatureSumC += FlightData.TemperatureC;
-        PressureSampleCount++;
+    // An out of range or non finite sample means a flaky sensor: restart the averaging window
+    if (!CalibrationBaroInRange(FlightData.PressurePa, FlightData.TemperatureC)) {
+        PressureSumPa = 0.0f;
+        TemperatureSumC = 0.0f;
+        PressureSampleCount = 0;
+        return;
+    }
 
-        if (PressureSampleCount >= PRESSURE_CALIBRATION_SAMPLES) {
-            float InvCount = 1.0f / (float)PressureSampleCount;
-            SystemContext->ReferencePressurePa = PressureSumPa * InvCount;
-            SystemContext->ReferenceTemperatureC = TemperatureSumC * InvCount;
+    if (PressureDiscardCount < PRESSURE_CALIBRATION_DISCARD_SAMPLES) {
+        PressureDiscardCount++;
+        return;
+    }
+
+    PressureSumPa += FlightData.PressurePa;
+    TemperatureSumC += FlightData.TemperatureC;
+    PressureSampleCount++;
+
+    if (PressureSampleCount >= PRESSURE_CALIBRATION_SAMPLES) {
+        float InvCount = 1.0f / (float)PressureSampleCount;
+        float ReferencePressurePa = PressureSumPa * InvCount;
+        float ReferenceTemperatureC = TemperatureSumC * InvCount;
+
+        if (CalibrationBaroInRange(ReferencePressurePa, ReferenceTemperatureC)) {
+            SystemContext->ReferencePressurePa = ReferencePressurePa;
+            SystemContext->ReferenceTemperatureC = ReferenceTemperatureC;
             SystemContext->ReferencePressurePaValid = true;
+        } else {
+            PressureSumPa = 0.0f;
+            TemperatureSumC = 0.0f;
+            PressureSampleCount = 0;
         }
     }
 }

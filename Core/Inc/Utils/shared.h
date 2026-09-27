@@ -152,8 +152,8 @@ typedef struct {
     uint8_t RelayState;
     uint8_t LastCommand;
     uint16_t CalStatus;
-    uint8_t SyncEnd;
     uint8_t ApogeeTrigger;
+    uint8_t SyncEnd;
 } FlightData_t;
 #pragma pack(pop)
 

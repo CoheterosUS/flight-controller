@@ -57,8 +57,8 @@ typedef struct {
     uint8_t RelayState;
     uint8_t LastCommand;
     uint16_t CalStatus;
-    uint8_t SyncEnd;
     uint8_t ApogeeTrigger;
+    uint8_t SyncEnd;
 } SDLogRecord_t;
 
 // Alt Filtro Kalman, 2 bytes
@@ -113,8 +113,8 @@ typedef struct {
     int16_t PDiag2;
     uint16_t PressurePa;
     uint8_t State;
-    uint8_t SyncEnd;
     uint8_t ApogeeTrigger;
+    uint8_t SyncEnd;
 } FlashLogRecord_t;
 #pragma pack(pop)
 

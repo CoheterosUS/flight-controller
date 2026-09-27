@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "Utils/configuration.h"
 
 #define DROP_M 15.0f
 #define TIMER_MS 28000u
@@ -286,6 +287,21 @@ static bool TestBadFirstSampleDoesNotSetPeak(void)
         && NowMs > 8000u;
 }
 
+static bool TestConstantsMatchConfiguration(void)
+{
+    /* The detector is built with its own fallback constants for the host, the tests use these numbers:
+       fail if the production configuration drifts away from them. */
+    return NearlyEqual(APOGEE_DROP_M, DROP_M, 0.0001f)
+        && APOGEE_TIMER_MS == TIMER_MS
+        && APOGEE_CONFIRM_SAMPLES == CONFIRM_SAMPLES
+        && NearlyEqual(APOGEE_BARO_MAX_SPEED_MPS, 400.0f, 0.0001f)
+        && NearlyEqual(APOGEE_BARO_SLEW_MARGIN_M, 10.0f, 0.0001f)
+        && NearlyEqual(BARO_VALID_MIN_PA, 30000.0f, 0.1f)
+        && NearlyEqual(BARO_VALID_MAX_PA, 125000.0f, 0.1f)
+        && NearlyEqual(BARO_VALID_MIN_TEMP_C, -40.0f, 0.001f)
+        && NearlyEqual(BARO_VALID_MAX_TEMP_C, 85.0f, 0.001f);
+}
+
 static bool TestTimerExactAndWrap(void)
 {
     ApogeeDetector_t Detector;
@@ -463,6 +479,7 @@ int main(void)
         {"upward spike does not poison the peak", TestSpikeUpDoesNotPoisonPeak},
         {"zero altitude after a high sample is rejected", TestZeroAfterHighRejected},
         {"bad first sample cannot set the peak", TestBadFirstSampleDoesNotSetPeak},
+        {"test constants match configuration.h", TestConstantsMatchConfiguration},
         {"timer exact boundary and tick wrap", TestTimerExactAndWrap},
         {"barometer wins when timer is simultaneous", TestBaroWinsTimer},
         {"firing is latched and reset clears state", TestLatchAndReset},

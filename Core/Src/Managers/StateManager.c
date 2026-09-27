@@ -140,6 +140,12 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, SystemContext_t *S
         case COMMAND_GROUND_ABORT:
             return STATE_GROUND_ABORT;
         case COMMAND_DROGUE:
+#if !DROGUE_COMMAND_ANY_STATE
+            if (CurrentSystemState != STATE_BOOST && CurrentSystemState != STATE_COAST &&
+                CurrentSystemState != STATE_ACTIVE_CONTROL) {
+                return CurrentSystemState;
+            }
+#endif
             SystemContext->ApogeeTrigger = APOGEE_TRIGGER_COMMAND;
             return STATE_APOGEE;
         case COMMAND_LANDED:
