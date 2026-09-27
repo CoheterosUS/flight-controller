@@ -26,6 +26,7 @@ $Flags = @(
     "-DSTM32H723xx",
     "-ICore/Inc",
     "-ICore/Src/Kalman",
+    "-ICore/Src/Kalman/Libs",
     "-IFATFS/Target",
     "-IFATFS/App",
     "-IDrivers/STM32H7xx_HAL_Driver/Inc",
