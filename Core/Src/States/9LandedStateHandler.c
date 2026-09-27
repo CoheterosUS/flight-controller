@@ -3,6 +3,7 @@
 #include "Utils/Calculations.h"
 #include "Utils/SD.h"
 #include "Sensors/W25Q32JV.h"
+#include "Tasks/FlashLoggingTask.h"
 #include "stm32h7xx_hal.h"
 
 void LandedStateEntry(SystemContext_t *ctx) {
@@ -25,6 +26,7 @@ SystemState_t LandedStateHandler(SystemContext_t *Context, FlightData_t FlightDa
 #endif
     ) {
         Context->FlashLoggingEnabled = false;
+        (void)FlashLogging_FlushAndWait(200);
         W25Q_LoggingStop();
     }
 

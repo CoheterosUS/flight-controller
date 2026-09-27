@@ -24,6 +24,9 @@ typedef int HAL_StatusTypeDef;
 #define HAL_ERROR 1
 #define W25Q_HANDLE ((SPI_HandleTypeDef *)0)
 
+void W25Q_Lock(void);
+void W25Q_Unlock(void);
+
 static inline bool W25Q_LogHasSpaceAt(uint32_t Address, uint32_t Bytes) {
     return Address <= W25Q_LOG_END && Bytes <= W25Q_LOG_END - Address;
 }

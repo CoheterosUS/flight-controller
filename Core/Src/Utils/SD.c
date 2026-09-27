@@ -24,7 +24,7 @@ static FRESULT NextLogName(char *Out, size_t Size) {
 FRESULT MountAndOpen(void) {
     FRESULT Result = f_mount(&SDFatFS, SDPath, 1);
     if (Result != FR_OK) {
-        SystemFaultFlags |= SD_MOUNT_FAILED;
+        SystemFaultSet(SD_MOUNT_FAILED);
         return Result;
     }
 
@@ -38,14 +38,14 @@ FRESULT MountAndOpen(void) {
     char LogName[13];
     Result = NextLogName(LogName, sizeof(LogName));
     if (Result != FR_OK) {
-        SystemFaultFlags |= SD_OPEN_FAILED;
+        SystemFaultSet(SD_OPEN_FAILED);
         f_mount(NULL, SDPath, 1);
         return Result;
     }
 
     Result = f_open(&SDFile, LogName, FA_CREATE_NEW | FA_WRITE);
     if (Result != FR_OK) {
-        SystemFaultFlags |= SD_OPEN_FAILED;
+        SystemFaultSet(SD_OPEN_FAILED);
         f_mount(NULL, SDPath, 1);
         return Result;
     }

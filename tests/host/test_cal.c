@@ -34,6 +34,8 @@ static void TestEmptyAndRoundTrip(void) {
     Check(W25Q_CalAppend(M), "first calibration append succeeds");
     Check(W25Q_CalLoad(Loaded) && SameM(M, Loaded), "calibration round trip");
     Check(W25Q_CalGetSequence() == 1, "first sequence is one");
+    Check(flash_lock_count() > 0 && flash_lock_count() == flash_unlock_count(),
+          "calibration operations use a balanced flash lock");
 }
 
 static void TestNewestWins(void) {

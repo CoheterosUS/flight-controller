@@ -5,12 +5,24 @@
 static uint8_t Flash[W25Q_TOTAL_SIZE];
 static int ProgramLimit = -1;
 static size_t ProgramCount;
+static size_t LockCount;
+static size_t UnlockCount;
 static uint8_t Status = 0;
+
+void W25Q_Lock(void) {
+    LockCount++;
+}
+
+void W25Q_Unlock(void) {
+    UnlockCount++;
+}
 
 void flash_reset(void) {
     memset(Flash, 0xFF, sizeof(Flash));
     ProgramLimit = -1;
     ProgramCount = 0;
+    LockCount = 0;
+    UnlockCount = 0;
     Status = 0;
 }
 
@@ -24,6 +36,14 @@ void flash_set_program_limit(int Limit) {
 
 size_t flash_program_count(void) {
     return ProgramCount;
+}
+
+size_t flash_lock_count(void) {
+    return LockCount;
+}
+
+size_t flash_unlock_count(void) {
+    return UnlockCount;
 }
 
 void flash_corrupt(uint32_t Address, uint8_t Value) {

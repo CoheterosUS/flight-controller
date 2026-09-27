@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "task.h"
 
 #define FLASH_HEADER_MAGIC      0x464C5348
 #define FLASH_HEADER_ADDRESS    0x00000000
@@ -20,8 +21,25 @@ typedef struct {
 
 static FlashHeader_t Header;
 static bool W25Q_Initialized = false;
+static SemaphoreHandle_t W25QMutex;
 
 _Static_assert(sizeof(FlightSnapshot_t) <= W25Q_PAGE_SIZE, "snapshot must fit in one page");
+
+void W25Q_CreateLock(void) {
+    if (W25QMutex == NULL) {
+        W25QMutex = xSemaphoreCreateRecursiveMutex();
+    }
+}
+
+void W25Q_Lock(void) {
+    if (W25QMutex == NULL || xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) return;
+    (void)xSemaphoreTakeRecursive(W25QMutex, portMAX_DELAY);
+}
+
+void W25Q_Unlock(void) {
+    if (W25QMutex == NULL || xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED) return;
+    (void)xSemaphoreGiveRecursive(W25QMutex);
+}
 
 static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
     uint8_t MFR, Type, Cap;
@@ -85,25 +103,31 @@ static HAL_StatusTypeDef W25Q_WriteHeader(SPI_HandleTypeDef *Handle) {
 
 bool W25Q_Init(void) {
     SPI_HandleTypeDef *Handle = W25Q_HANDLE;
+    bool Success = false;
+
+    W25Q_Lock();
 
     W25Q_DeselectCS();
     W25Q_WP_Disable();
-    W25Q_WaitBusy(Handle, 60000);
+    if (W25Q_WaitBusy(Handle, 60000) != HAL_OK) {
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
+    }
 
     if (!W25Q_VerifyJEDECID(Handle)) {
-        SystemFaultFlags |= W25Q_JEDEC_ID_FAILED;
-        return false;
+        SystemFaultSet(W25Q_JEDEC_ID_FAILED);
+        goto cleanup;
     }
 
     if (W25Q_UnprotectAll(Handle) != HAL_OK) {
-        SystemFaultFlags |= W25Q_INIT_FAILED;
-        return false;
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
     }
 
     FlashHeader_t ReadHeader;
     if (W25Q_ReadData(Handle, FLASH_HEADER_ADDRESS, (uint8_t *)&ReadHeader, sizeof(FlashHeader_t)) != HAL_OK) {
-        SystemFaultFlags |= W25Q_INIT_FAILED;
-        return false;
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
     }
 
     if (ReadHeader.Magic == 0xFFFFFFFF) {
@@ -113,33 +137,56 @@ bool W25Q_Init(void) {
         Header.WritePointer = W25Q_ScanForWritePointer(Handle, FLASH_DATA_START);
 
         if (W25Q_WriteHeader(Handle) != HAL_OK) {
-            SystemFaultFlags |= W25Q_INIT_FAILED;
-            return false;
+            SystemFaultSet(W25Q_INIT_FAILED);
+            goto cleanup;
         }
     } else if (ReadHeader.Magic == FLASH_HEADER_MAGIC) {
         Header = ReadHeader;
         Header.WritePointer = W25Q_ScanForWritePointer(Handle, Header.WritePointer);
     } else {
-        SystemFaultFlags |= W25Q_INIT_FAILED;
-        return false;
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
     }
 
-    return true;
+    Success = true;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
 }
 
-void W25Q_NewFlight(void) {
-    if (!W25Q_HasSpace(W25Q_PAGE_SIZE)) return;
+bool W25Q_NewFlight(void) {
+    bool Success = false;
+
+    W25Q_Lock();
+
+    if (!W25Q_HasSpace(W25Q_PAGE_SIZE)) {
+        SystemFaultSet(W25Q_LOG_FULL);
+        goto cleanup;
+    }
 
     FlashLogRecord_t Marker = {0};
     Marker.Sync = PACKET_HEADER;
     Marker.State = 0xFF;
     Marker.SyncEnd = PACKET_FOOTER;
 
-    if (W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t)) == HAL_OK) {
-        Header.WritePointer += W25Q_PAGE_SIZE;
-        Header.FlightCount++;
-        W25Q_WriteHeader(W25Q_HANDLE);
+    if (W25Q_PageProgram(W25Q_HANDLE, Header.WritePointer, (const uint8_t *)&Marker, sizeof(FlashLogRecord_t)) != HAL_OK) {
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
     }
+
+    Header.WritePointer += W25Q_PAGE_SIZE;
+    Header.FlightCount++;
+    if (W25Q_WriteHeader(W25Q_HANDLE) != HAL_OK) {
+        SystemFaultSet(W25Q_INIT_FAILED);
+        goto cleanup;
+    }
+
+    Success = true;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
 }
 
 uint32_t W25Q_GetWritePointer(void) {
@@ -160,44 +207,64 @@ uint32_t W25Q_LogEndAddress(void) {
 
 HAL_StatusTypeDef W25Q_EraseAll(void) {
     SPI_HandleTypeDef *Handle = W25Q_HANDLE;
+    HAL_StatusTypeDef Result = HAL_ERROR;
+
+    W25Q_Lock();
 
     W25Q_WP_Disable();
 
-    if (!W25Q_VerifyJEDECID(Handle)) return HAL_ERROR;
-    if (W25Q_UnprotectAll(Handle) != HAL_OK) return HAL_ERROR;
+    if (!W25Q_VerifyJEDECID(Handle)) goto cleanup;
+    if (W25Q_UnprotectAll(Handle) != HAL_OK) goto cleanup;
 
     for (uint32_t Address = 0; Address < W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE; Address += W25Q_BLOCK_SIZE) {
-        if (W25Q_BlockErase64K(Handle, Address) != HAL_OK) return HAL_ERROR;
+        if (W25Q_BlockErase64K(Handle, Address) != HAL_OK) goto cleanup;
     }
 
     for (uint32_t Address = W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE;
          Address < W25Q_LOG_END;
          Address += W25Q_SECTOR_SIZE) {
-        if (W25Q_SectorErase(Handle, Address) != HAL_OK) return HAL_ERROR;
+        if (W25Q_SectorErase(Handle, Address) != HAL_OK) goto cleanup;
     }
 
     Header.Magic = FLASH_HEADER_MAGIC;
     Header.FlightCount = 0;
     Header.WritePointer = FLASH_DATA_START;
 
-    return W25Q_WriteHeader(Handle);
+    Result = W25Q_WriteHeader(Handle);
+
+cleanup:
+    W25Q_Unlock();
+    return Result;
 }
 
 bool W25Q_LoggingInit(void) {
-    if (!W25Q_Init()) return false;
+    bool Success = false;
 
-    W25Q_NewFlight();
+    W25Q_Lock();
+
+    W25Q_Initialized = false;
+    if (!W25Q_Init()) goto cleanup;
+    if (!W25Q_NewFlight()) goto cleanup;
     W25Q_Initialized = true;
-    return true;
+    Success = true;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
 }
 
 void W25Q_LoggingStop(void) {
-    if (!W25Q_Initialized) return;
+    W25Q_Lock();
+
+    if (!W25Q_Initialized) goto cleanup;
 
     W25Q_WaitBusy(W25Q_HANDLE, 5);
     W25Q_WriteHeader(W25Q_HANDLE);
     W25Q_ProtectAll(W25Q_HANDLE);
     W25Q_Initialized = false;
+
+cleanup:
+    W25Q_Unlock();
 }
 
 bool W25Q_MaintenanceMode(void) {
@@ -211,9 +278,18 @@ bool W25Q_MaintenanceMode(void) {
 }
 
 bool W25Q_DumpToSD(void) {
-    if (!W25Q_Init()) return false;
+    bool Success = true;
+    W25Q_Lock();
 
-    if (f_mount(&SDFatFS, SDPath, 1) != FR_OK) return false;
+    if (!W25Q_Init()) {
+        Success = false;
+        goto cleanup;
+    }
+
+    if (f_mount(&SDFatFS, SDPath, 1) != FR_OK) {
+        Success = false;
+        goto cleanup;
+    }
 
     uint32_t Address = FLASH_DATA_START;
     uint32_t End = Header.WritePointer;
@@ -223,7 +299,10 @@ bool W25Q_DumpToSD(void) {
     FlashPage_t Page;
 
     while (Address < End) {
-        if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Page, sizeof(FlashPage_t)) != HAL_OK) break;
+        if (W25Q_ReadData(W25Q_HANDLE, Address, (uint8_t *)&Page, sizeof(FlashPage_t)) != HAL_OK) {
+            Success = false;
+            break;
+        }
 
         if (W25Q_IsSnapshotPage((const uint8_t *)&Page)) {
             Address += W25Q_PAGE_SIZE;
@@ -231,11 +310,21 @@ bool W25Q_DumpToSD(void) {
         }
 
         if (W25Q_IsFlightMarker(&Page.Records[0])) {
-            if (FileOpen) f_close(&File);
+            if (FileOpen) {
+                if (f_close(&File) != FR_OK) {
+                    Success = false;
+                    break;
+                }
+                FileOpen = false;
+            }
             char Name[16];
-            snprintf(Name, sizeof(Name), "F_%02u.BIN", FlightNum++);
-            if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) break;
+            snprintf(Name, sizeof(Name), "F_%02u.BIN", FlightNum);
+            if (f_open(&File, Name, FA_CREATE_ALWAYS | FA_WRITE) != FR_OK) {
+                Success = false;
+                break;
+            }
             FileOpen = true;
+            FlightNum++;
             Address += W25Q_PAGE_SIZE;
             continue;
         }
@@ -244,23 +333,38 @@ bool W25Q_DumpToSD(void) {
             for (uint8_t i = 0; i < FLASH_PAGE_RECORDS; i++) {
                 if (Page.Records[i].Sync != PACKET_HEADER) break;
                 UINT BytesWritten;
-                f_write(&File, &Page.Records[i], sizeof(FlashLogRecord_t), &BytesWritten);
+                FRESULT Result = f_write(&File, &Page.Records[i], sizeof(FlashLogRecord_t), &BytesWritten);
+                if (Result != FR_OK || BytesWritten != sizeof(FlashLogRecord_t)) {
+                    Success = false;
+                    break;
+                }
             }
+            if (!Success) break;
         }
         Address += W25Q_PAGE_SIZE;
     }
 
-    if (FileOpen) f_close(&File);
-    f_mount(NULL, SDPath, 1);
-    return FlightNum > 0;
+    if (FileOpen && f_close(&File) != FR_OK) Success = false;
+    if (f_mount(NULL, SDPath, 1) != FR_OK) Success = false;
+    if (FlightNum == 0) Success = false;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
 }
 
 bool W25Q_SnapshotWrite(const FlightSnapshot_t *S) {
     FlightSnapshot_t Snapshot;
     uint8_t Page[W25Q_PAGE_SIZE];
 
-    if (S == NULL || !W25Q_HasSpace(W25Q_PAGE_SIZE)) return false;
-    if ((W25Q_GetWritePointer() & (W25Q_PAGE_SIZE - 1u)) != 0) return false;
+    bool Success = false;
+    uint32_t Address;
+
+    W25Q_Lock();
+
+    if (S == NULL || !W25Q_HasSpace(W25Q_PAGE_SIZE)) goto cleanup;
+    Address = W25Q_GetWritePointer();
+    if ((Address & (W25Q_PAGE_SIZE - 1u)) != 0) goto cleanup;
 
     memset(Page, 0xFF, sizeof(Page));
     memcpy(&Snapshot, S, sizeof(Snapshot));
@@ -270,10 +374,31 @@ bool W25Q_SnapshotWrite(const FlightSnapshot_t *S) {
     memcpy(Page, &Snapshot, sizeof(Snapshot));
 
     if (W25Q_PageProgram(W25Q_HANDLE,
-                         W25Q_GetWritePointer(),
+                         Address,
                          Page,
-                         W25Q_PAGE_SIZE) != HAL_OK) return false;
+                         W25Q_PAGE_SIZE) != HAL_OK) goto cleanup;
+    if (!W25Q_SnapshotVerify(Address)) goto cleanup;
 
     W25Q_AdvanceWritePointer(W25Q_PAGE_SIZE);
-    return true;
+    Success = true;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
+}
+
+bool W25Q_SnapshotVerify(uint32_t Address) {
+    uint8_t Page[W25Q_PAGE_SIZE];
+    bool Success = false;
+
+    W25Q_Lock();
+
+    if ((Address & (W25Q_PAGE_SIZE - 1u)) == 0
+        && W25Q_LogHasSpaceAt(Address, W25Q_PAGE_SIZE)
+        && W25Q_ReadData(W25Q_HANDLE, Address, Page, sizeof(Page)) == HAL_OK) {
+        Success = W25Q_IsSnapshotPage(Page);
+    }
+
+    W25Q_Unlock();
+    return Success;
 }
