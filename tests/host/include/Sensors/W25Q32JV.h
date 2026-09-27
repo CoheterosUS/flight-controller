@@ -4,15 +4,16 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define FLASH_CAL_SECTOR_ADDRESS 0x003FF000u
+#define FLASH_CAL_SECTOR_A_ADDRESS 0x003FE000u
+#define FLASH_CAL_SECTOR_B_ADDRESS 0x003FF000u
 #define W25Q_PAGE_SIZE 256u
 #define W25Q_SECTOR_SIZE 4096u
+#define W25Q_BLOCK_SIZE 65536u
 #define W25Q_TOTAL_SIZE (4u * 1024u * 1024u)
-#define W25Q_LOG_END FLASH_CAL_SECTOR_ADDRESS
+#define W25Q_LOG_END FLASH_CAL_SECTOR_A_ADDRESS
 #define W25Q_JEDEC_MFR 0xEFu
 #define W25Q_JEDEC_TYPE 0x40u
 #define W25Q_JEDEC_CAPACITY 0x16u
-#define W25Q_CAL_SECTOR_ADDRESS FLASH_CAL_SECTOR_ADDRESS
 #define W25Q_SR1_BP0 (1u << 2)
 #define W25Q_SR1_BP1 (1u << 3)
 #define W25Q_SR1_BP2 (1u << 4)
@@ -52,10 +53,14 @@ HAL_StatusTypeDef W25Q_ReadStatusReg1(SPI_HandleTypeDef *, uint8_t *);
 HAL_StatusTypeDef W25Q_UnprotectAll(SPI_HandleTypeDef *);
 HAL_StatusTypeDef W25Q_ProtectAll(SPI_HandleTypeDef *);
 HAL_StatusTypeDef W25Q_SectorErase(SPI_HandleTypeDef *, uint32_t);
+HAL_StatusTypeDef W25Q_BlockErase64K(SPI_HandleTypeDef *, uint32_t);
 HAL_StatusTypeDef W25Q_PageProgram(SPI_HandleTypeDef *, uint32_t, const uint8_t *, uint16_t);
 
 bool W25Q_CalLoad(float M[9]);
 bool W25Q_CalAppend(const float M[9]);
 uint32_t W25Q_CalGetSequence(void);
+bool W25Q_PageIsFullyErased(const uint8_t *Page);
+bool W25Q_ShouldCreateFlightMarker(bool PreviousPageExists, bool PreviousIsMarker);
+HAL_StatusTypeDef W25Q_EraseLogRegion(SPI_HandleTypeDef *Handle);
 
 #endif

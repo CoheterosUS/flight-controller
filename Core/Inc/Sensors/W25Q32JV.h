@@ -21,7 +21,7 @@
 #define W25Q_TOTAL_SIZE         (4 * 1024 * 1024)
 #define W25Q_PAGE_COUNT         (W25Q_TOTAL_SIZE / W25Q_PAGE_SIZE)
 #define W25Q_SECTOR_COUNT       (W25Q_TOTAL_SIZE / W25Q_SECTOR_SIZE)
-#define W25Q_LOG_END            FLASH_CAL_SECTOR_ADDRESS
+#define W25Q_LOG_END            FLASH_CAL_SECTOR_A_ADDRESS
 
 static inline bool W25Q_LogHasSpaceAt(uint32_t Address, uint32_t Bytes) {
     return Address <= W25Q_LOG_END && Bytes <= W25Q_LOG_END - Address;
@@ -125,6 +125,9 @@ uint32_t W25Q_LogEndAddress(void);
 HAL_StatusTypeDef W25Q_EraseAll(void);
 bool W25Q_MaintenanceMode(void);
 bool W25Q_DumpToSD(void);
+bool W25Q_PageIsFullyErased(const uint8_t *Page);
+bool W25Q_ShouldCreateFlightMarker(bool PreviousPageExists, bool PreviousIsMarker);
+HAL_StatusTypeDef W25Q_EraseLogRegion(SPI_HandleTypeDef *Handle);
 
 bool W25Q_CalLoad(float M[9]);
 bool W25Q_CalAppend(const float M[9]);

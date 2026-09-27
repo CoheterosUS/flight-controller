@@ -69,8 +69,8 @@ Existing patterns stay as they are: state change chirp 5 ms, boot 2 beeps, flash
 | ID | Decision | Status |
 |---|---|---|
 | D16 | Only `M` is stored (9 floats). No gyro bias, no accel bias, no offsets. `Q` is derived at load by the QR. | SETTLED |
-| D17 | One 4 KB sector at the end of the flash (`0x3FF000`), append-only. Records of about 64 bytes: magic, version, sequence number, `M[9]`, CRC32, written with the commit fields last. The newest record with a valid CRC wins. The sector is erased only when full (about 60 calibrations). | SETTLED |
-| D18 | Consequences for the log code: a `W25Q_LOG_END` (total size minus 4096) bounds `W25Q_HasSpace` and the write-pointer scan. `W25Q_EraseAll` and chip erase must preserve or rewrite the calibration record. `W25Q_DumpToSD` must skip it. | SETTLED |
+| D17 | Two adjacent 4 KB sectors at the end of the flash (`0x3FE000` and `0x3FF000`), 8 KB total, used as an append-only ping-pong pair. Records are 64 bytes: magic, version, sequence number, `M[9]` and CRC32. The newest record with a valid CRC wins. When the active sector is full, the other sector is erased and receives the next record before the old sector can be touched, so rollover cannot erase the last valid calibration. | SETTLED |
+| D18 | Consequences for the log code: `W25Q_LOG_END` is `0x3FE000` (total size minus 8192) and bounds `W25Q_HasSpace` and the write-pointer scan. `W25Q_EraseAll` must preserve both calibration sectors. `W25Q_DumpToSD` must skip both sectors. | SETTLED |
 
 ### 3.5 Per-boot calibration (CALIBRATION state)
 

@@ -4,10 +4,10 @@ Read `DEEP_CALIBRATION_DESIGN.md` for the decisions behind this. This document d
 
 ## 1. Definitions
 
-- Bring-up: first power-up of a board or airframe, or the first power-up after the calibration sector was erased. The flash has no calibration record, so there is no valid `M`.
+- Bring-up: first power-up of a board or airframe, or the first power-up after both calibration sectors were erased. The flash has no calibration record, so there is no valid `M`.
 - HIL: hardware in the loop. `HIL_MODE 1`. The sensor values are injected over the telemetry UART by `HIL/hil.py` (`COMMAND_HIL_DATA`, GPS through `COMMAND_GPS_DATA`). Serial commands for state changes are not used.
 - Flight build: `HIL_MODE 0`. Real sensors.
-- Valid calibration: a valid `M` record in the flash calibration sector, plus valid gyro bias, accel bias and pressure reference measured this boot.
+- Valid calibration: a valid `M` record in the 8 KB flash calibration sector pair, plus valid gyro bias, accel bias and pressure reference measured this boot.
 
 ## 2. The rule
 
@@ -17,7 +17,7 @@ PRELAUNCH is rejected unless the calibration is valid. There is no identity fall
 
 | Step | State | What happens | What you observe |
 |---|---|---|---|
-| 1 | IDLE | Sensors idle, flash initialised, the newest valid `M` is loaded from the calibration sector, `SensorsIdleFinished` cleared. Auto-advance when `AUTO_START_CALIBRATION` is on. | Two short beeps (state machine started). A short chirp at each state change. |
+| 1 | IDLE | Sensors idle, flash initialised, the newest valid `M` is loaded from the calibration sector pair, `SensorsIdleFinished` cleared. Auto-advance when `AUTO_START_CALIBRATION` is on. | Two short beeps (state machine started). A short chirp at each state change. |
 | 2 | CALIBRATION | Sensors in performance mode. Pressure reference, gyro bias (raw data) and accel bias (body frame) are measured. Every window restarts if the rocket moves or is not nose up (gross-tilt gate). Holds if there is no valid `M`. | `CalStatus` bits. No audible pattern by default. |
 | 3 | PRELAUNCH | Entered only when everything is valid. Kalman initialised (attitude 0, 90, 0), then stepping. | State 2 in telemetry. |
 | any of 1 to 3 | DEEP_CALIBRATION | Entered by the 10 s nose-down gesture. See section 4. | One 2 s tone, then the pose prompts. |
@@ -43,13 +43,13 @@ Prerequisites: the rocket axes are marked on the fuselage (+Y and +Z). Know wher
 4. Verify the stored calibration. Power cycle. `CalStatus` must show a valid `M` after the IDLE step. Read the record back through the flash dump tool and check the sequence number, the CRC and that `det(Q)` is +1.
 5. Pad calibration. Stand the rocket nose straight up and still. CALIBRATION completes: `CalAccelX` is about +9.81 and `CalAccelY`, `CalAccelZ` about 0, `CalGyro` about 0. If it does not complete, check the gross-tilt gate.
 6. PRELAUNCH. The state reaches PRELAUNCH. The Kalman filter steps during the wait. Watch the position and velocity outputs for drift over a few minutes (any residual bias integrates twice).
-7. Negative checks on the bench: with the calibration sector erased, the board must stay in CALIBRATION and never reach PRELAUNCH. Nose down and still for 10 s in PRELAUNCH re-enters DEEP_CALIBRATION.
+7. Negative checks on the bench: with both calibration sectors erased, the board must stay in CALIBRATION and never reach PRELAUNCH. Nose down and still for 10 s in PRELAUNCH re-enters DEEP_CALIBRATION.
 
-To force a fresh bring-up, erase the calibration sector (a maintenance action; `FLASH_ERASE_ALL` must not erase it, see D18 in the design document).
+To force a fresh bring-up, erase both calibration sectors (an 8 KB maintenance action; `FLASH_ERASE_ALL` must not erase them, see D18 in the design document).
 
 ## 5. HIL
 
-Setup: `HIL_MODE 1`. `hil.py` sends raw accel, gyro, mag, pressure and temperature at the IMU output rate (`IMU_ODR_HZ`). HIL runs the real path: the same state machine, the same solve, the same flash sector.
+Setup: `HIL_MODE 1`. `hil.py` sends raw accel, gyro, mag, pressure and temperature at the IMU output rate (`IMU_ODR_HZ`). HIL runs the real path: the same state machine, the same solve, the same 8 KB flash calibration sector pair.
 
 The buzzer is not audible in HIL, so `hil.py` drives the tumble by watching the telemetry (state and the pose field inside `CalStatus`) instead of listening.
 
@@ -69,7 +69,7 @@ The buzzer is not audible in HIL, so `hil.py` drives the tumble by watching the 
 
 For quick iteration on the flight logic alone, a compile flag `HIL_PRESEED_M` loads an identity `M` into RAM at boot. Rules (assumption to confirm):
 - Only when `HIL_MODE 1`. A build with `HIL_PRESEED_M` and `HIL_MODE 0` must fail to compile (`#error`).
-- It never writes the flash sector.
+- It never writes the flash calibration sectors.
 - It sets a flag in `CalStatus` and in the flight snapshot, so any log or telemetry from such a run is identifiable.
 - The full scenarios above must still pass without it before a release.
 

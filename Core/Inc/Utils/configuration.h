@@ -85,8 +85,9 @@
 #define ACCEL_BIAS_STILL_GYRO_MAX_DPS       2.0f
 #define CAL_EXPECTED_NOSE_UP_X              9.81f
 
-// Flash calibration sector (WP-B)
-#define FLASH_CAL_SECTOR_ADDRESS            0x003FF000
+// Flash calibration sectors (WP-B)
+#define FLASH_CAL_SECTOR_A_ADDRESS          0x003FE000
+#define FLASH_CAL_SECTOR_B_ADDRESS          0x003FF000
 
 // GPS Configuration
 #define GPS_FIX_REQUIRED             0
