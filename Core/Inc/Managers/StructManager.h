@@ -12,15 +12,15 @@
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
-    float AccelX;
-    float AccelY;
-    float AccelZ;
-    float GyroX;
-    float GyroY;
-    float GyroZ;
-    float MagX;
-    float MagY;
-    float MagZ;
+    float RawAccelX;
+    float RawAccelY;
+    float RawAccelZ;
+    float RawGyroX;
+    float RawGyroY;
+    float RawGyroZ;
+    float RawMagX;
+    float RawMagY;
+    float RawMagZ;
     float PressurePa;
     float TemperatureC;
     int32_t Latitude;
@@ -60,12 +60,12 @@ typedef struct {
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
-    int16_t AccelX;
-    int16_t AccelY;
-    int16_t AccelZ;
-    int16_t GyroX;
-    int16_t GyroY;
-    int16_t GyroZ;
+    int16_t CalAccelX;
+    int16_t CalAccelY;
+    int16_t CalAccelZ;
+    int16_t CalGyroX;
+    int16_t CalGyroY;
+    int16_t CalGyroZ;
     int16_t PressurePa;
     int8_t TemperatureC;
     int32_t Latitude;
@@ -85,12 +85,12 @@ typedef struct {
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
-    float AccelX;
-    float AccelY;
-    float AccelZ;
-    float GyroX;
-    float GyroY;
-    float GyroZ;
+    float RawAccelX;
+    float RawAccelY;
+    float RawAccelZ;
+    float RawGyroX;
+    float RawGyroY;
+    float RawGyroZ;
     int16_t PosX;
     int16_t PosY;
     int16_t PosZ;

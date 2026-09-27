@@ -102,7 +102,7 @@ TimerHandle_t TimerBattery;
 
 SystemFaultFlags_t SystemFaultFlags;
 
-SystemContext_t SystemContext;
+SystemContext_t SystemContext = {0};
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

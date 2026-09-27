@@ -32,19 +32,32 @@ typedef enum {
     STATE_GROUND_ABORT,
     STATE_DESCENT_ABORT,
     STATE_ASCENT_ABORT,
+    STATE_DEEP_CALIBRATION,
 
     STATE_MAX           // Table size
 } SystemState_t;
+
+typedef struct {
+    float M[9];    // row-major 3x3, CalAccel = M * RawAccel - AccelBiasCal
+    float Q[9];    // row-major 3x3 rotation, CalGyro = Q * (RawGyro - GyroBiasRaw)
+    bool Valid;
+} ImuCalibration_t;
 
 // TODO: Refine
 typedef struct {
     float ReferencePressurePa;
     float ReferenceTemperatureC;
     bool ReferencePressurePaValid;
-    float GyroBiasX;
-    float GyroBiasY;
-    float GyroBiasZ;
+    float GyroBiasRawX; // WP-E will make these truly raw-frame.
+    float GyroBiasRawY;
+    float GyroBiasRawZ;
     bool GyroCalibrationValid;
+    ImuCalibration_t ImuCal;
+    float AccelBiasCalX;
+    float AccelBiasCalY;
+    float AccelBiasCalZ;
+    bool AccelBiasCalValid;
+    uint16_t CalStatus;
     volatile bool AltitudeFilterInitialized;
     volatile bool SDLoggingEnabled;
     volatile bool FlashLoggingEnabled;
@@ -76,15 +89,15 @@ typedef uint32_t SystemFaultFlags_t;
 typedef struct {
     uint16_t Sync;
     uint32_t Tick;
-    float AccelX;
-    float AccelY;
-    float AccelZ;
-    float GyroX;
-    float GyroY;
-    float GyroZ;
-    float MagX;
-    float MagY;
-    float MagZ;
+    float RawAccelX;
+    float RawAccelY;
+    float RawAccelZ;
+    float RawGyroX;
+    float RawGyroY;
+    float RawGyroZ;
+    float RawMagX;
+    float RawMagY;
+    float RawMagZ;
     float PressurePa;
     float TemperatureC;
     int32_t Latitude;

@@ -61,6 +61,9 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
         case STATE_ASCENT_ABORT:
             AscentAbortStateEntry(SystemContext);
             break;
+        case STATE_DEEP_CALIBRATION:
+            DeepCalibrationStateEntry(SystemContext);
+            break;
         default:
             break;
     }
@@ -182,6 +185,9 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 			break;
 		case STATE_ASCENT_ABORT:
 			return AscentAbortStateHandler(SystemContext, SensorData);
+			break;
+		case STATE_DEEP_CALIBRATION:
+			return DeepCalibrationStateHandler(SystemContext, SensorData);
 			break;
 		default:
 			// Should not be able to reach

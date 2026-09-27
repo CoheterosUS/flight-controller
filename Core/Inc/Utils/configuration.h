@@ -10,6 +10,12 @@
 
 #define SD_LOGGING_ENABLED          0
 #define HIL_MODE                    1
+
+// HIL only (see BRINGUP_AND_HIL.md)
+#define HIL_PRESEED_M                       0
+#if HIL_PRESEED_M && !HIL_MODE
+#error "HIL_PRESEED_M requires HIL_MODE"
+#endif
 #define EXTERNAL_COMMANDS           1
 #define AUTO_START_CALIBRATION		1
 
@@ -33,6 +39,9 @@
 #define PRESSURE_CALIBRATION_SAMPLES            1000
 
 // IMU Configuration
+// IMU timing (WP-E)
+#define IMU_ODR_HZ                          200
+
 #define GYRO_CALIBRATION_DISCARD_SAMPLES        1000
 #define GYRO_CALIBRATION_SAMPLES                1000
 
@@ -46,6 +55,47 @@
 #define IMU_ROT_ZX  +0.00000000f
 #define IMU_ROT_ZY  +0.00000000f
 #define IMU_ROT_ZZ  +1.00000000f
+
+// Deep calibration gesture (WP-D)
+#define DEEP_CAL_HOLD_MS                    10000
+#define DEEP_CAL_HOLD_AXIS_RAW              1        // 0=X, 1=Y, 2=Z
+#define DEEP_CAL_HOLD_AXIS_SIGN             (+1)     // nose down reads +9.81 on raw Y
+#define DEEP_CAL_HOLD_G_BAND_PCT            10
+#define DEEP_CAL_HOLD_LATERAL_MAX_G         0.2f
+#define DEEP_CAL_HOLD_GYRO_MAX_DPS          2.0f
+
+// Deep calibration tumble (WP-A, WP-D)
+#define DEEP_CAL_POSE_SETTLE_MS             10000
+#define DEEP_CAL_POSE_SAMPLE_MS             30000
+#define DEEP_CAL_POSE_G_BAND_PCT            10
+#define DEEP_CAL_POSE_DOMINANT_MIN_G        0.8f
+#define DEEP_CAL_POSE_ANGLE_TOL_DEG         20.0f
+#define DEEP_CAL_GYRO_MOTION_MAX_DPS        2.0f
+#define DEEP_CAL_POSE_MAX_RESTARTS          5
+#define DEEP_CAL_TIMEOUT_MS                 (2 * 6 * (DEEP_CAL_POSE_SETTLE_MS + DEEP_CAL_POSE_SAMPLE_MS))
+#define DEEP_CAL_NORM_RESIDUAL_MAX          0.02f    // fraction of g, per pose after correction
+#define DEEP_CAL_DET_TOL                    0.1f     // |det(Q) - 1|
+
+// Buzzer patterns (WP-C)
+#define BUZZER_POSE_ON_MS                   400
+#define BUZZER_POSE_OFF_MS                  400
+#define BUZZER_DEEPCAL_ENTERED_MS           2000
+#define BUZZER_DEEPCAL_OK_COUNT             3
+#define BUZZER_DEEPCAL_OK_ON_MS             1200
+#define BUZZER_DEEPCAL_OK_OFF_MS            500
+#define BUZZER_DEEPCAL_FAIL_MS              4000
+#define STACK_SIZE_BUZZER                   256
+
+// Per-boot bias calibration (WP-E)
+#define GYRO_CAL_STILL_MAX_DPS              1.0f
+#define ACCEL_BIAS_CAL_DISCARD_SAMPLES      1000
+#define ACCEL_BIAS_CAL_SAMPLES              1000
+#define ACCEL_BIAS_LATERAL_MAX_G            0.1f
+#define ACCEL_BIAS_STILL_GYRO_MAX_DPS       2.0f
+#define CAL_EXPECTED_NOSE_UP_X              9.81f
+
+// Flash calibration sector (WP-B)
+#define FLASH_CAL_SECTOR_ADDRESS            0x003FF000
 
 // GPS Configuration
 #define GPS_FIX_REQUIRED             0

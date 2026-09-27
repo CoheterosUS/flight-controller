@@ -6,15 +6,15 @@ SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
 
     Record.Sync = FlightData->Sync;
     Record.Tick = FlightData->Tick;
-    Record.AccelX = FlightData->AccelX;
-    Record.AccelY = FlightData->AccelY;
-    Record.AccelZ = FlightData->AccelZ;
-    Record.GyroX = FlightData->GyroX;
-    Record.GyroY = FlightData->GyroY;
-    Record.GyroZ = FlightData->GyroZ;
-    Record.MagX = FlightData->MagX;
-    Record.MagY = FlightData->MagY;
-    Record.MagZ = FlightData->MagZ;
+    Record.RawAccelX = FlightData->RawAccelX;
+    Record.RawAccelY = FlightData->RawAccelY;
+    Record.RawAccelZ = FlightData->RawAccelZ;
+    Record.RawGyroX = FlightData->RawGyroX;
+    Record.RawGyroY = FlightData->RawGyroY;
+    Record.RawGyroZ = FlightData->RawGyroZ;
+    Record.RawMagX = FlightData->RawMagX;
+    Record.RawMagY = FlightData->RawMagY;
+    Record.RawMagZ = FlightData->RawMagZ;
     Record.PressurePa = FlightData->PressurePa;
     Record.TemperatureC = FlightData->TemperatureC;
     Record.Latitude = FlightData->Latitude;
@@ -50,12 +50,12 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
 
     Packet.Sync = FlightData->Sync;
     Packet.Tick = FlightData->Tick;
-    Packet.AccelX = (int16_t)FlightData->AccelX;
-    Packet.AccelY = (int16_t)FlightData->AccelY;
-    Packet.AccelZ = (int16_t)FlightData->AccelZ;
-    Packet.GyroX = (int16_t)FlightData->GyroX;
-    Packet.GyroY = (int16_t)FlightData->GyroY;
-    Packet.GyroZ = (int16_t)FlightData->GyroZ;
+    Packet.CalAccelX = (int16_t)FlightData->CalAccelX;
+    Packet.CalAccelY = (int16_t)FlightData->CalAccelY;
+    Packet.CalAccelZ = (int16_t)FlightData->CalAccelZ;
+    Packet.CalGyroX = (int16_t)FlightData->CalGyroX;
+    Packet.CalGyroY = (int16_t)FlightData->CalGyroY;
+    Packet.CalGyroZ = (int16_t)FlightData->CalGyroZ;
     Packet.PressurePa = (int16_t)(FlightData->PressurePa / 10.0f);
     Packet.TemperatureC = (int8_t)FlightData->TemperatureC;
     Packet.Latitude = FlightData->Latitude;
@@ -79,12 +79,12 @@ FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData) {
 
     Record.Sync = FlightData->Sync;
     Record.Tick = FlightData->Tick;
-    Record.AccelX = FlightData->CalAccelX;
-    Record.AccelY = FlightData->CalAccelY;
-    Record.AccelZ = FlightData->CalAccelZ;
-    Record.GyroX = FlightData->CalGyroX;
-    Record.GyroY = FlightData->CalGyroY;
-    Record.GyroZ = FlightData->CalGyroZ;
+    Record.RawAccelX = FlightData->RawAccelX;
+    Record.RawAccelY = FlightData->RawAccelY;
+    Record.RawAccelZ = FlightData->RawAccelZ;
+    Record.RawGyroX = FlightData->RawGyroX;
+    Record.RawGyroY = FlightData->RawGyroY;
+    Record.RawGyroZ = FlightData->RawGyroZ;
     Record.PosX = (int16_t)FlightData->PosX;
     Record.PosY = (int16_t)FlightData->PosY;
     Record.PosZ = (int16_t)FlightData->PosZ;

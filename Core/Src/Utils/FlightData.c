@@ -59,20 +59,20 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.PressurePa = BMP581_FlightData.PressurePa;
 	FlightData.TemperatureC = BMP581_FlightData.TemperatureC;
 
-	FlightData.MagX = IIS2MDCTR_FlightData.MagX;
-	FlightData.MagY = IIS2MDCTR_FlightData.MagY;
-	FlightData.MagZ = IIS2MDCTR_FlightData.MagZ;
+	FlightData.RawMagX = IIS2MDCTR_FlightData.MagX;
+	FlightData.RawMagY = IIS2MDCTR_FlightData.MagY;
+	FlightData.RawMagZ = IIS2MDCTR_FlightData.MagZ;
 
 	ApplyIMURotation(
 		IIM42653_FlightData.AccelX, IIM42653_FlightData.AccelY, IIM42653_FlightData.AccelZ,
-		&FlightData.AccelX, &FlightData.AccelY, &FlightData.AccelZ
+		&FlightData.RawAccelX, &FlightData.RawAccelY, &FlightData.RawAccelZ
 	);
 
 	ApplyIMURotation(
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroX, SystemContext->GyroBiasX),
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroY, SystemContext->GyroBiasY),
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroZ, SystemContext->GyroBiasZ),
-		&FlightData.GyroX, &FlightData.GyroY, &FlightData.GyroZ
+		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroX, SystemContext->GyroBiasRawX),
+		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroY, SystemContext->GyroBiasRawY),
+		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroZ, SystemContext->GyroBiasRawZ),
+		&FlightData.RawGyroX, &FlightData.RawGyroY, &FlightData.RawGyroZ
 	);
 
 	FlightData.Latitude = ZOEM8Q_FlightData.Latitude;
@@ -88,28 +88,28 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.GPSVelocity = CalculateGPSVerticalVelocity(FlightData.GPSAltitude, FlightData.Tick);
 
 	if (SystemContext->KalmanInitialized) {
-		bool IMU_Available = (FlightData.AccelX != KalmanLastAccelX);
+		bool IMU_Available = (FlightData.RawAccelX != KalmanLastAccelX);
 		bool BAR_Available = (FlightData.PressurePa != KalmanLastPressure);
-		KalmanLastAccelX = FlightData.AccelX;
+		KalmanLastAccelX = FlightData.RawAccelX;
 		KalmanLastPressure = FlightData.PressurePa;
 
-		float32_t AccelRaw[3] = {FlightData.AccelX, FlightData.AccelY, FlightData.AccelZ};
-		float32_t GyroRaw[3] = {FlightData.GyroX, FlightData.GyroY, FlightData.GyroZ};
-		float32_t AccelIMU[3];
-		float32_t OmegaIMU[3];
+		float32_t AccelSensor[3] = {FlightData.RawAccelX, FlightData.RawAccelY, FlightData.RawAccelZ};
+		float32_t GyroSensor[3] = {FlightData.RawGyroX, FlightData.RawGyroY, FlightData.RawGyroZ};
+		float32_t AccelCal[3];
+		float32_t GyroCal[3];
 		float32_t ZBAR[1] = {FlightData.PressurePa};
 
-		KalmanFilter_IMU_Cal(AccelRaw, GyroRaw, AccelIMU, OmegaIMU);
+		KalmanFilter_IMU_Cal(AccelSensor, GyroSensor, AccelCal, GyroCal);
 
-		FlightData.CalAccelX = AccelIMU[0];
-		FlightData.CalAccelY = AccelIMU[1];
-		FlightData.CalAccelZ = AccelIMU[2];
-		FlightData.CalGyroX = OmegaIMU[0];
-		FlightData.CalGyroY = OmegaIMU[1];
-		FlightData.CalGyroZ = OmegaIMU[2];
+		FlightData.CalAccelX = AccelCal[0];
+		FlightData.CalAccelY = AccelCal[1];
+		FlightData.CalAccelZ = AccelCal[2];
+		FlightData.CalGyroX = GyroCal[0];
+		FlightData.CalGyroY = GyroCal[1];
+		FlightData.CalGyroZ = GyroCal[2];
 
 		kalman_filter(IMU_Available, false, false, BAR_Available,
-			&AccelIMU, &OmegaIMU, &KalmanZGPS, &KalmanZMAG, &ZBAR,
+			&AccelCal, &GyroCal, &KalmanZGPS, &KalmanZMAG, &ZBAR,
 			&KalmanPos, &KalmanVel, &KalmanQuat,
 			&KalmanBe, &KalmanP, &KalmanQ, &KalmanRGPS, &KalmanRMAG, &KalmanRBAR,
 			SystemContext->ReferencePressurePa, CalculateKelvinFromCelsius(SystemContext->ReferenceTemperatureC), KALMAN_DT
@@ -140,12 +140,12 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 		FlightData.QuatY = 0;
 		FlightData.QuatZ = 0;
 		memset(FlightData.PDiag, 0, sizeof(FlightData.PDiag));
-		FlightData.CalAccelX = FlightData.AccelX;
-		FlightData.CalAccelY = FlightData.AccelY;
-		FlightData.CalAccelZ = FlightData.AccelZ;
-		FlightData.CalGyroX = FlightData.GyroX;
-		FlightData.CalGyroY = FlightData.GyroY;
-		FlightData.CalGyroZ = FlightData.GyroZ;
+		FlightData.CalAccelX = FlightData.RawAccelX;
+		FlightData.CalAccelY = FlightData.RawAccelY;
+		FlightData.CalAccelZ = FlightData.RawAccelZ;
+		FlightData.CalGyroX = FlightData.RawGyroX;
+		FlightData.CalGyroY = FlightData.RawGyroY;
+		FlightData.CalGyroZ = FlightData.RawGyroZ;
 	}
 
 	FlightData.Flags = SystemFaultFlags;

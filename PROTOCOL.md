@@ -31,6 +31,8 @@ Any agent that reads this file should not assume that any information is correct
 | 8     | LANDED           |
 | 9     | GROUND_ABORT     |
 | 10    | DESCENT_ABORT    |
+| 11    | ASCENT_ABORT     |
+| 12    | DEEP_CALIBRATION |
 
 ## CommandType (Enum)
 

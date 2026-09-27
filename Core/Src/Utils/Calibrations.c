@@ -14,10 +14,14 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->ReferencePressurePa = 0.0f;
     ctx->ReferenceTemperatureC = 0.0f;
     ctx->ReferencePressurePaValid = false;
-    ctx->GyroBiasX = 0.0f;
-    ctx->GyroBiasY = 0.0f;
-    ctx->GyroBiasZ = 0.0f;
+    ctx->GyroBiasRawX = 0.0f;
+    ctx->GyroBiasRawY = 0.0f;
+    ctx->GyroBiasRawZ = 0.0f;
     ctx->GyroCalibrationValid = false;
+    ctx->AccelBiasCalX = 0.0f;
+    ctx->AccelBiasCalY = 0.0f;
+    ctx->AccelBiasCalZ = 0.0f;
+    ctx->AccelBiasCalValid = false;
     ctx->AltitudeFilterInitialized = false;
     ctx->GPSFixValid = false;
 
@@ -68,16 +72,16 @@ void CalibrateGyroscope(FlightData_t FlightData, SystemContext_t *SystemContext)
         return;
     }
 
-    GyroSumX += FlightData.GyroX;
-    GyroSumY += FlightData.GyroY;
-    GyroSumZ += FlightData.GyroZ;
+    GyroSumX += FlightData.RawGyroX;
+    GyroSumY += FlightData.RawGyroY;
+    GyroSumZ += FlightData.RawGyroZ;
     GyroSampleCount++;
 
     if (GyroSampleCount >= GYRO_CALIBRATION_SAMPLES) {
         const float InvCount = 1.0f / (float)GyroSampleCount;
-        SystemContext->GyroBiasX = GyroSumX * InvCount;
-        SystemContext->GyroBiasY = GyroSumY * InvCount;
-        SystemContext->GyroBiasZ = GyroSumZ * InvCount;
+        SystemContext->GyroBiasRawX = GyroSumX * InvCount;
+        SystemContext->GyroBiasRawY = GyroSumY * InvCount;
+        SystemContext->GyroBiasRawZ = GyroSumZ * InvCount;
         SystemContext->GyroCalibrationValid = true;
     }
 }
