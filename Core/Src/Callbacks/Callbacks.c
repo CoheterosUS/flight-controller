@@ -24,6 +24,8 @@ uint8_t BMP581_RXBuf[BMP581_SENSOR_DATA_SIZE];
 __attribute__((section(".dma_buffer"), aligned(32)))
 uint8_t IIS2MDCTR_RXBuf[IIS2MDCTR_SENSOR_DATA_SIZE];
 
+static volatile bool BMP581_ReadPending;
+
 void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     if (huart->Instance == USART1) {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
@@ -53,7 +55,13 @@ void IIM42653_Timer_Callback(TimerHandle_t xTimer) {
 }
 
 void BMP581_Timer_Callback(TimerHandle_t xTimer) {
-    HAL_I2C_Mem_Read_DMA(BMP581_HANDLE, BMP581_I2C_ADDRESS, BMP581_REG_TEMPERATURE_XLSB, I2C_MEMADD_SIZE_8BIT, BMP581_RXBuf, BMP581_SENSOR_DATA_SIZE);
+    if (BMP581_ReadPending) {
+        return;
+    }
+
+    if (HAL_I2C_Mem_Read_DMA(BMP581_HANDLE, BMP581_I2C_ADDRESS, BMP581_REG_TEMPERATURE_XLSB, I2C_MEMADD_SIZE_8BIT, BMP581_RXBuf, BMP581_SENSOR_DATA_SIZE) == HAL_OK) {
+        BMP581_ReadPending = true;
+    }
 }
 
 void IIS2MDCTR_Timer_Callback(TimerHandle_t xTimer) {
@@ -79,9 +87,18 @@ void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi) {
 void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c) {
 	// BMP581
     if (hi2c->Instance == I2C2) {
-        BMP581_Mailbox_Publish(BMP581_RXBuf);
+        if (BMP581_ReadPending) {
+            BMP581_ReadPending = false;
+            BMP581_Mailbox_Publish(BMP581_RXBuf);
+        }
     // IIS2MDCTR
     } else if (hi2c->Instance == I2C1) {
         IIS2MDCTR_Mailbox_Publish(IIS2MDCTR_RXBuf);
+    }
+}
+
+void HAL_I2C_ErrorCallback(I2C_HandleTypeDef *hi2c) {
+    if (hi2c->Instance == I2C2) {
+        BMP581_ReadPending = false;
     }
 }

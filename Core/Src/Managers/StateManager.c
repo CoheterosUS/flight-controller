@@ -3,8 +3,11 @@
 #include "Managers/Managers.h"
 #include "Utils/shared.h"
 #include "Utils/Pyro.h"
+#include "Utils/ApogeeDetector.h"
 #include "timers.h"
 #include <Tasks/SensorConfigTask.h>
+
+static ApogeeDetector_t Detector;
 
 void StartSensorTimers(void) {
 	xTimerStart(TimerIIM42653, 0);
@@ -36,6 +39,8 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
             break;
         case STATE_BOOST:
             BoostStateEntry(SystemContext);
+            SystemContext->ApogeeTrigger = APOGEE_TRIGGER_NONE;
+            ApogeeDetector_Reset(&Detector, Now);
             break;
         case STATE_COAST:
             CoastStateEntry(SystemContext);
@@ -124,7 +129,7 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 #endif
 }
 
-SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t CommantType, BaseType_t Received) {
+SystemState_t HandleCommand(SystemState_t CurrentSystemState, SystemContext_t *SystemContext, CommandType_t CommantType, BaseType_t Received) {
     if (Received != pdPASS) {
         return CurrentSystemState;
     }
@@ -135,6 +140,7 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t Comm
         case COMMAND_GROUND_ABORT:
             return STATE_GROUND_ABORT;
         case COMMAND_DROGUE:
+            SystemContext->ApogeeTrigger = APOGEE_TRIGGER_COMMAND;
             return STATE_APOGEE;
         case COMMAND_LANDED:
             return STATE_LANDED;
@@ -149,6 +155,21 @@ SystemState_t HandleCommand(SystemState_t CurrentSystemState, CommandType_t Comm
 }
 
 SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *SystemContext, FlightData_t SensorData) {
+	if (CurrentSystemState == STATE_BOOST || CurrentSystemState == STATE_COAST || CurrentSystemState == STATE_ACTIVE_CONTROL) {
+		ApogeeInput_t Input = {
+			.NowMs = xTaskGetTickCount(),
+			.BaroAllowed = CurrentSystemState != STATE_BOOST,
+			.BaroValid = SensorData.BaroValid,
+			.AltitudeM = SensorData.BarometricAltitude,
+			.BaroSampleId = SensorData.BaroSampleId
+		};
+		ApogeeTrigger_t Trigger = ApogeeDetector_Update(&Detector, &Input);
+		if (Trigger != APOGEE_TRIGGER_NONE) {
+			SystemContext->ApogeeTrigger = Trigger;
+			return STATE_APOGEE;
+		}
+	}
+
 	switch (CurrentSystemState) {
 		case STATE_IDLE:
 			return IdleStateHandler(SystemContext, SensorData);

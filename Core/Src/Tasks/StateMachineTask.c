@@ -53,7 +53,7 @@ void StateMachineTask(void *pvParameters) {
         ZOEM8Q_Mailbox_Read(&ZOEM8Q_SensorData);
 
         BaseType_t CommandReceived = xQueueReceive(CommandQueue, &Command, 0);
-        SystemState_t NextSystemState = HandleCommand(CurrentSystemState, Command, CommandReceived);
+        SystemState_t NextSystemState = HandleCommand(CurrentSystemState, SystemContext, Command, CommandReceived);
 
         FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData, ZOEM8Q_SensorData, Command);
         dbg_flight_data = FlightData;

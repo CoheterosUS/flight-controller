@@ -6,6 +6,7 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "configuration.h"
+#include "Utils/ApogeeDetector.h"
 #include "stm32h7xx_hal.h"
 #include "timers.h"
 
@@ -80,6 +81,7 @@ typedef struct {
     volatile bool SensorsIdleFinished;
     bool GPSFixValid;
     bool KalmanInitialized;
+    ApogeeTrigger_t ApogeeTrigger;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
@@ -124,6 +126,8 @@ typedef struct {
     uint8_t Satellites;
     float BarometricAltitude;
     float BarometricVelocity;
+    uint32_t BaroSampleId;
+    bool BaroValid;
     float GPSVelocity;
     float CalAccelX;
     float CalAccelY;
@@ -149,6 +153,7 @@ typedef struct {
     uint8_t LastCommand;
     uint16_t CalStatus;
     uint8_t SyncEnd;
+    uint8_t ApogeeTrigger;
 } FlightData_t;
 #pragma pack(pop)
 

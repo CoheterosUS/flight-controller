@@ -38,28 +38,51 @@ float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool 
     return (float)SignValue * (Temperature ? TEMPERATURE_SCALE : PRESSURE_SCALE);
 }
 
-static float BarometricPreviousAltitude;
-static uint32_t BarometricPreviousTick;
+#define BARO_VELOCITY_BUFFER_SIZE (BARO_ODR_HZ * BARO_VELOCITY_WINDOW_MS / 1000 + 1)
 
-float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick) {
+typedef struct {
+    float Altitude;
+    uint32_t Tick;
+} BarometricVelocitySample_t;
 
-    uint32_t DeltaTick = Tick - BarometricPreviousTick;
-    float Velocity = 0.0f;
+static BarometricVelocitySample_t BarometricSamples[BARO_VELOCITY_BUFFER_SIZE];
+static uint16_t BarometricSampleCount;
+static uint16_t BarometricNextIndex;
+static uint32_t BarometricLastSampleId;
+static float BarometricVelocity;
 
-    if (DeltaTick > 0 && BarometricPreviousTick > 0) {
-        float DeltaSeconds = (float)DeltaTick / 1000.0f;
-        Velocity = (Altitude - BarometricPreviousAltitude) / DeltaSeconds;
+float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick, bool BaroValid, uint32_t BaroSampleId) {
+    if (!BaroValid || BaroSampleId == 0 || BaroSampleId == BarometricLastSampleId || !isfinite(Altitude)) {
+        return BarometricVelocity;
     }
 
-    BarometricPreviousAltitude = Altitude;
-    BarometricPreviousTick = Tick;
+    BarometricLastSampleId = BaroSampleId;
+    BarometricSamples[BarometricNextIndex] = (BarometricVelocitySample_t){
+        .Altitude = Altitude,
+        .Tick = Tick
+    };
+    BarometricNextIndex = (uint16_t)((BarometricNextIndex + 1U) % BARO_VELOCITY_BUFFER_SIZE);
+    if (BarometricSampleCount < BARO_VELOCITY_BUFFER_SIZE) {
+        BarometricSampleCount++;
+    }
 
-    return Velocity;
+    uint16_t OldestIndex = (BarometricSampleCount == BARO_VELOCITY_BUFFER_SIZE) ? BarometricNextIndex : 0;
+    uint32_t DeltaTick = Tick - BarometricSamples[OldestIndex].Tick;
+    if (DeltaTick >= (BARO_VELOCITY_WINDOW_MS / 2U) && DeltaTick > 0) {
+        BarometricVelocity = (Altitude - BarometricSamples[OldestIndex].Altitude) /
+                             ((float)DeltaTick / 1000.0f);
+    } else {
+        BarometricVelocity = 0.0f;
+    }
+
+    return BarometricVelocity;
 }
 
 void ResetBarometricVerticalVelocity(void) {
-    BarometricPreviousAltitude = 0.0f;
-    BarometricPreviousTick = 0;
+    BarometricSampleCount = 0;
+    BarometricNextIndex = 0;
+    BarometricLastSampleId = 0;
+    BarometricVelocity = 0.0f;
 }
 
 static float GPSPreviousAltitude;

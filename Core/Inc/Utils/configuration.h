@@ -138,10 +138,11 @@
 // Coast to Active Control Altitude Threshold
 // TODO(EuRoC): ACTIVE_CONTROL is a EuRoC feature, set the altitudes from the judges' released rules (see BACKLOG.md)
 #define COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD    2000.0f // Barometric altitude threshold for active control
-#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (LOOP_RATE_HZ / 20)
+#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (((BARO_ODR_HZ / 20) < 2) ? 2 : (BARO_ODR_HZ / 20))
 
 // Apogee detection (see APOGEE_DETECTION_PLAN.md). Channel B: barometer drop from peak. Channel D: timer from BOOST entry.
 #define BARO_ODR_HZ                         50      // actual BMP581 output data rate in flight
+#define BARO_VELOCITY_WINDOW_MS             1000
 #define APOGEE_DROP_M                       15.0f
 #define APOGEE_CONFIRM_SAMPLES              5       // new valid barometer samples
 #define APOGEE_TIMER_MS                     28000   // launch (BOOST entry) to forced drogue. Must exceed the latest plausible apogee time
@@ -154,17 +155,6 @@
 #define BARO_VALID_MIN_TEMP_C               (-40.0f)
 #define BARO_VALID_MAX_TEMP_C               85.0f
 
-// Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
-#define ACTIVE_CONTROL_APOGEE_BAROM_ALT_ENABLED			0
-#define ACTIVE_CONTROL_APOGEE_BAROM_ALT_THRESHOLD		2900.0f
-#define ACTIVE_CONTROL_APOGEE_BAROM_VEL_ENABLED			1
-#define ACTIVE_CONTROL_APOGEE_BAROM_VEL_THRESHOLD		0.0f
-#define ACTIVE_CONTROL_APOGEE_GPS_ENABLED				0
-#define ACTIVE_CONTROL_APOGEE_GPS_ALT_THRESHOLD			2900.0f
-#define ACTIVE_CONTROL_APOGEE_GPS_VEL_Y_THRESHOLD		0.0f
-#define ACTIVE_CONTROL_APOGEE_DELAY_ENABLED				0
-#define ACTIVE_CONTROL_APOGEE_DELAY_MS					10000
-
 // Apogee to Main Parachute
 #define APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f // WARN: AGL
 #define APOGEE_MAIN_PARACHUTE_GPS_ALT_ENABLED		0
@@ -175,7 +165,7 @@
 // Main Parachute to Landed
 #define MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
 #define MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD		2.0f
-#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		LOOP_RATE_HZ
+#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		BARO_ODR_HZ
 
 #define LANDED_SD_STOP_DELAY_ENABLED            1
 #define LANDED_SD_STOP_DELAY_MS                 5000
