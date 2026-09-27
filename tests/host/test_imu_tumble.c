@@ -208,6 +208,22 @@ static void TestPoseChecks(void)
     const float WrongMagnitude[3] = {0.5f * G, 0.0f, 0.0f};
     Check(ImuTumble_CheckPose(&T, 3u, WrongMagnitude) == IMU_TUMBLE_POSE_BAD_MAGNITUDE,
           "wrong magnitude is rejected");
+
+    const float NegativeY[3] = {0.0f, -G, 0.0f};
+    Check(ImuTumble_CheckPose(&T, 3u, NegativeY) == IMU_TUMBLE_POSE_OK, "-Y pose is accepted");
+    AddPoseMean(&T, 3u, 0.0f, -G, 0.0f);
+    const float PositiveZ[3] = {0.0f, 0.0f, G};
+    const float SameAxisAsY[3] = {0.0f, G, 0.0f};
+    Check(ImuTumble_CheckPose(&T, 4u, PositiveZ) == IMU_TUMBLE_POSE_OK,
+          "+Z pose on the third axis is accepted");
+    Check(ImuTumble_CheckPose(&T, 4u, SameAxisAsY) == IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS,
+          "pose 4 on an already used axis is rejected");
+    AddPoseMean(&T, 4u, 0.0f, 0.0f, G);
+    const float NegativeZ[3] = {0.0f, 0.0f, -G};
+    Check(ImuTumble_CheckPose(&T, 5u, NegativeZ) == IMU_TUMBLE_POSE_OK,
+          "-Z pose opposite to +Z is accepted");
+    Check(ImuTumble_CheckPose(&T, 5u, PositiveZ) == IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS,
+          "pose 5 not opposite to pose 4 is rejected");
 }
 
 static void TestSingular(void)

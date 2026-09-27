@@ -176,50 +176,36 @@ ImuTumblePoseStatus_t ImuTumble_CheckPose(const ImuTumble_t *T, uint8_t Pose, co
     const float ToleranceRadians = (float)DEEP_CAL_POSE_ANGLE_TOL_DEG * 0.01745329251994329577f;
     const float CosTolerance = cosf(ToleranceRadians);
     const float SinTolerance = sinf(ToleranceRadians);
-    if (!ImuTumble_IsCommitted(T, 0u)) {
-        return IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
-    }
 
-    if (Pose == 1u) {
-        return ImuTumble_Opposite(T->PoseMean[0], MeanRaw, CosTolerance)
+    switch (Pose) {
+    case 1u:
+        return ImuTumble_IsCommitted(T, 0u) && ImuTumble_Opposite(T->PoseMean[0], MeanRaw, CosTolerance)
             ? IMU_TUMBLE_POSE_OK : IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
-    }
-
-    if (!ImuTumble_IsCommitted(T, 1u) || Axis == ImuTumble_DominantAxis(T->PoseMean[0]) ||
-        !ImuTumble_Perpendicular(T->PoseMean[0], MeanRaw, SinTolerance)) {
+    case 2u:
+        return ImuTumble_IsCommitted(T, 1u) &&
+               Axis != ImuTumble_DominantAxis(T->PoseMean[0]) &&
+               ImuTumble_Perpendicular(T->PoseMean[0], MeanRaw, SinTolerance)
+            ? IMU_TUMBLE_POSE_OK : IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
+    case 3u:
+        return ImuTumble_IsCommitted(T, 2u) &&
+               Axis == ImuTumble_DominantAxis(T->PoseMean[2]) &&
+               ImuTumble_Opposite(T->PoseMean[2], MeanRaw, CosTolerance)
+            ? IMU_TUMBLE_POSE_OK : IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
+    case 4u:
+        return ImuTumble_IsCommitted(T, 3u) &&
+               Axis != ImuTumble_DominantAxis(T->PoseMean[0]) &&
+               Axis != ImuTumble_DominantAxis(T->PoseMean[2]) &&
+               ImuTumble_Perpendicular(T->PoseMean[0], MeanRaw, SinTolerance) &&
+               ImuTumble_Perpendicular(T->PoseMean[2], MeanRaw, SinTolerance)
+            ? IMU_TUMBLE_POSE_OK : IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
+    case 5u:
+        return ImuTumble_IsCommitted(T, 4u) &&
+               Axis == ImuTumble_DominantAxis(T->PoseMean[4]) &&
+               ImuTumble_Opposite(T->PoseMean[4], MeanRaw, CosTolerance)
+            ? IMU_TUMBLE_POSE_OK : IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
+    default:
         return IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
     }
-
-    if (Pose == 2u) {
-        return IMU_TUMBLE_POSE_OK;
-    }
-
-    if (!ImuTumble_IsCommitted(T, 2u) ||
-        !ImuTumble_Opposite(T->PoseMean[2], MeanRaw, CosTolerance) ||
-        Axis != ImuTumble_DominantAxis(T->PoseMean[2])) {
-        return IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
-    }
-
-    if (Pose == 3u) {
-        return IMU_TUMBLE_POSE_OK;
-    }
-
-    if (!ImuTumble_IsCommitted(T, 3u) || Axis == ImuTumble_DominantAxis(T->PoseMean[0]) ||
-        Axis == ImuTumble_DominantAxis(T->PoseMean[2]) ||
-        !ImuTumble_Perpendicular(T->PoseMean[2], MeanRaw, SinTolerance)) {
-        return IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
-    }
-
-    if (Pose == 4u) {
-        return IMU_TUMBLE_POSE_OK;
-    }
-
-    if (!ImuTumble_IsCommitted(T, 4u) ||
-        !ImuTumble_Opposite(T->PoseMean[4], MeanRaw, CosTolerance) ||
-        Axis != ImuTumble_DominantAxis(T->PoseMean[4])) {
-        return IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS;
-    }
-    return IMU_TUMBLE_POSE_OK;
 }
 
 static void ImuTumble_BuildNormalEquations(const ImuTumble_t *T, double A[4][4], double B[4][3])
