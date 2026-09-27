@@ -89,6 +89,7 @@
 typedef struct {
     float TemperatureC;
     float PressurePa;
+    uint32_t SampleId;
 } BMP581_SensorData_t;
 
 HAL_StatusTypeDef BMP581_Reset(I2C_HandleTypeDef *BMP581_Handle);

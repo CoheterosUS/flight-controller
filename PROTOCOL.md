@@ -107,6 +107,8 @@ The W25Q32JV flash calibration sector and the per-flight calibration snapshot pa
 | Satellites         | uint8    | Count           |                               |
 | BarometricAltitude | float    | Meters          |                               |
 | BarometricVelocity | float    | m/s             |                               |
+| BaroSampleId       | uint32   |                 | Mailbox sample counter       |
+| BaroValid          | bool     |                 | Validated barometer sample   |
 | GPSVelocity        | float    | m/s             |                               |
 | CalAccelX          | float    | m/s2            | Rocket body frame             |
 | CalAccelY          | float    | m/s2            | Rocket body frame             |
@@ -131,6 +133,7 @@ The W25Q32JV flash calibration sector and the per-flight calibration snapshot pa
 | RelayState         | uint8    | Bitmask         | RelayState                   |
 | LastCommand        | uint8    | CommandType     | Persists                     |
 | CalStatus          | uint16   | Bitmask and pose | Calibration and Kalman status |
+| ApogeeTrigger      | uint8    |                 | 0 none, 1 baro, 2 timer, 3 command |
 | SyncEnd            | uint8    |                 | `0xBE`                       |
 
 ## CalStatus (uint16)
@@ -245,7 +248,7 @@ The packet is 54 bytes. Accel and gyro fields are calibrated rocket body-frame v
 
 ## Wire SD Log Record (Structure, Packed)
 
-The record is 187 bytes. Raw IMU fields are hardware axes. Cal IMU fields are rocket body-frame values.
+The record is 188 bytes. Raw IMU fields are hardware axes. Cal IMU fields are rocket body-frame values.
 
 | Offset | Size | Type    | Field              | Encoding         |
 |--------|------|---------|--------------------|------------------|
@@ -292,11 +295,12 @@ The record is 187 bytes. Raw IMU fields are hardware axes. Cal IMU fields are ro
 | 182    | 1    | uint8   | RelayState         | Bitmask          |
 | 183    | 1    | uint8   | LastCommand        | Enum             |
 | 184    | 2    | uint16  | CalStatus          | Bitmask and pose |
-| 186    | 1    | uint8   | SyncEnd            | `0xBE`           |
+| 186    | 1    | uint8   | ApogeeTrigger      | 0 none, 1 baro, 2 timer, 3 command |
+| 187    | 1    | uint8   | SyncEnd            | `0xBE`           |
 
 ## Wire Flash Log Record (Structure, Packed)
 
-The record is 56 bytes. Stored on W25Q32JV external flash at 10 Hz, with 4 records per 256-byte page. The 56-byte record therefore fits within the 64-byte record slot. Flight boundaries are marked by a marker record where State = `0xFF` and all sensor fields are zero. The marker is page-aligned and occupies the first 56 bytes of a 256-byte page, with the rest as `0xFF` padding.
+The record is 57 bytes. Stored on W25Q32JV external flash at 10 Hz, with 4 records per 256-byte page. The 57-byte record therefore fits within the 64-byte record slot. Flight boundaries are marked by a marker record where State = `0xFF` and all sensor fields are zero. The marker is page-aligned and occupies the first 57 bytes of a 256-byte page, with the rest as `0xFF` padding.
 
 | Offset | Size | Type    | Field      | Encoding      |
 |--------|------|---------|------------|---------------|
@@ -321,4 +325,5 @@ The record is 56 bytes. Stored on W25Q32JV external flash at 10 Hz, with 4 recor
 | 50     | 2    | int16   | PDiag2     | x10           |
 | 52     | 2    | uint16  | PressurePa | /10           |
 | 54     | 1    | uint8   | State      | Enum          |
-| 55     | 1    | uint8   | SyncEnd    | `0xBE`        |
+| 55     | 1    | uint8   | ApogeeTrigger | 0 none, 1 baro, 2 timer, 3 command |
+| 56     | 1    | uint8   | SyncEnd    | `0xBE`        |

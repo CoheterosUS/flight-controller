@@ -17,6 +17,17 @@
 #define FLIGHT_BUILD                0 // set to 1 for a flight build: rejects HIL, HIL pre-seed and external commands at compile time.
 #endif
 
+// FLIGHT_BUILD must be 1 for any image that goes on a rocket. It refuses to compile with HIL switches on,
+// because HIL_MODE 1 never configures or starts the real sensors (no launch detection, no parachutes).
+// Pre-flight checklist: FLIGHT_BUILD 1, HIL_MODE 0, HIL_PRESEED_M 0, erase the flash log (old records use another layout).
+
+// Manual drogue command (COMMAND_DROGUE): 0 = only accepted in BOOST, COAST, ACTIVE_CONTROL (a stray UART frame
+// must not fire the drogue on the pad), 1 = accepted in every state (bench pyro tests).
+#define DROGUE_COMMAND_ANY_STATE    0
+#if FLIGHT_BUILD && DROGUE_COMMAND_ANY_STATE
+#error "FLIGHT_BUILD requires DROGUE_COMMAND_ANY_STATE 0"
+#endif
+
 // HIL only (see BRINGUP_AND_HIL.md)
 #ifndef HIL_PRESEED_M
 #define HIL_PRESEED_M                       0
@@ -49,8 +60,9 @@
 #define ALTITUDE_IIR_FILTER_ALPHA    (10.0f / LOOP_RATE_HZ)
 
 // Barometer Configuration
-#define PRESSURE_CALIBRATION_DISCARD_SAMPLES    1000
-#define PRESSURE_CALIBRATION_SAMPLES            1000
+// Counted in UNIQUE barometer samples (not loop iterations): about 1 s discard and 5 s average at the sensor rate
+#define PRESSURE_CALIBRATION_DISCARD_SAMPLES    50
+#define PRESSURE_CALIBRATION_SAMPLES            250
 
 // IMU Configuration
 // IMU timing (WP-E)
@@ -143,19 +155,25 @@
 #define BOOST_COAST_CONSECUTIVE_SAMPLES        (LOOP_RATE_HZ / 20)
 
 // Coast to Active Control Altitude Threshold
+// TODO(EuRoC): ACTIVE_CONTROL is a EuRoC feature, set the altitudes from the judges' released rules (see BACKLOG.md)
 #define COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD    2000.0f // Barometric altitude threshold for active control
-#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (LOOP_RATE_HZ / 20)
+#define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (((BARO_ODR_HZ / 20) < 2) ? 2 : (BARO_ODR_HZ / 20))
 
-// Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
-#define ACTIVE_CONTROL_APOGEE_BAROM_ALT_ENABLED			0
-#define ACTIVE_CONTROL_APOGEE_BAROM_ALT_THRESHOLD		2900.0f
-#define ACTIVE_CONTROL_APOGEE_BAROM_VEL_ENABLED			1
-#define ACTIVE_CONTROL_APOGEE_BAROM_VEL_THRESHOLD		0.0f
-#define ACTIVE_CONTROL_APOGEE_GPS_ENABLED				0
-#define ACTIVE_CONTROL_APOGEE_GPS_ALT_THRESHOLD			2900.0f
-#define ACTIVE_CONTROL_APOGEE_GPS_VEL_Y_THRESHOLD		0.0f
-#define ACTIVE_CONTROL_APOGEE_DELAY_ENABLED				0
-#define ACTIVE_CONTROL_APOGEE_DELAY_MS					10000
+// Apogee detection (see APOGEE_DETECTION_PLAN.md). Channel B: barometer drop from peak. Channel D: timer from BOOST entry.
+#define BARO_ODR_HZ                         46      // BMP581 typical rate in continuous mode at pressure x32, temperature x2
+#define BARO_VELOCITY_WINDOW_MS             1000
+#define BARO_GRAVITY_MS2                    9.81f   // Must match the Kalman barometer model g[2]
+#define APOGEE_DROP_M                       15.0f
+#define APOGEE_CONFIRM_SAMPLES              5       // new valid barometer samples
+#define APOGEE_TIMER_MS                     28000   // launch (BOOST entry) to forced drogue. Must exceed the latest plausible apogee time
+#define APOGEE_BARO_MAX_SPEED_MPS           400.0f  // slew gate speed
+#define APOGEE_BARO_SLEW_MARGIN_M           10.0f   // slew gate constant margin
+
+// Barometer sample plausibility (BMP581 operating range, verify against Datasheets/BMP581.pdf)
+#define BARO_VALID_MIN_PA                   30000.0f
+#define BARO_VALID_MAX_PA                   125000.0f
+#define BARO_VALID_MIN_TEMP_C               (-40.0f)
+#define BARO_VALID_MAX_TEMP_C               85.0f
 
 // Apogee to Main Parachute
 #define APOGEE_MAIN_PARACHUTE_BAROM_ALT_THRESHOLD 	450.0f // WARN: AGL
@@ -163,11 +181,14 @@
 #define APOGEE_MAIN_PARACHUTE_GPS_ALT_THRESHOLD		450.0f // WARN: ASL
 #define APOGEE_MAIN_PARACHUTE_DELAY_ENABLED			0
 #define APOGEE_MAIN_PARACHUTE_DELAY_MS				30000
+// Placeholders to tune with the descent simulation. This channel must never fire while the barometer is healthy.
+#define APOGEE_MAIN_BARO_LOSS_MS                    5000
+#define APOGEE_MAIN_BARO_LOSS_DELAY_MS              60000
 
 // Main Parachute to Landed
 #define MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
 #define MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD		2.0f
-#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		LOOP_RATE_HZ
+#define MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES		BARO_ODR_HZ
 
 #define LANDED_SD_STOP_DELAY_ENABLED            1
 #define LANDED_SD_STOP_DELAY_MS                 5000

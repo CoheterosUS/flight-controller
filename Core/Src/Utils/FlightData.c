@@ -6,7 +6,9 @@
 #include "Utils/Calculations.h"
 #include "Utils/ImuCal.h"
 #include "Utils/Pyro.h"
+#include "Utils/ApogeeDetector.h"
 #include "KalmanLib.h"
+#include <math.h>
 
 #include <math.h>
 
@@ -37,6 +39,8 @@ static bool FlightData_FiniteVec3(const float V[3])
 {
     return isfinite(V[0]) && isfinite(V[1]) && isfinite(V[2]);
 }
+static float LastValidBarometricAltitude = 0.0f;
+static bool HaveValidBarometricAltitude;
 
 void KalmanFilter_Init(SystemContext_t *SystemContext) {
 	float32_t EulDeg0[3] = {KALMAN_INITIAL_ROLL_DEG, KALMAN_INITIAL_PITCH_DEG, KALMAN_INITIAL_YAW_DEG};
@@ -89,9 +93,43 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.Milliseconds = ZOEM8Q_FlightData.Milliseconds;
 	FlightData.Satellites = ZOEM8Q_FlightData.Satellites;
 
-	FlightData.BarometricAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
+	if (!SystemContext->ReferencePressurePaValid) {
+		LastValidBarometricAltitude = 0.0f;
+		HaveValidBarometricAltitude = false;
+	}
+
+	FlightData.BaroSampleId = BMP581_FlightData.SampleId;
+	bool ReferenceValid = SystemContext->ReferencePressurePaValid &&
+		isfinite(SystemContext->ReferenceTemperatureC) &&
+		SystemContext->ReferenceTemperatureC >= BARO_VALID_MIN_TEMP_C &&
+		SystemContext->ReferenceTemperatureC <= BARO_VALID_MAX_TEMP_C;
+
+	FlightData.BaroValid = BaroSampleValid(
+		FlightData.PressurePa,
+		FlightData.TemperatureC,
+		SystemContext->ReferencePressurePa,
+		ReferenceValid,
+		FlightData.BaroSampleId
+	);
+
+	if (FlightData.BaroValid) {
+		float DerivedAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa);
+		if (isfinite(DerivedAltitude)) {
+			LastValidBarometricAltitude = DerivedAltitude;
+			HaveValidBarometricAltitude = true;
+		} else {
+			FlightData.BaroValid = false;
+		}
+	}
+
+	FlightData.BarometricAltitude = HaveValidBarometricAltitude ? LastValidBarometricAltitude : 0.0f;
 	// FlightData.BarometricAltitude = CalculateFilteredAltitude(SystemContext, FlightData.BarometricAltitude);
-	FlightData.BarometricVelocity = CalculateBarometricVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick);
+	FlightData.BarometricVelocity = CalculateBarometricVerticalVelocity(
+		FlightData.BarometricAltitude,
+		FlightData.Tick,
+		FlightData.BaroValid,
+		FlightData.BaroSampleId
+	);
 	FlightData.GPSVelocity = CalculateGPSVerticalVelocity(FlightData.GPSAltitude, FlightData.Tick);
 
 	const float RawAccel[3] = {FlightData.RawAccelX, FlightData.RawAccelY, FlightData.RawAccelZ};
@@ -177,6 +215,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.RelayState = PyroGetState();
 	FlightData.LastCommand = (LastCommand < COMMAND_HIL_DATA) ? LastCommand : COMMAND_NONE;
 	FlightData.SyncEnd = PACKET_FOOTER;
+	FlightData.ApogeeTrigger = (uint8_t)SystemContext->ApogeeTrigger;
 
 	return FlightData;
 }
