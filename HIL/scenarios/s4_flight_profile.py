@@ -67,6 +67,7 @@ def run(link, cfg=None):
     r = ScenarioResult(SCENARIO_ID)
 
     # Reach PRELAUNCH on the pad.
+    _common.reset_board(link, cfg)
     link.send_command(p.COMMAND_CALIBRATION)
     pad = lambda: link.send_hil(
         synth.noisy([0.0, -synth.GRAVITY, 0.0], cfg.accel_noise),

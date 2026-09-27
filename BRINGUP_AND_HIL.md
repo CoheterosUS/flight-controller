@@ -73,6 +73,24 @@ For quick iteration on the flight logic alone, a compile flag `HIL_PRESEED_M` lo
 - It sets a flag in `CalStatus` and in the flight snapshot, so any log or telemetry from such a run is identifiable.
 - The full scenarios above must still pass without it before a release.
 
+### 5.3 Running the harness
+
+The scenarios live in `HIL/` as a small package: `harness/` (serial link, telemetry decode, wait helpers, synthetic sensor math) and `scenarios/` (one file per S1 to S7), driven by `run_all.py`. Install the one dependency with `pip install -r HIL/requirements.txt`.
+
+```
+cd HIL
+python run_all.py --port COM3                 # all scenarios
+python run_all.py --port COM3 --scenario S4   # one
+python run_all.py --port COM3 --scenario S1 S6 # a subset
+```
+
+Each scenario prints its checks and a PASS, FAIL or BLOCKED line.
+
+- `harness/protocol.py` is the single place that describes the wire layout: state values, the CalStatus bit assignment and the telemetry offsets. When the firmware layout changes, update that file only.
+- CalStatus is carried in the BatteryVoltage telemetry slot (offset 46) during pre-flight states, so the packet does not grow. The firmware must write it there only in pre-flight states and leave the real battery voltage in that slot from BOOST on.
+- Scenarios that need the deep calibration firmware (state 12 and CalStatus) report BLOCKED until it lands. Flip `CALSTATUS_PRESENT` to `True` in `harness/protocol.py` once the firmware writes CalStatus, and they run unchanged. S4 (flight profile) runs against the current firmware today.
+- Some pass criteria cannot be read over telemetry: the exact `M` versus `M_true` match (S1) is a WP-A host test, and the 0.01 dps gyro bound (S3) is a WP-E host test. The HIL versions assert the coarser observable and say so in the check text.
+
 ## 6. Notes
 
 - Serial commands are disabled in the flight configuration. `EXTERNAL_COMMANDS` is defined in `configuration.h` but is not used by the code today.
