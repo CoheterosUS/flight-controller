@@ -13,6 +13,22 @@
 #define BITS_SET(value, mask) (((value) & (mask)) == (mask))
 #define BITS_CLEAR(value, mask) (((value) & (mask)) == 0)
 
+#define CAL_STATUS_IMU_CAL_VALID       BIT(0)
+#define CAL_STATUS_GYRO_BIAS_VALID     BIT(1)
+#define CAL_STATUS_ACCEL_BIAS_VALID    BIT(2)
+#define CAL_STATUS_PRESSURE_REF_VALID  BIT(3)
+#define CAL_STATUS_KALMAN_INITIALIZED  BIT(4)
+#define CAL_STATUS_KALMAN_STEPPING     BIT(5)
+#define CAL_STATUS_HIL_PRESEED         BIT(6)
+#define CAL_STATUS_RESERVED            BIT(7)
+#define CAL_STATUS_POSE_SHIFT          8U
+#define CAL_STATUS_POSE_MASK           (0x7U << CAL_STATUS_POSE_SHIFT)
+#define CAL_STATUS_GET_POSE(status) \
+    ((uint8_t)(((uint16_t)(status) & CAL_STATUS_POSE_MASK) >> CAL_STATUS_POSE_SHIFT))
+#define CAL_STATUS_SET_POSE(status, pose) \
+    ((uint16_t)(((uint16_t)(status) & (uint16_t)~CAL_STATUS_POSE_MASK) \
+        | ((((uint16_t)(pose)) << CAL_STATUS_POSE_SHIFT) & CAL_STATUS_POSE_MASK)))
+
 typedef enum {
     MSG_DATA = 0x01,
     MSG_COMMAND = 0x02
@@ -131,6 +147,7 @@ typedef struct {
     uint8_t State;
     uint8_t RelayState;
     uint8_t LastCommand;
+    uint16_t CalStatus;
     uint8_t SyncEnd;
 } FlightData_t;
 #pragma pack(pop)

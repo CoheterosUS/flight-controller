@@ -149,6 +149,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	}
 
 	FlightData.Flags = SystemFaultFlags;
+	FlightData.CalStatus = SystemContext->CalStatus;
 	FlightData.BatteryVoltage = BatteryGetVoltage();
 	FlightData.State = SystemState;
 	FlightData.RelayState = PyroGetState();
