@@ -61,6 +61,11 @@ Any agent that reads this file should not assume that any information is correct
 | 7   | IIS2MDCTR_MODE_PERFORMANCE_FAILED |
 | 8   | SD_MOUNT_FAILED                   |
 | 9   | SD_OPEN_FAILED                    |
+| 10  | W25Q_JEDEC_ID_FAILED              |
+| 11  | W25Q_INIT_FAILED                  |
+| 12  | W25Q_LOG_FULL                     |
+| 13  | W25Q_WRITE_FAILED                 |
+| 14  | W25Q_SNAPSHOT_FAILED              |
 
 ## RelayState (Bitmask)
 

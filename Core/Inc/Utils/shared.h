@@ -97,9 +97,15 @@ typedef enum {
     SD_OPEN_FAILED = 1u << 9,
     W25Q_JEDEC_ID_FAILED = 1u << 10,
     W25Q_INIT_FAILED = 1u << 11,
+    W25Q_LOG_FULL = 1u << 12,
+    W25Q_WRITE_FAILED = 1u << 13,
+    W25Q_SNAPSHOT_FAILED = 1u << 14,
 } SystemFaultFlag_t;
 
-typedef uint32_t SystemFaultFlags_t;
+typedef volatile uint32_t SystemFaultFlags_t;
+
+#define SystemFaultSet(mask) \
+    __atomic_fetch_or(&SystemFaultFlags, (mask), __ATOMIC_SEQ_CST)
 
 #pragma pack(push, 1)
 typedef struct {

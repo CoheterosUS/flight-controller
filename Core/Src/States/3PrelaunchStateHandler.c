@@ -25,8 +25,12 @@ void PrelaunchStateEntry(SystemContext_t *ctx) {
     if ((ctx->CalStatus & CAL_STATUS_HIL_PRESEED) != 0u) {
         Snapshot.Flags |= W25Q_SNAPSHOT_FLAG_HIL_PRESEED;
     }
-    (void)W25Q_SnapshotWrite(&Snapshot);
-    ctx->FlashLoggingEnabled = true;
+    if (!W25Q_SnapshotWrite(&Snapshot)) {
+        SystemFaultSet(W25Q_SNAPSHOT_FAILED);
+        ctx->FlashLoggingEnabled = false;
+    } else {
+        ctx->FlashLoggingEnabled = true;
+    }
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

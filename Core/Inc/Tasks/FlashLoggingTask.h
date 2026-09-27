@@ -10,6 +10,7 @@ extern TaskHandle_t FlashWriterTaskHandle;
 
 void CreateFlashLoggingTask(SystemContext_t *SystemContext, UBaseType_t Priority, uint16_t StackSize);
 void CreateFlashMaintenanceTask(UBaseType_t Priority, uint16_t StackSize);
+bool FlashLogging_FlushAndWait(uint32_t TimeoutMs);
 void FlashProducerTask(void *pvParameters);
 void FlashWriterTask(void *pvParameters);
 void FlashMaintenanceTask(void *pvParameters);

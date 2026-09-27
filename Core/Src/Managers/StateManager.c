@@ -88,13 +88,13 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 	switch (CurrentSystemState) {
 		case STATE_IDLE:
 			if (BMP581_Mode_Idle(BMP581_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= BMP581_MODE_IDLE_FAILED;
+				SystemFaultSet(BMP581_MODE_IDLE_FAILED);
 			}
 			if (IIM42653_Mode_Idle(IIM42653_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIM42653_MODE_IDLE_FAILED;
+				SystemFaultSet(IIM42653_MODE_IDLE_FAILED);
 			}
 			if (IIS2MDCTR_Mode_Idle(IIS2MDCTR_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIS2MDCTR_MODE_IDLE_FAILED;
+				SystemFaultSet(IIS2MDCTR_MODE_IDLE_FAILED);
 			}
 
 #if AUTO_START_CALIBRATION
@@ -104,13 +104,13 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 		case STATE_CALIBRATION:
 		case STATE_DEEP_CALIBRATION:
 			if (BMP581_Mode_Performance(BMP581_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= BMP581_MODE_PERFORMANCE_FAILED;
+				SystemFaultSet(BMP581_MODE_PERFORMANCE_FAILED);
 			}
 			if (IIM42653_Mode_Performance(IIM42653_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIM42653_MODE_PERFORMANCE_FAILED;
+				SystemFaultSet(IIM42653_MODE_PERFORMANCE_FAILED);
 			}
 			if (IIS2MDCTR_Mode_Performance(IIS2MDCTR_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIS2MDCTR_MODE_PERFORMANCE_FAILED;
+				SystemFaultSet(IIS2MDCTR_MODE_PERFORMANCE_FAILED);
 			}
 
 			StartSensorTimers();
@@ -121,13 +121,13 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 		case STATE_LANDED:
 			StopSensorTimers();
 			if (BMP581_Mode_Idle(BMP581_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= BMP581_MODE_IDLE_FAILED;
+				SystemFaultSet(BMP581_MODE_IDLE_FAILED);
 			}
 			if (IIM42653_Mode_Idle(IIM42653_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIM42653_MODE_IDLE_FAILED;
+				SystemFaultSet(IIM42653_MODE_IDLE_FAILED);
 			}
 			if (IIS2MDCTR_Mode_Idle(IIS2MDCTR_HANDLE) != HAL_OK) {
-				SystemFaultFlags |= IIS2MDCTR_MODE_IDLE_FAILED;
+				SystemFaultSet(IIS2MDCTR_MODE_IDLE_FAILED);
 			}
 			break;
 		default:

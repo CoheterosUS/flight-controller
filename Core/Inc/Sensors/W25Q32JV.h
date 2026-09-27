@@ -91,6 +91,9 @@ typedef struct {
 
 extern SemaphoreHandle_t FlashSPISemaphore;
 
+void W25Q_CreateLock(void);
+void W25Q_Lock(void);
+void W25Q_Unlock(void);
 void W25Q_SelectCS(void);
 void W25Q_DeselectCS(void);
 void W25Q_WP_Enable(void);
@@ -114,7 +117,7 @@ HAL_StatusTypeDef W25Q_UnprotectAll(SPI_HandleTypeDef *Handle);
 bool W25Q_Init(void);
 bool W25Q_LoggingInit(void);
 void W25Q_LoggingStop(void);
-void W25Q_NewFlight(void);
+bool W25Q_NewFlight(void);
 uint32_t W25Q_GetWritePointer(void);
 void W25Q_AdvanceWritePointer(uint16_t Bytes);
 bool W25Q_HasSpace(uint16_t Bytes);
@@ -127,5 +130,6 @@ bool W25Q_CalLoad(float M[9]);
 bool W25Q_CalAppend(const float M[9]);
 uint32_t W25Q_CalGetSequence(void);
 bool W25Q_SnapshotWrite(const FlightSnapshot_t *S);
+bool W25Q_SnapshotVerify(uint32_t Address);
 
 #endif //W25Q32JV_H

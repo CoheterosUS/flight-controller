@@ -8,6 +8,8 @@ void flash_reset(void);
 uint8_t *flash_bytes(void);
 void flash_set_program_limit(int Limit);
 size_t flash_program_count(void);
+size_t flash_lock_count(void);
+size_t flash_unlock_count(void);
 void flash_corrupt(uint32_t Address, uint8_t Value);
 
 #endif

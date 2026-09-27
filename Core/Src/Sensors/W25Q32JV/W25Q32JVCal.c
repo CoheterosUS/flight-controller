@@ -92,11 +92,19 @@ bool W25Q_CalLoad(float M[9]) {
     uint32_t LastNonErased;
     bool ReadOk;
 
-    if (M == NULL || !W25Q_CalFlashPresent()) return false;
-    if (!W25Q_CalScan(&Newest, &LastNonErased, &ReadOk) || !ReadOk) return false;
+    bool Success = false;
+
+    W25Q_Lock();
+
+    if (M == NULL || !W25Q_CalFlashPresent()) goto cleanup;
+    if (!W25Q_CalScan(&Newest, &LastNonErased, &ReadOk) || !ReadOk) goto cleanup;
 
     memcpy(M, Newest.M, sizeof(Newest.M));
-    return true;
+    Success = true;
+
+cleanup:
+    W25Q_Unlock();
+    return Success;
 }
 
 uint32_t W25Q_CalGetSequence(void) {
@@ -104,9 +112,18 @@ uint32_t W25Q_CalGetSequence(void) {
     uint32_t LastNonErased;
     bool ReadOk;
 
-    if (!W25Q_CalFlashPresent()) return 0;
-    if (!W25Q_CalScan(&Newest, &LastNonErased, &ReadOk) || !ReadOk) return 0;
-    return Newest.Sequence;
+    uint32_t Sequence = 0;
+
+    W25Q_Lock();
+
+    if (W25Q_CalFlashPresent()
+        && W25Q_CalScan(&Newest, &LastNonErased, &ReadOk)
+        && ReadOk) {
+        Sequence = Newest.Sequence;
+    }
+
+    W25Q_Unlock();
+    return Sequence;
 }
 
 static bool W25Q_CalRestoreProtection(uint8_t OriginalStatus) {
@@ -125,14 +142,16 @@ bool W25Q_CalAppend(const float M[9]) {
     uint32_t Slot;
     uint8_t OriginalStatus;
     bool Success = false;
-    bool Protected;
+    bool Protected = false;
     bool ReadOk;
 
-    if (M == NULL || !W25Q_CalFlashPresent()) return false;
-    if (W25Q_ReadStatusReg1(W25Q_HANDLE, &OriginalStatus) != HAL_OK) return false;
+    W25Q_Lock();
+
+    if (M == NULL || !W25Q_CalFlashPresent()) goto cleanup;
+    if (W25Q_ReadStatusReg1(W25Q_HANDLE, &OriginalStatus) != HAL_OK) goto cleanup;
 
     Protected = (OriginalStatus & (W25Q_SR1_BP0 | W25Q_SR1_BP1 | W25Q_SR1_BP2)) != 0;
-    if (W25Q_UnprotectAll(W25Q_HANDLE) != HAL_OK) return false;
+    if (W25Q_UnprotectAll(W25Q_HANDLE) != HAL_OK) goto cleanup;
 
     (void)W25Q_CalScan(&Newest, &LastNonErased, &ReadOk);
     if (!ReadOk) goto cleanup;
@@ -172,5 +191,6 @@ bool W25Q_CalAppend(const float M[9]) {
 
 cleanup:
     if (Protected && !W25Q_CalRestoreProtection(OriginalStatus)) Success = false;
+    W25Q_Unlock();
     return Success;
 }
