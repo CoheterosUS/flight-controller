@@ -15,6 +15,10 @@ extern TaskHandle_t BuzzerTaskHandle;
 void CreateBuzzerTask(UBaseType_t Priority, uint16_t StackSize);
 void BuzzerTask(void *pvParameters);
 
+static inline bool Buzzer_PatternRequestsOwnership(BuzzerPattern_t Pattern) {
+    return Pattern != BUZZ_NONE && Pattern != BUZZ_STOP;
+}
+
 static inline bool Buzzer_PatternStep(BuzzerPattern_t Pattern, uint8_t Index, uint32_t *OnMs, uint32_t *OffMs) {
     uint8_t Count = 0;
     uint32_t OnDuration = 0;

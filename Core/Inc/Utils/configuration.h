@@ -9,14 +9,27 @@
 #define PACKET_FOOTER		0xBE
 
 #define SD_LOGGING_ENABLED          0
+#ifndef HIL_MODE
 #define HIL_MODE                    1
+#endif
+
+#ifndef FLIGHT_BUILD
+#define FLIGHT_BUILD                0 // set to 1 for a flight build: rejects HIL, HIL pre-seed and external commands at compile time.
+#endif
 
 // HIL only (see BRINGUP_AND_HIL.md)
+#ifndef HIL_PRESEED_M
 #define HIL_PRESEED_M                       0
+#endif
 #if HIL_PRESEED_M && !HIL_MODE
 #error "HIL_PRESEED_M requires HIL_MODE"
 #endif
-#define EXTERNAL_COMMANDS           1
+#ifndef EXTERNAL_COMMANDS
+#define EXTERNAL_COMMANDS           0 // serial state commands (reset, ground abort, calibration; drogue and landed only in HIL builds). Off: the flight configuration has no state commands.
+#endif
+#if FLIGHT_BUILD && (HIL_MODE || HIL_PRESEED_M || EXTERNAL_COMMANDS)
+#error "FLIGHT_BUILD requires HIL_MODE 0, HIL_PRESEED_M 0 and EXTERNAL_COMMANDS 0"
+#endif
 #define AUTO_START_CALIBRATION		1
 #define CONFIG_VERSION                       1
 
@@ -58,6 +71,7 @@
 #define DEEP_CAL_POSE_SETTLE_MS             10000
 #define DEEP_CAL_POSE_CHECK_WINDOW_MS       2000
 #define DEEP_CAL_POSE_SAMPLE_MS             30000
+#define DEEP_CAL_POSE_MIN_SAMPLES           ((DEEP_CAL_POSE_SAMPLE_MS / 1000) * IMU_ODR_HZ / 2)
 #define DEEP_CAL_POSE_G_BAND_PCT            10
 #define DEEP_CAL_POSE_DOMINANT_MIN_G        0.8f
 #define DEEP_CAL_POSE_ANGLE_TOL_DEG         20.0f
@@ -79,6 +93,7 @@
 
 // Per-boot bias calibration (WP-E)
 #define GYRO_CAL_STILL_MAX_DPS              1.0f
+#define GYRO_CAL_BIAS_MAX_DPS               5.0f
 #define ACCEL_BIAS_CAL_DISCARD_SAMPLES      1000
 #define ACCEL_BIAS_CAL_SAMPLES              1000
 #define ACCEL_BIAS_LATERAL_MAX_G            0.1f

@@ -242,12 +242,39 @@ static void TestSingular(void)
     Check(Quality.Failure == IMU_TUMBLE_FAILURE_SINGULAR, "singular data reports failure");
 }
 
+static void TestNonFiniteInputs(void)
+{
+    ImuTumble_t T;
+    ImuCalibration_t Calibration;
+    ImuTumbleQuality_t Quality;
+    const float Good[3] = {G, 0.0f, 0.0f};
+    const float Bad[3] = {NAN, 0.0f, 0.0f};
+    float Q[9];
+    float DetQ;
+
+    ImuTumble_Reset(&T);
+    ImuTumble_AddSample(&T, 0u, Bad);
+    Check(T.Count[0] == 0u, "non-finite tumble sample is ignored");
+    for (unsigned Pose = 0u; Pose < 6u; Pose++) {
+        for (unsigned Sample = 0u; Sample < 20u; Sample++) {
+            ImuTumble_AddSample(&T, (uint8_t)Pose, Good);
+        }
+    }
+    T.Outer[0][0] = NAN;
+    Check(!ImuTumble_Solve(&T, &Calibration, &Quality), "non-finite tumble accumulator is rejected");
+
+    const float BadM[9] = {1.0f, 0.0f, 0.0f, 0.0f, INFINITY, 0.0f,
+                           0.0f, 0.0f, 1.0f};
+    Check(!ImuTumble_DeriveQ(BadM, Q, &DetQ), "non-finite M is rejected by derive-Q");
+}
+
 int main(void)
 {
     TestRecovery();
     TestMirrored();
     TestPoseChecks();
     TestSingular();
+    TestNonFiniteInputs();
     puts("imu tumble host tests passed");
     return EXIT_SUCCESS;
 }

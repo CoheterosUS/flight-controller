@@ -1,6 +1,7 @@
 param(
     [int]$BaselineErrors = -1,
-    [int]$BaselineWarnings = -1
+    [int]$BaselineWarnings = -1,
+    [switch]$CheckFlightBuild
 )
 
 $ErrorActionPreference = "Stop"
@@ -80,6 +81,30 @@ try {
 }
 finally {
     Pop-Location
+}
+
+if ($CheckFlightBuild) {
+    $GuardSource = Join-Path $RepositoryRoot "Core/Src/Utils/ImuCal.c"
+    $SavedErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        $RejectedOutput = @(& $Compiler @Flags "-DFLIGHT_BUILD=1" "-fsyntax-only" $GuardSource 2>&1)
+    }
+    finally {
+        $ErrorActionPreference = $SavedErrorActionPreference
+    }
+    if ($LASTEXITCODE -eq 0) {
+        Write-Output "Flight guard: default development macros were not rejected"
+        exit 1
+    }
+
+    $FlightOutput = @(& $Compiler @Flags "-DFLIGHT_BUILD=1" "-DHIL_MODE=0" "-DEXTERNAL_COMMANDS=0" "-fsyntax-only" $GuardSource 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        Write-Output "Flight guard: valid flight configuration did not compile"
+        $FlightOutput | ForEach-Object { Write-Output "  $_" }
+        exit 1
+    }
+    Write-Output "Flight guard: default rejected and valid flight configuration compiled"
 }
 
 Write-Output "Files: $($Sources.Count)"

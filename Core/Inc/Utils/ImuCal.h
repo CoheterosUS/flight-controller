@@ -29,6 +29,7 @@ typedef enum {
 #define CAL_STATUS_KALMAN_INITIALIZED  (1u << 4)
 #define CAL_STATUS_KALMAN_STEPPING     (1u << 5)
 #define CAL_STATUS_HIL_PRESEED         (1u << 6)
+#define CAL_STATUS_HIL_MODE            (1u << 7)
 #define CAL_STATUS_POSE_MASK           (0x7u << 8)
 
 typedef struct {
@@ -93,6 +94,7 @@ ImuCalAccumulatorResult_t ImuCal_AccelBiasAdd(ImuAccelBiasAccumulator_t *Accumul
                                               float BiasCal[3]);
 
 void ImuCal_UpdateStatus(SystemContext_t *Ctx, bool KalmanStepping);
+void ImuCal_SanitizeVec3(float V[3], float Last[3]);
 bool KalmanStateAllowsStepping(SystemState_t State);
 
 #ifndef IMU_CAL_HOST

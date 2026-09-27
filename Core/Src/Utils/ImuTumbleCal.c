@@ -36,12 +36,35 @@ static const float ImuTumbleTargets[IMU_TUMBLE_POSE_COUNT][3] = {
 
 static float ImuTumble_Dot(const float A[3], const float B[3])
 {
+    if (A == NULL || B == NULL || !isfinite(A[0]) || !isfinite(A[1]) || !isfinite(A[2]) ||
+        !isfinite(B[0]) || !isfinite(B[1]) || !isfinite(B[2])) {
+        return NAN;
+    }
     return A[0] * B[0] + A[1] * B[1] + A[2] * B[2];
 }
 
 static float ImuTumble_Norm(const float A[3])
 {
-    return sqrtf(ImuTumble_Dot(A, A));
+    const float Dot = ImuTumble_Dot(A, A);
+    return isfinite(Dot) && Dot >= 0.0f ? sqrtf(Dot) : NAN;
+}
+
+static bool ImuTumble_FiniteFloats(const float *Values, size_t Count)
+{
+    if (Values == NULL) return false;
+    for (size_t I = 0u; I < Count; I++) {
+        if (!isfinite(Values[I])) return false;
+    }
+    return true;
+}
+
+static bool ImuTumble_FiniteDoubles(const double *Values, size_t Count)
+{
+    if (Values == NULL) return false;
+    for (size_t I = 0u; I < Count; I++) {
+        if (!isfinite(Values[I])) return false;
+    }
+    return true;
 }
 
 static uint8_t ImuTumble_DominantAxis(const float A[3])
@@ -62,19 +85,23 @@ static uint8_t ImuTumble_DominantAxis(const float A[3])
 static bool ImuTumble_Opposite(const float A[3], const float B[3], float CosTolerance)
 {
     const float Denominator = ImuTumble_Norm(A) * ImuTumble_Norm(B);
-    if (Denominator <= 0.0f) {
+    const float Dot = ImuTumble_Dot(A, B);
+    if (!isfinite(Denominator) || !isfinite(Dot) || Denominator <= 0.0f) {
         return false;
     }
-    return ImuTumble_Dot(A, B) / Denominator <= -CosTolerance;
+    const float Ratio = Dot / Denominator;
+    return isfinite(Ratio) && Ratio <= -CosTolerance;
 }
 
 static bool ImuTumble_Perpendicular(const float A[3], const float B[3], float SinTolerance)
 {
     const float Denominator = ImuTumble_Norm(A) * ImuTumble_Norm(B);
-    if (Denominator <= 0.0f) {
+    const float Dot = ImuTumble_Dot(A, B);
+    if (!isfinite(Denominator) || !isfinite(Dot) || Denominator <= 0.0f) {
         return false;
     }
-    return fabsf(ImuTumble_Dot(A, B) / Denominator) <= SinTolerance;
+    const float Ratio = Dot / Denominator;
+    return isfinite(Ratio) && fabsf(Ratio) <= SinTolerance;
 }
 
 static bool ImuTumble_IsCommitted(const ImuTumble_t *T, uint8_t Pose)
@@ -119,7 +146,7 @@ bool ImuTumble_PoseMean(const ImuTumble_t *T, uint8_t Pose, float Mean[3])
     for (uint8_t I = 0u; I < 3u; I++) {
         Mean[I] = (float)(T->Sum[Pose][I] / Count);
     }
-    return true;
+    return ImuTumble_FiniteFloats(Mean, 3u);
 }
 
 bool ImuTumble_PoseCommit(ImuTumble_t *T, uint8_t Pose)
@@ -136,7 +163,8 @@ bool ImuTumble_PoseCommit(ImuTumble_t *T, uint8_t Pose)
 
 void ImuTumble_AddSample(ImuTumble_t *T, uint8_t Pose, const float RawAccel[3])
 {
-    if (T == NULL || RawAccel == NULL || Pose >= IMU_TUMBLE_POSE_COUNT) {
+    if (T == NULL || RawAccel == NULL || Pose >= IMU_TUMBLE_POSE_COUNT ||
+        !ImuTumble_FiniteFloats(RawAccel, 3u)) {
         return;
     }
 
@@ -160,7 +188,8 @@ ImuTumblePoseStatus_t ImuTumble_CheckPose(const ImuTumble_t *T, uint8_t Pose, co
 
     const float Magnitude = ImuTumble_Norm(MeanRaw);
     const float MagnitudeBand = IMU_TUMBLE_G * ((float)DEEP_CAL_POSE_G_BAND_PCT / 100.0f);
-    if (fabsf(Magnitude - IMU_TUMBLE_G) > MagnitudeBand) {
+    if (!ImuTumble_FiniteFloats(MeanRaw, 3u) || !isfinite(Magnitude) ||
+        !isfinite(MagnitudeBand) || fabsf(Magnitude - IMU_TUMBLE_G) > MagnitudeBand) {
         return IMU_TUMBLE_POSE_BAD_MAGNITUDE;
     }
 
@@ -257,6 +286,11 @@ static void ImuTumble_BuildNormalEquations(const ImuTumble_t *T, double A[4][4],
 
 static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], double X[4][3], float *PivotRatio)
 {
+    if (A == NULL || B == NULL || X == NULL || PivotRatio == NULL ||
+        !ImuTumble_FiniteDoubles(&A[0][0], 16u) ||
+        !ImuTumble_FiniteDoubles(&B[0][0], 12u)) {
+        return false;
+    }
     double LargestEntry = 0.0;
     for (uint8_t Row = 0u; Row < 4u; Row++) {
         for (uint8_t Col = 0u; Col < 4u; Col++) {
@@ -266,7 +300,7 @@ static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], doubl
             }
         }
     }
-    if (LargestEntry == 0.0) {
+    if (!isfinite(LargestEntry) || LargestEntry == 0.0) {
         *PivotRatio = 0.0f;
         return false;
     }
@@ -281,8 +315,9 @@ static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], doubl
             }
         }
         const double Pivot = fabs(A[PivotRow][Col]);
-        if (Pivot < LargestEntry * IMU_TUMBLE_PIVOT_REL_TOL) {
+        if (!isfinite(Pivot) || Pivot < LargestEntry * IMU_TUMBLE_PIVOT_REL_TOL) {
             *PivotRatio = (float)(SmallestPivot / (LargestPivot > 0.0 ? LargestPivot : LargestEntry));
+            if (!isfinite(*PivotRatio)) *PivotRatio = 0.0f;
             return false;
         }
         if (Pivot < SmallestPivot) {
@@ -306,6 +341,10 @@ static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], doubl
 
         for (uint8_t Row = (uint8_t)(Col + 1u); Row < 4u; Row++) {
             const double Factor = A[Row][Col] / A[Col][Col];
+            if (!isfinite(Factor)) {
+                *PivotRatio = 0.0f;
+                return false;
+            }
             A[Row][Col] = 0.0;
             for (uint8_t J = (uint8_t)(Col + 1u); J < 4u; J++) {
                 A[Row][J] -= Factor * A[Col][J];
@@ -317,6 +356,7 @@ static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], doubl
     }
 
     *PivotRatio = (float)(SmallestPivot / LargestPivot);
+    if (!isfinite(*PivotRatio)) return false;
     for (int Row = 3; Row >= 0; Row--) {
         for (uint8_t Col = 0u; Col < 3u; Col++) {
             double Value = B[Row][Col];
@@ -326,11 +366,12 @@ static bool ImuTumble_SolveNormalEquations(double A[4][4], double B[4][3], doubl
             X[Row][Col] = Value / A[Row][Row];
         }
     }
-    return true;
+    return ImuTumble_FiniteDoubles(&X[0][0], 12u);
 }
 
 static float ImuTumble_Determinant3(const float M[9])
 {
+    if (!ImuTumble_FiniteFloats(M, 9u)) return NAN;
     return M[0] * (M[4] * M[8] - M[5] * M[7])
          - M[1] * (M[3] * M[8] - M[5] * M[6])
          + M[2] * (M[3] * M[7] - M[4] * M[6]);
@@ -338,6 +379,7 @@ static float ImuTumble_Determinant3(const float M[9])
 
 static bool ImuTumble_CheckOrthogonal(const float Q[9])
 {
+    if (!ImuTumble_FiniteFloats(Q, 9u)) return false;
     for (uint8_t Row = 0u; Row < 3u; Row++) {
         for (uint8_t Col = 0u; Col < 3u; Col++) {
             float Value = 0.0f;
@@ -345,7 +387,7 @@ static bool ImuTumble_CheckOrthogonal(const float Q[9])
                 Value += Q[Row * 3u + K] * Q[Col * 3u + K];
             }
             const float Expected = (Row == Col) ? 1.0f : 0.0f;
-            if (fabsf(Value - Expected) > IMU_TUMBLE_Q_ORTHOGONAL_TOL) {
+            if (!isfinite(Value) || fabsf(Value - Expected) > IMU_TUMBLE_Q_ORTHOGONAL_TOL) {
                 return false;
             }
         }
@@ -367,8 +409,23 @@ static void ImuTumble_CopyAndNormalizeQR(const float M[9], float Q[9], float R[9
     arm_matrix_instance_f32 OutQ = {3u, 3u, QData};
 
     memcpy(SourceData, M, sizeof(SourceData));
+    if (!ImuTumble_FiniteFloats(SourceData, 9u)) {
+        *Status = ARM_MATH_ARGUMENT_ERROR;
+        *DetQ = 0.0f;
+        memset(Q, 0, 9u * sizeof(float));
+        memset(R, 0, 9u * sizeof(float));
+        return;
+    }
     *Status = arm_mat_qr_f32(&Source, IMU_TUMBLE_QR_THRESHOLD, &OutR, &OutQ, Tau, TmpA, TmpB);
     if (*Status != ARM_MATH_SUCCESS) {
+        *DetQ = 0.0f;
+        memset(Q, 0, 9u * sizeof(float));
+        memset(R, 0, 9u * sizeof(float));
+        return;
+    }
+
+    if (!ImuTumble_FiniteFloats(QData, 9u) || !ImuTumble_FiniteFloats(RData, 9u)) {
+        *Status = ARM_MATH_ARGUMENT_ERROR;
         *DetQ = 0.0f;
         memset(Q, 0, 9u * sizeof(float));
         memset(R, 0, 9u * sizeof(float));
@@ -392,6 +449,9 @@ static void ImuTumble_CopyAndNormalizeQR(const float M[9], float Q[9], float R[9
         }
     }
     *DetQ = ImuTumble_Determinant3(Q);
+    if (!isfinite(*DetQ) || !ImuTumble_FiniteFloats(Q, 9u) || !ImuTumble_FiniteFloats(R, 9u)) {
+        *Status = ARM_MATH_ARGUMENT_ERROR;
+    }
 }
 
 bool ImuTumble_DeriveQ(const float M[9], float Q[9], float *DetQ)
@@ -401,7 +461,9 @@ bool ImuTumble_DeriveQ(const float M[9], float Q[9], float *DetQ)
 
     if (M == NULL || Q == NULL || DetQ == NULL) return false;
     ImuTumble_CopyAndNormalizeQR(M, Q, R, DetQ, &Status);
-    return Status == ARM_MATH_SUCCESS;
+    return Status == ARM_MATH_SUCCESS && isfinite(*DetQ) &&
+        ImuTumble_FiniteFloats(Q, 9u) && ImuTumble_FiniteFloats(R, 9u) &&
+        ImuTumble_CheckOrthogonal(Q);
 }
 
 bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuality_t *Quality)
@@ -424,10 +486,19 @@ bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuali
             Quality->Failure = IMU_TUMBLE_FAILURE_INSUFFICIENT_SAMPLES;
             return false;
         }
+        if (!ImuTumble_FiniteDoubles(T->Sum[Pose], 3u) ||
+            !ImuTumble_FiniteDoubles(T->Outer[Pose], 6u)) {
+            Quality->Failure = IMU_TUMBLE_FAILURE_SINGULAR;
+            return false;
+        }
     }
 
     ImuTumble_BuildNormalEquations(T, A, B);
     if (!ImuTumble_SolveNormalEquations(A, B, X, &Quality->PivotRatio)) {
+        Quality->Failure = IMU_TUMBLE_FAILURE_SINGULAR;
+        return false;
+    }
+    if (!isfinite(Quality->PivotRatio) || !ImuTumble_FiniteDoubles(&X[0][0], 12u)) {
         Quality->Failure = IMU_TUMBLE_FAILURE_SINGULAR;
         return false;
     }
@@ -440,6 +511,10 @@ bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuali
     }
 
     memcpy(Out->M, M, sizeof(M));
+    if (!ImuTumble_FiniteFloats(M, 9u) || !ImuTumble_FiniteFloats(Quality->Offsets, 3u)) {
+        Quality->Failure = IMU_TUMBLE_FAILURE_SINGULAR;
+        return false;
+    }
     for (uint8_t Pose = 0u; Pose < IMU_TUMBLE_POSE_COUNT; Pose++) {
         float Mean[3];
         float Corrected[3];
@@ -454,7 +529,8 @@ bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuali
             }
         }
         Quality->PoseResidual[Pose] = fabsf(ImuTumble_Norm(Corrected) - IMU_TUMBLE_G) / IMU_TUMBLE_G;
-        if (Quality->PoseResidual[Pose] > DEEP_CAL_NORM_RESIDUAL_MAX) {
+        if (!ImuTumble_FiniteFloats(Corrected, 3u) || !isfinite(Quality->PoseResidual[Pose]) ||
+            Quality->PoseResidual[Pose] > DEEP_CAL_NORM_RESIDUAL_MAX) {
             Quality->Failure = IMU_TUMBLE_FAILURE_RESIDUAL;
             return false;
         }
@@ -465,7 +541,9 @@ bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuali
         Quality->Failure = IMU_TUMBLE_FAILURE_QR;
         return false;
     }
-    if (fabsf(Quality->DetQ - 1.0f) > DEEP_CAL_DET_TOL) {
+    if (!isfinite(Quality->DetQ) || !ImuTumble_FiniteFloats(Out->Q, 9u) ||
+        !ImuTumble_FiniteFloats(Quality->R, 9u) ||
+        fabsf(Quality->DetQ - 1.0f) > DEEP_CAL_DET_TOL) {
         Quality->Failure = IMU_TUMBLE_FAILURE_DET_Q;
         return false;
     }

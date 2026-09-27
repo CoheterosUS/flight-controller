@@ -44,6 +44,7 @@ typedef struct {
 void Buzzer_Beep(uint32_t Duration);
 void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t WaitDuration, bool UseHAL);
 void Buzzer_Play(BuzzerPattern_t Pattern);
+bool Buzzer_PatternActive(void);
 
 void BMP581_Mailbox_Publish(const uint8_t *RXBuffer);
 void BMP581_Mailbox_Inject(const BMP581_SensorData_t *Data);

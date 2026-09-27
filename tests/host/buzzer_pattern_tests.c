@@ -27,6 +27,12 @@ static int CheckPattern(BuzzerPattern_t Pattern, uint8_t Count, uint32_t Expecte
 }
 
 int main(void) {
+    if (!Buzzer_PatternRequestsOwnership(BUZZ_DEEPCAL_ENTERED) ||
+        Buzzer_PatternRequestsOwnership(BUZZ_NONE) ||
+        Buzzer_PatternRequestsOwnership(BUZZ_STOP)) {
+        fprintf(stderr, "FAIL: buzzer ownership flag logic\n");
+        return 1;
+    }
     if (CheckPattern(BUZZ_DEEPCAL_ENTERED, 1, BUZZER_DEEPCAL_ENTERED_MS, 0) != 0) {
         return 1;
     }
