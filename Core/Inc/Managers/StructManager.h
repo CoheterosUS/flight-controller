@@ -87,9 +87,38 @@ typedef struct {
     uint8_t State;
     uint8_t RelayState;
     uint8_t LastCommand;
-    uint16_t CalStatus;
     uint8_t SyncEnd;
 } TelemetryPacket_t;
+
+#if HIL_MODE
+// HIL builds only: the 52 byte packet with CalStatus inserted before SyncEnd (54 bytes).
+// hil.py needs CalStatus (validity bits, HIL flags, tumble pose). Flight builds never send it.
+typedef struct {
+    uint16_t Sync;
+    uint32_t Tick;
+    int16_t CalAccelX;
+    int16_t CalAccelY;
+    int16_t CalAccelZ;
+    int16_t CalGyroX;
+    int16_t CalGyroY;
+    int16_t CalGyroZ;
+    int16_t PressurePa;
+    int8_t TemperatureC;
+    int32_t Latitude;
+    int32_t Longitude;
+    int32_t GPSAltitude;
+    uint8_t Satellites;
+    int32_t BarometricAltitude;
+    int32_t BarometricVelocity;
+    uint32_t Flags;
+    int16_t BatteryVoltage;
+    uint8_t State;
+    uint8_t RelayState;
+    uint8_t LastCommand;
+    uint16_t CalStatus;
+    uint8_t SyncEnd;
+} TelemetryPacketHil_t;
+#endif
 
 typedef struct {
     uint16_t Sync;
@@ -120,11 +149,27 @@ typedef struct {
 
 _Static_assert(sizeof(FlashLogRecord_t) == 57, "FlashLogRecord_t layout changed");
 _Static_assert(sizeof(FlashLogRecord_t) <= (256 / FLASH_RECORDS_PER_PAGE), "FlashLogRecord_t exceeds flash page slot");
-_Static_assert(sizeof(TelemetryPacket_t) == 54, "TelemetryPacket_t layout changed");
+// TelemetryPacket_t is the original 52 byte wire layout parsed by the ground software. Do not change it.
+_Static_assert(sizeof(TelemetryPacket_t) == 52, "TelemetryPacket_t layout changed");
+#if HIL_MODE
+_Static_assert(sizeof(TelemetryPacketHil_t) == 54, "TelemetryPacketHil_t layout changed");
+#endif
 _Static_assert(sizeof(SDLogRecord_t) == 188, "SDLogRecord_t layout changed");
 
 SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData);
 TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData);
+#if HIL_MODE
+TelemetryPacketHil_t BuildTelemetryPacketHil(const FlightData_t *FlightData);
+#endif
+
+// The packet the serial link actually sends: 54 bytes with CalStatus in a HIL build, 52 bytes otherwise.
+#if HIL_MODE
+typedef TelemetryPacketHil_t TelemetryWirePacket_t;
+#define BuildTelemetryWirePacket BuildTelemetryPacketHil
+#else
+typedef TelemetryPacket_t TelemetryWirePacket_t;
+#define BuildTelemetryWirePacket BuildTelemetryPacket
+#endif
 FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData);
 
 #endif //STRUCTMANAGER_H

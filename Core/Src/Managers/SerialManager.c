@@ -4,7 +4,7 @@
 #include <string.h>
 
 __attribute__((section(".dma_buffer"), aligned(32)))
-static uint8_t SERIAL_TX_BUFFER[2][sizeof(TelemetryPacket_t)];
+static uint8_t SERIAL_TX_BUFFER[2][sizeof(TelemetryWirePacket_t)];
 
 static uint8_t ActiveTXIndex;
 static volatile bool TXBusy;
@@ -18,7 +18,7 @@ void SerialInit(void) {
     TelemetryCounter = 0;
 }
 
-void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State) {
+void SerialSendFlightData(const TelemetryWirePacket_t *Packet, SystemState_t State) {
     uint8_t Divider = (State == STATE_IDLE) ? TELEMETRY_DIVIDER_IDLE : TELEMETRY_DIVIDER;
     if (++TelemetryCounter < Divider) return;
     TelemetryCounter = 0;
@@ -26,10 +26,10 @@ void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State) 
     if (TXBusy) return;
 
     uint8_t *Buf = SERIAL_TX_BUFFER[ActiveTXIndex];
-    memcpy(Buf, Packet, sizeof(TelemetryPacket_t));
+    memcpy(Buf, Packet, sizeof(TelemetryWirePacket_t));
 
     TXBusy = true;
-    HAL_UART_Transmit_DMA(USART1_HANDLE, Buf, sizeof(TelemetryPacket_t));
+    HAL_UART_Transmit_DMA(USART1_HANDLE, Buf, sizeof(TelemetryWirePacket_t));
     dbg_telem_sent++;
     ActiveTXIndex ^= 1;
 }

@@ -6,11 +6,11 @@ Status of the firmware: everything below has passed host tests, the ARM compile 
 
 ## 1. Harness status
 
-`HIL/hil.py` was rewritten for this branch (54 byte telemetry with `CalStatus`, states 11 and 12, raw hardware-axis inputs generated from an `M_true` preset, pose-driven tumble, scenario runner with pass or fail and exit codes, CSV logs in `HIL/logs/`). It was self tested only against its built-in mock board (`--port sim`), never against the target. Firmware change for HIL: telemetry runs at 10 Hz when `HIL_MODE 1` (1 Hz otherwise), so events can be timed.
+`HIL/hil.py` was rewritten for this branch (54 byte HIL telemetry with `CalStatus`, states 11 and 12, raw hardware-axis inputs generated from an `M_true` preset, pose-driven tumble, scenario runner with pass or fail and exit codes, CSV logs in `HIL/logs/`). It was self tested only against its built-in mock board (`--port sim`), never against the target. Firmware change for HIL: telemetry runs at 10 Hz when `HIL_MODE 1` (1 Hz otherwise), so events can be timed. Only a HIL build sends the 54 byte packet with `CalStatus` (offset 51, `TelemetryPacketHil_t`). A flight build (`HIL_MODE 0`) sends the original 52 byte packet the ground software parses, without `CalStatus`; `hil.py` detects that stream and stops with `SETUP ERROR: board is not a HIL build (52 byte telemetry)` (exit code 2).
 
 | # | Item | Status |
 |---|---|---|
-| B1 | 54 byte telemetry, `CalStatus`, pose field | Done in `hil.py`. |
+| B1 | 54 byte HIL telemetry, `CalStatus`, pose field | Done in `hil.py`. A 52 byte (flight build) stream is refused as a setup error; self test with `--port sim --sim-flight-build`. |
 | B2 | State names 11 and 12 | Done. |
 | B3 | Raw inputs through `M_true` | Done. Presets `default`, `alt` (S7), `roll90` (S3), `identity`. |
 | B4 | Scenario runner, pass or fail, exit codes | Done. |
@@ -24,7 +24,7 @@ Do not use serial state commands to move the state machine: the flight configura
 
 Suite runner: `python HIL/run_all.py --port COM5 [--scenario S1 S4 APOGEE ...]` runs the entries below by ID (`--list` shows them). Individual runs:
 
-Common: `python HIL/hil.py --port COM5 --scenario <name> [options]`. Add `--seed N`, `--repeat N`. Exit code 0 pass, 1 fail, 2 setup error (no telemetry, or not a HIL build).
+Common: `python HIL/hil.py --port COM5 --scenario <name> [options]`. Add `--seed N`, `--repeat N`. Exit code 0 pass, 1 fail, 2 setup error (no telemetry, or not a HIL build: 52 byte telemetry or CalStatus bit 7 clear).
 
 | Test | Command |
 |---|---|
@@ -90,7 +90,7 @@ Run exactly as written in `HIL/APOGEE_HIL.md`. Order: H1 and H11, then H3, H4, H
 |---|---|---|
 | R1 | Serial commands are refused. Send `CA FE 04 00 BE` (drogue), reset, ground-abort and calibration frames in every state on the pad and during flight. | The state does not change and no pyro fires. With `EXTERNAL_COMMANDS 0` (default) all of them are ignored. If a build with `EXTERNAL_COMMANDS 1` is tested, drogue and landed work only when `HIL_MODE 1`. |
 | R2 | Build guards. Compile with `-DFLIGHT_BUILD=1` on the default config. | The compile fails with the `FLIGHT_BUILD requires ...` error. (Also verified by `python tools/link_check.py . -DFLIGHT_BUILD=1`.) A build with `FLIGHT_BUILD 1 HIL_MODE 0 EXTERNAL_COMMANDS 0 HIL_PRESEED_M 0` links. |
-| R3 | CalStatus bits 6 and 7. | Bit 7 set in every HIL build telemetry, bit 6 only with pre-seed. In a flight build both clear (bench check, not HIL). |
+| R3 | CalStatus bits 6 and 7. | Bit 7 set in every HIL build telemetry, bit 6 only with pre-seed. A flight build has no `CalStatus` on the wire: check instead that its telemetry is the 52 byte packet (bench check, not HIL), and if SD logging is enabled that both bits are clear in the SD log. |
 | R4 | Flash flush on stop. Run a full flight to LANDED, then stop. | The flash log contains the last records (the partial last page is written). The SD or flash dump shows the record around landing. |
 | R5 | Log full. Fill the log region (fast fill with the flash tool) and boot. | `W25Q_LOG_FULL` (fault bit 12) is raised, the board does not arm (no PRELAUNCH or it aborts). |
 | R6 | Flight snapshot. After entering PRELAUNCH with valid calibration. | The snapshot page is written and verifies (no bit 14 fault). Flash log has the raw fields plus a once-per-flight snapshot with `M`, biases and the pressure reference. |

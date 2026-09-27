@@ -70,7 +70,7 @@ Files: `Core/Src/Managers/StructManager.c`, `Core/Inc/Managers/StructManager.h`,
 
 - New state value 12 (DEEP_CALIBRATION).
 - Telemetry `Accel*` and `Gyro*` fields are now the `Cal` values (body frame). Truncation to int16 is intended.
-- New `CalStatus` field (uint16): validity flags, HIL pre-seed flag, current tumble pose (0 to 6). Packet length grows by 2 bytes.
+- New `CalStatus` field (uint16): validity flags, HIL pre-seed flag, current tumble pose (0 to 6). Amended: HIL builds only (54 byte packet). Flight builds send the original 52 byte packet, unchanged for the ground software.
 - No new commands.
 - Flash dump tool: `Raw` accel and gyro in flash records, a snapshot record type, and a calibration sector excluded from the log range.
 

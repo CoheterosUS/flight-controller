@@ -99,7 +99,7 @@ Existing patterns stay as they are: state change chirp 5 ms, boot 2 beeps, flash
 | D29 | `Cal` fields are computed every loop, independent of the Kalman filter. The tumble and the gyro bias calibration read the `Raw` fields. | SETTLED |
 | D30 | Flight thresholds move to `CalAccelX`, with the sign flipped. Boost: `CalAccelX > +20 m/s2` (was raw Y below -20). Burnout: `CalAccelX < +5 m/s2` (was raw Y above -5). Counts and values otherwise unchanged. This resolves the README item "check transition conditions against IMU reference frame". | SETTLED |
 | D31 | Flash log records carry `Raw` accel and gyro (floats, record stays 56 bytes). At PRELAUNCH entry, one snapshot record is written into the log with the values used that flight: `M`, `AccelBiasCal`, `GyroBiasRaw`, reference pressure and temperature, ODR, config version. Offline, `Cal = f(Raw, snapshot)`. | SETTLED, layout DEFAULT |
-| D32 | SD log records carry both `Raw` and `Cal`. Telemetry sends the `Cal` fields (truncation to int16 is intended) plus a new `CalStatus` (uint16: validity flags, HIL pre-seed flag, HIL mode flag, current tumble pose). | SETTLED, CalStatus layout DEFAULT |
+| D32 | SD log records carry both `Raw` and `Cal`. Telemetry sends the `Cal` fields (truncation to int16 is intended) plus a new `CalStatus` (uint16: validity flags, HIL pre-seed flag, HIL mode flag, current tumble pose). Amended: `CalStatus` is on the wire only in HIL builds (54 byte packet); flight builds keep the original 52 byte packet so the ground software is unchanged (`PROTOCOL.md`). | SETTLED, CalStatus layout DEFAULT |
 
 ### 3.8 Other changes
 

@@ -6,19 +6,20 @@ Read `DEEP_CALIBRATION_DESIGN.md` for the decisions behind this. This document d
 
 - Bring-up: first power-up of a board or airframe, or the first power-up after both calibration sectors were erased. The flash has no calibration record, so there is no valid `M`.
 - HIL: hardware in the loop. `HIL_MODE 1`. The sensor values are injected over the telemetry UART by `HIL/hil.py` (`COMMAND_HIL_DATA`, GPS through `COMMAND_GPS_DATA`). Serial commands for state changes are not used.
-- Flight build: `HIL_MODE 0`. Real sensors.
+- Flight build: `HIL_MODE 0`. Real sensors. Sends the original 52 byte telemetry packet (no `CalStatus`, see `PROTOCOL.md`).
+- Telemetry: a HIL build sends 54 bytes (the 52 byte layout plus `CalStatus` at offset 51). `CalStatus` never reaches the flight wire. On real hardware it is visible in the SD log (offset 184) when `SD_LOGGING_ENABLED` is 1 (off by default), not in the flash log.
 - Valid calibration: a valid `M` record in the 8 KB flash calibration sector pair, plus valid gyro bias, accel bias and pressure reference measured this boot.
 
 ## 2. The rule
 
-PRELAUNCH is rejected unless the calibration is valid. There is no identity fallback in a flight build. With no valid `M`, the CALIBRATION state holds and the telemetry `CalStatus` shows which item is missing. The way out is the deep calibration gesture (nose down and still for 10 s), which always works in pre-flight states.
+PRELAUNCH is rejected unless the calibration is valid. There is no identity fallback in a flight build. With no valid `M`, the CALIBRATION state holds. `CalStatus` shows which item is missing: in the HIL telemetry, or in the SD log on a flight build (the 52 byte flight telemetry only shows `State` 1). The way out is the deep calibration gesture (nose down and still for 10 s), which always works in pre-flight states.
 
 ## 3. What the board does at power-up
 
 | Step | State | What happens | What you observe |
 |---|---|---|---|
 | 1 | IDLE | Sensors idle, flash initialised, the newest valid `M` is loaded from the calibration sector pair, `SensorsIdleFinished` cleared. Auto-advance when `AUTO_START_CALIBRATION` is on. | Two short beeps (state machine started). A short chirp at each state change. |
-| 2 | CALIBRATION | Sensors in performance mode. Pressure reference, gyro bias (raw data) and accel bias (body frame) are measured. Every window restarts if the rocket moves or is not nose up (gross-tilt gate). Holds if there is no valid `M`. | `CalStatus` bits. No audible pattern by default. |
+| 2 | CALIBRATION | Sensors in performance mode. Pressure reference, gyro bias (raw data) and accel bias (body frame) are measured. Every window restarts if the rocket moves or is not nose up (gross-tilt gate). Holds if there is no valid `M`. | State 1 in telemetry. `CalStatus` bits in HIL telemetry or the SD log. No audible pattern by default. |
 | 3 | PRELAUNCH | Entered only when everything is valid. Kalman initialised (attitude 0, 90, 0), then stepping. | State 2 in telemetry. |
 | any of 1 to 3 | DEEP_CALIBRATION | Entered by the 10 s nose-down gesture. See section 4. | One 2 s tone, then the pose prompts. |
 
@@ -40,7 +41,7 @@ Prerequisites: the rocket axes are marked on the fuselage (+Y and +Z). Know wher
 | 6 | -Z | the +Z mark down |
 
    After each prompt, orient the rocket and hold it still. Data is ignored during the settle time (default 10 s), then sampled for 30 s. If the prompt repeats, the pose was rejected (moving, or wrong orientation): reorient and hold still. Nominal duration at defaults: about 4 minutes. Success: three 1.2 s tones and a return to IDLE. Failure: one 4 s tone and a return to IDLE. A right-hand-rule mistake in the poses is detected at the end and reported as a failure.
-4. Verify the stored calibration. Power cycle. `CalStatus` must show a valid `M` after the IDLE step. Read the record back through the flash dump tool and check the sequence number, the CRC and that `det(Q)` is +1.
+4. Verify the stored calibration. Power cycle. A valid `M` must be loaded after the IDLE step: on a flight build the telemetry has no `CalStatus`, so check that the calibrated accel fields follow the rocket axes (nose up: `CalAccelX` about +9.8; without `M` they carry raw axes and read about -9.8 on `CalAccelY`), or read `CalStatus` bit 0 in the SD log. Read the record back through the flash dump tool and check the sequence number, the CRC and that `det(Q)` is +1.
 5. Pad calibration. Stand the rocket nose straight up and still. CALIBRATION completes: `CalAccelX` is about +9.81 and `CalAccelY`, `CalAccelZ` about 0, `CalGyro` about 0. If it does not complete, check the gross-tilt gate.
 6. PRELAUNCH. The state reaches PRELAUNCH. The Kalman filter steps during the wait. Watch the position and velocity outputs for drift over a few minutes (any residual bias integrates twice).
 7. Negative checks on the bench: with both calibration sectors erased, the board must stay in CALIBRATION and never reach PRELAUNCH. Nose down and still for 10 s in PRELAUNCH re-enters DEEP_CALIBRATION.
@@ -85,16 +86,16 @@ python run_all.py --port COM3 --scenario APOGEE
 python run_all.py --port sim                   # harness self test against the mock board
 ```
 
-- The wire layout (54 byte telemetry, CalStatus at offset 51, `COMMAND_HIL_DATA` 36 bytes, `COMMAND_HIL_BARO` 8 bytes) lives at the top of `hil.py` and in `PROTOCOL.md`. Keep them in step.
+- The wire layout (54 byte HIL telemetry, CalStatus at offset 51, `COMMAND_HIL_DATA` 36 bytes, `COMMAND_HIL_BARO` 8 bytes) lives at the top of `hil.py` and in `PROTOCOL.md`. Keep them in step. The firmware structs are `TelemetryPacketHil_t` (HIL) and `TelemetryPacket_t` (flight, 52 bytes), checked by `tests/host/run_telemetry_layout_tests.ps1`.
+- A board that sends the 52 byte flight packet is not a HIL build: `hil.py` stops with `SETUP ERROR: board is not a HIL build (52 byte telemetry)` and exit code 2. `--port sim --sim-flight-build` exercises this check against the mock.
 - Serial state commands are disabled, so the harness never resets or aborts the board over the UART. Scenarios that need a fresh board (no calibration, S6) need the calibration sectors erased first; S5 and the flash checks need manual steps.
 - Some pass criteria cannot be read over telemetry: the exact `M` versus `M_true` match (S1) is a WP-A host test, and the fine 0.01 dps gyro bound (S3) is a WP-E host test. The HIL versions assert the coarser observable, and say so in the check text.
 
 ## 6. Flight build checklist
 
 - Set `FLIGHT_BUILD 1` and compile. The compile-time guard proves `HIL_MODE 0`, `HIL_PRESEED_M 0` and `EXTERNAL_COMMANDS 0`.
-- Confirm CalStatus bits 6 and 7 are clear in telemetry.
-- Confirm the calibration valid bits are set.
-- Confirm the state reaches PRELAUNCH.
+- Confirm the telemetry packets are 52 bytes (`SyncEnd` `0xBE` at offset 51). That is the flight layout the ground software parses, and it proves `HIL_MODE 0`. `CalStatus` bits 6 and 7 are not on the flight wire; the compile-time guard already excludes HIL mode and pre-seed.
+- Confirm the state reaches PRELAUNCH (state 2). PRELAUNCH is only entered with all calibration items valid, so this is the calibration check on a flight build. For the individual `CalStatus` bits, read the SD log (when SD logging is enabled).
 
 ## 7. Notes
 

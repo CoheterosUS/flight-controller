@@ -91,13 +91,22 @@ Things to know:
 
 ## 4. Verify (do this after every successful tumble)
 
-1. Power cycle the board and let it reach CALIBRATION. Read `CalStatus` in telemetry (`PROTOCOL.md`, "CalStatus"). Bit 0 (IMU_CAL_VALID) must be set: the stored `M` loaded.
+What the telemetry shows. A flight build (`HIL_MODE 0`) sends the original 52 byte packet (`PROTOCOL.md`, "Wire Telemetry Packet") at 1 Hz. It does **not** contain `CalStatus`, so the individual calibration bits and the tumble pose are not visible on the link. What you can read:
+
+- `State` (offset 48): 0 IDLE, 1 CALIBRATION, 2 PRELAUNCH, 12 DEEP_CALIBRATION (the tumble is running), 9 GROUND_ABORT.
+- `Flags` (offset 42): the fault bitmask.
+- The accel and gyro fields (offsets 6 to 16, `CalAccelX` to `CalGyroZ`): calibrated body-frame values, truncated to integers. Older ground software may label them `AccelX` to `GyroZ`, the bytes are the same.
+- The packet length itself: 52 bytes means a non-HIL build. A HIL build sends 54 bytes.
+
+Bit level detail (`CalStatus`) needs either a HIL build (`CalStatus` is in its 54 byte telemetry, but the sensors are simulated there, so it cannot verify a real board) or the SD log (`CalStatus` at offset 184 of every record, only written when the build has `SD_LOGGING_ENABLED 1`, which is off by default). The flash log does not carry `CalStatus`.
+
+1. Power cycle the board. `State` goes to 1 (CALIBRATION). `Flags` zero.
 2. Hold the rocket nose up and still. Check the calibrated readings in telemetry:
    - `CalAccelX` about +9.8 (int16 in the wire packet, so 9 or 10), `CalAccelY` and `CalAccelZ` 0 or +-1.
    - `CalGyro` all 0.
-   Values appear truncated to integers on the telemetry link: use the flash or SD log for the fine values.
-3. Rotate slowly about the nose axis and watch `CalGyroX`. Turn the rocket nose-up to a horizontal position with the +Y mark up: `CalAccelY` should go to about +9.8, `CalAccelX` to about 0.
-4. Wait for PRELAUNCH. `CalStatus` bits 0 to 5 set (`0x003F`), bit 6 clear (no pre-seed), bit 7 clear (flight build, HIL off). `Flags` zero.
+   Values appear truncated to integers on the telemetry link. The fine calibrated values are in the SD log (float, when SD logging is enabled). The flash log only holds raw hardware-axis accel and gyro, not the calibrated values.
+3. Rotate slowly about the nose axis and watch `CalGyroX`. Turn the rocket nose-up to a horizontal position with the +Y mark up: `CalAccelY` should go to about +9.8, `CalAccelX` to about 0. Readings that follow the rocket axes like this show that the stored `M` loaded. Without a valid `M` these fields carry the raw hardware-axis values instead (with the board's default mounting, nose up reads about -9.8 on `CalAccelY` and about 0 on `CalAccelX`).
+4. Stand it nose up and still, and wait for `State` 2 (PRELAUNCH). The board only enters PRELAUNCH when `M`, the gyro bias, the accel bias and the pressure reference are all valid (`CalStatus` bits 0 to 3), so reaching state 2 is the proof on a flight build. `Flags` zero. HIL mode and pre-seed are off by construction: `FLIGHT_BUILD 1` refuses to compile with either one, and the 52 byte packet confirms `HIL_MODE 0`.
 5. Optional bench check: read the calibration record from flash with the flash dump tool. Sequence number increased by one, CRC good, `det(Q)` about +1.
 
 ## 5. Troubleshooting
@@ -109,11 +118,11 @@ Things to know:
 | A pose repeats forever | Rocket not still or not aligned, or the prompt is being misread. | Clamp the rocket in a cradle. Count the beeps again. Check the mark you are pointing up. |
 | Fails with the long 4 s tone after all six poses | Mirrored pose order (right-hand rule violated), a pose held wrongly but accepted, or a bad sensor. The solve rejects `det(Q)` near -1, big residuals or a large per-pose error. | Check where the +Y and +Z marks really are. Re-run, keeping the order and the marks straight. If it fails twice with correct poses, suspect the sensor: check accel noise in telemetry. |
 | Fails at once with the 4 s tone | A flash or sensor fault. The state goes to GROUND_ABORT, not IDLE. | Read `Flags` (`PROTOCOL.md`, fault table): bits 10 to 14 are flash faults, bits 0 to 7 sensor faults. Fix, power cycle. |
-| Stays in CALIBRATION forever after a good tumble | Pad measurement is restarting: rocket moving, not nose up, or a bias out of limit. | Stand it nose up and still. Check `CalStatus` bits 1, 2, 3 to see which item is missing. |
-| Never leaves CALIBRATION, bit 0 clear | No valid `M` in flash. | Run procedure A. |
+| Stays in CALIBRATION forever after a good tumble | Pad measurement is restarting: rocket moving, not nose up, or a bias out of limit. | Stand it nose up and still. The flight telemetry cannot say which item is missing (`CalStatus` bits 1, 2, 3 are not on the 52 byte packet): read them from the SD log if it is enabled. |
+| Never leaves CALIBRATION, even nose up and still | No valid `M` in flash (`CalStatus` bit 0 clear, visible only in the SD log), or the case above. The accel readings in step 4.3 not following the rocket axes points to a missing `M`. | Run procedure A. |
 | `Flags` bit 12 (LOG_FULL) after boot | The flight log region is full. | Erase the log before flight (`FLASH_ERASE_ALL` maintenance build). The calibration sectors are preserved. |
 | Bit 13 or 14 set | Flash write failed, or the flight snapshot failed to verify. | Do not fly. Re-check the flash, power cycle, retry. |
-| Buzzer silent | Buzzer disabled or wiring. | Watch the pose field in telemetry (`CalStatus` bits 8 to 10 = pose 1 to 6, state 12) instead. |
+| Buzzer silent | Buzzer disabled or wiring. | The pose number (`CalStatus` bits 8 to 10) is not on the flight telemetry. You can see `State` 12 while the tumble runs and the return to 0 (IDLE) at the end, or 9 (GROUND_ABORT) on a fault. Without the buzzer, time the poses (10 s settle plus 30 s sample each) or fix the buzzer first. The pose field is visible only in a HIL build or the SD log. |
 
 ## 6. When to redo procedure A
 
@@ -146,4 +155,5 @@ Not needed between flights if the board has not moved: `M` stays in flash. Proce
 | Failure | one 4 s tone, back to IDLE (a fault goes to GROUND_ABORT) |
 | Storage | two flash sectors at `0x003FE000` and `0x003FF000`, append only, newest wins |
 | Pad calibration | nose up, still, about 15 s, automatic every boot |
-| Needed for PRELAUNCH | valid `M`, gyro bias, accel bias, pressure reference (`CalStatus` bits 0 to 3) |
+| Needed for PRELAUNCH | valid `M`, gyro bias, accel bias, pressure reference (`CalStatus` bits 0 to 3, SD log or HIL telemetry only) |
+| Flight telemetry | 52 bytes at 1 Hz: `State`, `Flags`, truncated `CalAccel` and `CalGyro`, no `CalStatus` |

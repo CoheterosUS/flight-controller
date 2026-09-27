@@ -1,4 +1,5 @@
 #include "Managers/StructManager.h"
+#include <stddef.h>
 #include <string.h>
 
 SDLogRecord_t BuildSDLogRecord(const FlightData_t *FlightData) {
@@ -77,11 +78,24 @@ TelemetryPacket_t BuildTelemetryPacket(const FlightData_t *FlightData) {
     Packet.State = FlightData->State;
     Packet.RelayState = FlightData->RelayState;
     Packet.LastCommand = FlightData->LastCommand;
-    Packet.CalStatus = FlightData->CalStatus;
     Packet.SyncEnd = FlightData->SyncEnd;
 
     return Packet;
 }
+
+#if HIL_MODE
+TelemetryPacketHil_t BuildTelemetryPacketHil(const FlightData_t *FlightData) {
+    const TelemetryPacket_t Base = BuildTelemetryPacket(FlightData);
+    TelemetryPacketHil_t Packet;
+
+    // Same bytes up to LastCommand (offset 0 to 50), then CalStatus, then SyncEnd.
+    memcpy(&Packet, &Base, offsetof(TelemetryPacket_t, SyncEnd));
+    Packet.CalStatus = FlightData->CalStatus;
+    Packet.SyncEnd = Base.SyncEnd;
+
+    return Packet;
+}
+#endif
 
 FlashLogRecord_t BuildFlashLogRecord(const FlightData_t *FlightData) {
     FlashLogRecord_t Record;

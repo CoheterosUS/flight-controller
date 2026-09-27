@@ -82,7 +82,7 @@ void StateMachineTask(void *pvParameters) {
             xQueueSend(FlashLoggingQueue, &FlashRecord, 0);
         }
 
-        TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
+        TelemetryWirePacket_t Packet = BuildTelemetryWirePacket(&FlightData);  // 52 bytes, 54 with CalStatus in HIL
         SerialSendFlightData(&Packet, CurrentSystemState);
 
         dbg_current_state = CurrentSystemState;

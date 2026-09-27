@@ -139,6 +139,8 @@ The W25Q32JV flash calibration sector and the per-flight calibration snapshot pa
 
 ## CalStatus (uint16)
 
+Where it is visible: the HIL telemetry packet (offset 51, HIL builds only) and the SD log record (offset 184, when SD logging is enabled). It is not in the 52 byte flight telemetry packet and not in the flash log record.
+
 | Bit or field | Name                    | Meaning                          |
 |--------------|-------------------------|----------------------------------|
 | 0            | IMU_CAL_VALID           | M is loaded and valid            |
@@ -233,7 +235,11 @@ Command `0x11` (COMMAND_HIL_BARO). One frame is one barometer sample (the firmwa
 
 ## Wire Telemetry Packet (Structure, Packed)
 
-The packet is 54 bytes. Accel and gyro fields are calibrated rocket body-frame values, truncated to int16.
+A flight build (`HIL_MODE 0`) sends a 52 byte packet, byte for byte the pre-deep-calibration layout, so existing ground software parses it unchanged. The only change is the meaning of the accel and gyro fields: they now carry calibrated rocket body-frame values, truncated to int16 (the table names them `CalAccel*` and `CalGyro*`, the ground software may still call them `Accel*` and `Gyro*`). Firmware type: `TelemetryPacket_t`, checked by `tests/host/run_telemetry_layout_tests.ps1`.
+
+`CalStatus` is not on the flight wire. It is carried by the SD log record (offset 184, see below), which is only written when `SD_LOGGING_ENABLED` is 1 (it is 0 in `configuration.h` today). The flash log record does not carry it.
+
+A HIL build (`HIL_MODE 1`) sends a 54 byte packet instead (`TelemetryPacketHil_t`): the same bytes 0 to 50, then `CalStatus` (uint16) at offset 51 and `SyncEnd` at offset 53. `HIL/hil.py` parses this packet and refuses a board that sends the 52 byte packet (not a HIL build). The telemetry rate is 10 Hz in a HIL build and 1 Hz otherwise.
 
 | Offset | Size | Type   | Field              | Encoding                   |
 |--------|------|--------|--------------------|----------------------------|
@@ -258,7 +264,13 @@ The packet is 54 bytes. Accel and gyro fields are calibrated rocket body-frame v
 | 48     | 1    | uint8  | State              | Enum                       |
 | 49     | 1    | uint8  | RelayState         | Bitmask                    |
 | 50     | 1    | uint8  | LastCommand        | Enum                       |
-| 51     | 2    | uint16 | CalStatus          | Bitmask and tumble pose   |
+| 51     | 1    | uint8  | SyncEnd            | `0xBE`                     |
+
+HIL build only (54 bytes): offsets 0 to 50 as above, then
+
+| Offset | Size | Type   | Field              | Encoding                   |
+|--------|------|--------|--------------------|----------------------------|
+| 51     | 2    | uint16 | CalStatus          | Bitmask and tumble pose, see "CalStatus" |
 | 53     | 1    | uint8  | SyncEnd            | `0xBE`                     |
 
 ## Wire SD Log Record (Structure, Packed)

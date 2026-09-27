@@ -14,6 +14,8 @@ Frames:
 Transport: COMMAND_HIL_DATA (0x10, 36 byte payload: raw accel, raw gyro, mag) at --rate Hz (default 200 =
 IMU_ODR_HZ), and COMMAND_HIL_BARO (0x11, 8 byte payload: pressure, temperature) at --baro-rate Hz (default 50).
 One barometer frame is one barometer sample, as on the hardware.
+Telemetry: the 54 byte HIL packet (the 52 byte flight layout plus CalStatus at offset 51). A board that sends
+the 52 byte flight packet is not a HIL build and is refused with a SETUP ERROR (exit code 2).
 
 Use --port sim to run any scenario against a crude built-in mock of the board (harness self test only).
 Exit code: 0 all pass, 1 any failure, 2 setup error.
@@ -43,9 +45,16 @@ COMMAND_HIL_BARO = 0x11
 HIL_DATA_PAYLOAD_SIZE = 36
 HIL_BARO_PAYLOAD_SIZE = 8
 
+# HIL builds send 54 bytes: the 52 byte flight layout with CalStatus (uint16) inserted before SyncEnd.
 TELEMETRY_FORMAT = "<HI6hhbiiiBiiIhBBBHB"
 TELEMETRY_PACKET_SIZE = struct.calcsize(TELEMETRY_FORMAT)
 assert TELEMETRY_PACKET_SIZE == 54
+# Flight builds send the original 52 byte packet (no CalStatus). Only used to detect a wrong build.
+TELEMETRY_FLIGHT_FORMAT = "<HI6hhbiiiBiiIhBBBB"
+TELEMETRY_FLIGHT_PACKET_SIZE = struct.calcsize(TELEMETRY_FLIGHT_FORMAT)
+assert TELEMETRY_FLIGHT_PACKET_SIZE == 52
+# Consecutive 52 byte packets seen before the harness gives up with a SETUP ERROR.
+FLIGHT_PACKETS_TO_REFUSE = 2
 TELEMETRY_FIELDS = [
     "sync", "tick", "cal_ax", "cal_ay", "cal_az", "cal_gx", "cal_gy", "cal_gz", "pressure_pa",
     "temperature_c", "lat", "lon", "gps_alt", "sats", "baro_alt", "baro_vel", "flags", "battery",
@@ -218,6 +227,7 @@ class TelemetryParser:
     def __init__(self):
         self.buf = bytearray()
         self.bad = 0
+        self.flight_packets = 0  # 52 byte packets (flight build) seen in a row
 
     def feed(self, data):
         self.buf += data
@@ -232,9 +242,12 @@ class TelemetryParser:
             if len(self.buf) < TELEMETRY_PACKET_SIZE:
                 break
             if self.buf[TELEMETRY_PACKET_SIZE - 1] != PACKET_FOOTER:
+                if self.looks_like_flight_packet():
+                    self.flight_packets += 1
                 self.bad += 1
                 del self.buf[:1]
                 continue
+            self.flight_packets = 0
             values = struct.unpack_from(TELEMETRY_FORMAT, self.buf, 0)
             del self.buf[:TELEMETRY_PACKET_SIZE]
             tel = dict(zip(TELEMETRY_FIELDS, values))
@@ -247,13 +260,20 @@ class TelemetryParser:
             out.append(tel)
         return out
 
+    def looks_like_flight_packet(self):
+        """A 52 byte packet: footer at offset 51 and the next packet header right after it."""
+        n = TELEMETRY_FLIGHT_PACKET_SIZE
+        return (self.buf[n - 1] == PACKET_FOOTER and self.buf[n] == PACKET_HEADER_LSB
+                and self.buf[n + 1] == PACKET_HEADER_MSB)
+
 
 # ---------------------------------------------------------------- crude mock board (harness self test only)
 class MockBoard:
     """Not the firmware. Just enough state logic to exercise every harness path with --port sim."""
 
-    def __init__(self, rate, mounting, start_valid=True, baro_rate=50):
+    def __init__(self, rate, mounting, start_valid=True, baro_rate=50, flight_build=False):
         self.rate = rate
+        self.flight_build = flight_build  # emit the 52 byte flight packet (tests the wrong-build detection)
         self.baro_rate = baro_rate
         self.m = make_mounting("default") if mounting is None else mounting
         self.rx = bytearray()
@@ -383,6 +403,11 @@ class MockBoard:
     def emit(self):
         cal = (self.cal & 0xFF) | (self.pose << 8)
         trunc = [int(x) for x in self.body] + [int(x) for x in self.gyro]
+        if self.flight_build:
+            self.tx += struct.pack(TELEMETRY_FLIGHT_FORMAT, 0xCAFE, self.n * 1000 // self.rate, *trunc,
+                                   int(P_REF / 10), 25, 0, 0, 0, 0, int(self.alt * 100), 0, 0, 80, self.state, 0, 0,
+                                   PACKET_FOOTER)
+            return
         pkt = struct.pack(TELEMETRY_FORMAT, 0xCAFE, self.n * 1000 // self.rate, *trunc, int(P_REF / 10),
                           25, 0, 0, 0, 0, int(self.alt * 100), 0, 0, 80, self.state, 0, 0, cal, PACKET_FOOTER)
         self.tx += pkt
@@ -399,7 +424,7 @@ class Runner:
         self.sim = args.port == "sim"
         if self.sim:
             self.ser = MockBoard(self.rate, mounting, start_valid=args.scenario not in ("tumble", "calibrate"),
-                                 baro_rate=args.baro_rate)
+                                 baro_rate=args.baro_rate, flight_build=args.sim_flight_build)
         else:
             import serial  # pyserial
             self.ser = serial.Serial(args.port, args.baud, timeout=0, write_timeout=1)
@@ -445,7 +470,11 @@ class Runner:
         n = self.ser.in_waiting
         if not n:
             return
-        for tel in self.parser.feed(self.ser.read(n)):
+        tels = self.parser.feed(self.ser.read(n))
+        if self.parser.flight_packets >= FLIGHT_PACKETS_TO_REFUSE:
+            raise SetupError("board is not a HIL build (52 byte telemetry). Flash a HIL_MODE 1 build: "
+                             "hil.py needs the 54 byte HIL packet with CalStatus.")
+        for tel in tels:
             self.tel = tel
             self.tel_count += 1
             tel["sim_t"] = self.t
@@ -1015,6 +1044,8 @@ def main():
     p.add_argument("--seed", type=int, default=1)
     p.add_argument("--mounting", default="default", choices=["default", "alt", "roll90", "identity"],
                    help="M_true preset (roll90 is S3)")
+    p.add_argument("--sim-flight-build", action="store_true",
+                   help="with --port sim: the mock sends 52 byte flight telemetry (checks the wrong-build refusal)")
     p.add_argument("--log-dir", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "logs"))
     # tumble negative cases
     p.add_argument("--mirrored", action="store_true", help="S6b: swap poses 3 and 4 (handedness error)")

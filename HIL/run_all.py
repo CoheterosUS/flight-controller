@@ -12,7 +12,8 @@ PASS, FAIL, or MANUAL (needs a manual step that the harness cannot do over the U
 provoking a fault, dumping flash). Exit code 1 if anything failed.
 
 Suite runner and scenario IDs by Angelo Sho Moraschi (branch hil). The scenario bodies live in hil.py, which
-speaks the current protocol (54 byte telemetry with CalStatus, COMMAND_HIL_DATA plus COMMAND_HIL_BARO).
+speaks the current protocol (54 byte HIL telemetry with CalStatus, COMMAND_HIL_DATA plus COMMAND_HIL_BARO).
+The board must run a HIL build: a flight build (52 byte telemetry) is refused by hil.py with a SETUP ERROR.
 """
 
 import argparse
