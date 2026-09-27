@@ -66,6 +66,7 @@
 
 // Deep calibration tumble (WP-A, WP-D)
 #define DEEP_CAL_POSE_SETTLE_MS             10000
+#define DEEP_CAL_POSE_CHECK_WINDOW_MS       2000
 #define DEEP_CAL_POSE_SAMPLE_MS             30000
 #define DEEP_CAL_POSE_G_BAND_PCT            10
 #define DEEP_CAL_POSE_DOMINANT_MIN_G        0.8f
