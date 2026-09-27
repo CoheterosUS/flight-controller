@@ -136,8 +136,23 @@
 #define BOOST_COAST_CONSECUTIVE_SAMPLES        (LOOP_RATE_HZ / 20)
 
 // Coast to Active Control Altitude Threshold
+// TODO(EuRoC): ACTIVE_CONTROL is a EuRoC feature, set the altitudes from the judges' released rules (see BACKLOG.md)
 #define COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD    2000.0f // Barometric altitude threshold for active control
 #define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (LOOP_RATE_HZ / 20)
+
+// Apogee detection (see APOGEE_DETECTION_PLAN.md). Channel B: barometer drop from peak. Channel D: timer from BOOST entry.
+#define BARO_ODR_HZ                         50      // actual BMP581 output data rate in flight
+#define APOGEE_DROP_M                       7.0f
+#define APOGEE_CONFIRM_SAMPLES              5       // new valid barometer samples
+#define APOGEE_TIMER_MS                     28000   // launch (BOOST entry) to forced drogue. Must exceed the latest plausible apogee time
+#define APOGEE_BARO_MAX_SPEED_MPS           400.0f  // slew gate speed
+#define APOGEE_BARO_SLEW_MARGIN_M           10.0f   // slew gate constant margin
+
+// Barometer sample plausibility (BMP581 operating range, verify against Datasheets/BMP581.pdf)
+#define BARO_VALID_MIN_PA                   30000.0f
+#define BARO_VALID_MAX_PA                   125000.0f
+#define BARO_VALID_MIN_TEMP_C               (-40.0f)
+#define BARO_VALID_MAX_TEMP_C               85.0f
 
 // Active Control to Apogee Barometric Altitude + GPS Altitude + GPS Vertical Velocity
 #define ACTIVE_CONTROL_APOGEE_BAROM_ALT_ENABLED			0
