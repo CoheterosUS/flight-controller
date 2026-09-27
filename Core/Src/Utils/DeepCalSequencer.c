@@ -91,9 +91,6 @@ static bool DeepCalSeq_PoseIsValid(const DeepCalSeq_t *S, const float Mean[3])
 {
     return ImuTumble_CheckPose(&S->Tumble, S->Pose, Mean) == IMU_TUMBLE_POSE_OK;
 }
-    return S->Pose >= 4u && Status == IMU_TUMBLE_POSE_INCONSISTENT_WITH_PREVIOUS
-        && DeepCalSeq_ValidThirdAxis(S, Mean);
-}
 
 static void DeepCalSeq_SetOutput(const DeepCalSeq_t *S, DeepCalSeqOut_t *Out)
 {
