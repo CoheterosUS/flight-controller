@@ -17,12 +17,12 @@ Read `DEEP_CALIBRATION_DESIGN.md` first. Decision IDs (D1, D2, ...) refer to tha
 
 Goal: make the tree compile with the new names and types, with stubs, so WP-A to WP-H can start.
 - Rename per D28: `FlightData_t` fields (`RawAccel*`, `RawGyro*`, `RawMag*`; `CalAccel*` and `CalGyro*` stay), record fields in `SDLogRecord_t`, `FlashLogRecord_t`, `TelemetryPacket_t` (names and meaning per D31 and D32, layout unchanged for now), `SystemContext_t` (`GyroBiasRaw*`, `AccelBiasCal*`).
-- Point every consumer at the right field. The compiler finds them all. State handlers 3 (prelaunch) and 4 (boost) use `CalAccelX` with the sign flip (D30).
-- Add to `SystemContext_t`: `ImuCalibration_t ImuCal`, `float AccelBiasCal[3]`, `float GyroBiasRaw[3]`, `bool AccelBiasCalValid`, `uint16_t CalStatus`.
+- Point every consumer at the right field. The compiler finds them all. The behaviour stays unchanged: the state handlers keep reading the same physical axis (now named `RawAccelY`). The switch to `CalAccelX` with the sign flip (D30) belongs to WP-E, because it only makes sense once `Cal` is computed from `M`.
+- Add to `SystemContext_t`: `ImuCalibration_t ImuCal`, `float AccelBiasCalX/Y/Z`, `bool AccelBiasCalValid`, `uint16_t CalStatus` (the renamed `GyroBiasRawX/Y/Z` scalars stay scalars).
 - Add `STATE_DEEP_CALIBRATION` (12), `StateHandlers.h` declarations, `13DeepCalibrationStateHandler.c` with an empty handler, and the cases in `OnStateEntry` and `HandleState`.
 - Add every new macro (section 6) to `configuration.h` with defaults, in one block per package.
 - Update `PROTOCOL.md` for the state value only.
-- Definition of done: builds, behaviour unchanged except the renames and the threshold axis.
+- Definition of done: builds, behaviour unchanged except the renames (the compile check passes at the same level as the baseline).
 
 ### WP-A: Tumble math module (independent)
 
@@ -54,6 +54,7 @@ Files: `Core/Src/States/13DeepCalibrationStateHandler.c`, `Core/Src/Managers/Sta
 
 Files: `Core/Src/Utils/FlightData.c` and header, `Core/Src/Utils/Calibrations.c` and header, `Core/Src/Utils/Calculations.c` and header (bias and rotation helpers only), `Core/Src/States/2CalibrationStateHandler.c`, `Core/Src/States/3PrelaunchStateHandler.c`, the abort state handlers, `main.c` (IMU timer line), `Core/Src/Sensors/IIM42653/IIM42653Handler.c` (ODR constant).
 - D19 to D23: `Cal` fields every loop (`ImuApplyCalibration`), gyro bias on raw data (the bug fix), accel bias in the body frame, tilt and stillness gates, load `M` at boot, the PRELAUNCH gate, retire `ApplyIMURotation`.
+- D30: switch the boost and burnout thresholds (states 3 and 4) from raw Y to `CalAccelX` with the sign flip, in the same change that makes `Cal` real.
 - D24 to D27: Kalman initialised at the end of CALIBRATION, stepping from PRELAUNCH, stopping in abort states, `KALMAN_DT` from `IMU_ODR_HZ`.
 - D34: `IMU_ODR_HZ` selects the ODR register value and the IMU timer period.
 - Do not touch `CalculateBarometricVerticalVelocity` behaviour (the apogee session owns it).
@@ -83,7 +84,7 @@ Files: `HIL/hil.py`, `BRINGUP_AND_HIL.md`.
 
 | File or area | Owner |
 |---|---|
-| `shared.h`, `configuration.h` (structure), `StateHandlers.h`, renames across the tree | WP0 |
+| `shared.h`, `configuration.h` (structure), `StateHandlers.h`, renames across the tree, `tools/build_check.ps1` | WP0 |
 | `ImuTumbleCal.*`, CMSIS QR sources | WP-A |
 | `W25Q32JV*` | WP-B |
 | `Buzzer*.c`, `BuzzerTask.*` | WP-C |
