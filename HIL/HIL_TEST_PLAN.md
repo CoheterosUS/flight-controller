@@ -14,7 +14,7 @@ Status of the firmware: everything below has passed host tests, the ARM compile 
 | B2 | State names 11 and 12 | Done. |
 | B3 | Raw inputs through `M_true` | Done. Presets `default`, `alt` (S7), `roll90` (S3), `identity`. |
 | B4 | Scenario runner, pass or fail, exit codes | Done. |
-| B5 | `COMMAND_HIL_BARO` (0x11, 50 Hz) | OPEN. Implemented only as uncommitted work in the apogee session worktree (`C:\devc-wt-apogee-hil`); the owner must commit it. Until then every `COMMAND_HIL_DATA` packet is one barometer sample at 200 Hz. Sample-based checks (spikes, dips, confirm count) keep their meaning, but time constants shrink by 4 (5 samples = 25 ms instead of 100 ms). Treat H1 to H15 results as provisional until B5 lands. |
+| B5 | `COMMAND_HIL_BARO` (0x11, 50 Hz) | OPEN. Implemented only as uncommitted work in the apogee session worktree (`C:\dev\fc-wt-apogee-hil`); the owner must commit it. Until then every `COMMAND_HIL_DATA` packet is one barometer sample at 200 Hz. Sample-based checks (spikes, dips, confirm count) keep their meaning, but time constants shrink by 4 (5 samples = 25 ms instead of 100 ms). Treat H1 to H15 results as provisional until B5 lands. |
 | B6 | Rate | `hil.py` sends at 200 Hz (`--rate`, must equal `IMU_ODR_HZ`). Measured host pacing: 200.0 Hz, 9800 B/s, 85 % of the 115200 baud link. Watch for lost packets: the firmware re-arms the receive DMA after each idle event, so bytes that arrive while the telemetry task is preempted are dropped. If a tumble pose keeps restarting with no motion, suspect this (a pose needs 3000 distinct samples in 30 s). |
 | B7 | Buzzer not audible | The tumble follows the pose field (CalStatus bits 8 to 10). |
 
