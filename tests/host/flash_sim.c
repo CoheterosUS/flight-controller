@@ -4,7 +4,10 @@
 
 static uint8_t Flash[W25Q_TOTAL_SIZE];
 static int ProgramLimit = -1;
+static int EraseLimit = -1;
 static size_t ProgramCount;
+static size_t ReadCount;
+static uint32_t LastEraseAddress;
 static size_t LockCount;
 static size_t UnlockCount;
 static uint8_t Status = 0;
@@ -20,7 +23,10 @@ void W25Q_Unlock(void) {
 void flash_reset(void) {
     memset(Flash, 0xFF, sizeof(Flash));
     ProgramLimit = -1;
+    EraseLimit = -1;
     ProgramCount = 0;
+    ReadCount = 0;
+    LastEraseAddress = UINT32_MAX;
     LockCount = 0;
     UnlockCount = 0;
     Status = 0;
@@ -34,8 +40,20 @@ void flash_set_program_limit(int Limit) {
     ProgramLimit = Limit;
 }
 
+void flash_set_erase_limit(int Limit) {
+    EraseLimit = Limit;
+}
+
 size_t flash_program_count(void) {
     return ProgramCount;
+}
+
+size_t flash_read_count(void) {
+    return ReadCount;
+}
+
+uint32_t flash_last_erase_address(void) {
+    return LastEraseAddress;
 }
 
 size_t flash_lock_count(void) {
@@ -61,6 +79,7 @@ HAL_StatusTypeDef W25Q_ReadJEDECID(SPI_HandleTypeDef *Handle, uint8_t *Manufactu
 HAL_StatusTypeDef W25Q_ReadData(SPI_HandleTypeDef *Handle, uint32_t Address, uint8_t *Data, uint32_t Length) {
     (void)Handle;
     if (Address > W25Q_TOTAL_SIZE || Length > W25Q_TOTAL_SIZE - Address) return HAL_ERROR;
+    ReadCount++;
     memcpy(Data, &Flash[Address], Length);
     return HAL_OK;
 }
@@ -87,7 +106,19 @@ HAL_StatusTypeDef W25Q_SectorErase(SPI_HandleTypeDef *Handle, uint32_t Address) 
     (void)Handle;
     Address &= ~(W25Q_SECTOR_SIZE - 1u);
     if (Address >= W25Q_TOTAL_SIZE || Address + W25Q_SECTOR_SIZE > W25Q_TOTAL_SIZE) return HAL_ERROR;
-    memset(&Flash[Address], 0xFF, W25Q_SECTOR_SIZE);
+    LastEraseAddress = Address;
+    size_t Bytes = EraseLimit >= 0 && EraseLimit < (int)W25Q_SECTOR_SIZE
+        ? (size_t)EraseLimit
+        : W25Q_SECTOR_SIZE;
+    memset(&Flash[Address], 0xFF, Bytes);
+    return Bytes == W25Q_SECTOR_SIZE ? HAL_OK : HAL_ERROR;
+}
+
+HAL_StatusTypeDef W25Q_BlockErase64K(SPI_HandleTypeDef *Handle, uint32_t Address) {
+    (void)Handle;
+    Address &= ~(W25Q_BLOCK_SIZE - 1u);
+    if (Address >= W25Q_TOTAL_SIZE || Address + W25Q_BLOCK_SIZE > W25Q_TOTAL_SIZE) return HAL_ERROR;
+    memset(&Flash[Address], 0xFF, W25Q_BLOCK_SIZE);
     return HAL_OK;
 }
 

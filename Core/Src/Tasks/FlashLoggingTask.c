@@ -17,7 +17,7 @@ static QueueHandle_t PageReadyQueue;
 static SemaphoreHandle_t FlushCompleteSemaphore;
 static SemaphoreHandle_t WriterIdleSemaphore;
 static volatile bool FlushRequested;
-static volatile bool WriterBusy;
+static volatile uint32_t PagesPending;
 static bool ProducerAccepting;
 
 volatile uint32_t dbg_flash_pages_written = 0;
@@ -34,7 +34,7 @@ void CreateFlashLoggingTask(SystemContext_t *SystemContext, const UBaseType_t Pr
     memset(&PageA, 0xFF, sizeof(PageA));
     ActiveCount = 0;
     FlushRequested = false;
-    WriterBusy = false;
+    PagesPending = 0;
     ProducerAccepting = false;
 
     xTaskCreate(
@@ -59,7 +59,11 @@ void CreateFlashLoggingTask(SystemContext_t *SystemContext, const UBaseType_t Pr
 static bool QueueActivePage(TickType_t WaitTicks) {
     FlashPage_t Page = PageA;
 
-    if (xQueueSend(PageReadyQueue, &Page, WaitTicks) != pdPASS) return false;
+    __atomic_fetch_add(&PagesPending, 1u, __ATOMIC_SEQ_CST);
+    if (xQueueSend(PageReadyQueue, &Page, WaitTicks) != pdPASS) {
+        __atomic_fetch_sub(&PagesPending, 1u, __ATOMIC_SEQ_CST);
+        return false;
+    }
 
     memset(&PageA, 0xFF, sizeof(PageA));
     ActiveCount = 0;
@@ -111,7 +115,7 @@ bool FlashLogging_FlushAndWait(const uint32_t TimeoutMs) {
     if (xSemaphoreTake(FlushCompleteSemaphore, Remaining) != pdPASS) return false;
 
     for (;;) {
-        if (!WriterBusy && uxQueueMessagesWaiting(PageReadyQueue) == 0) return true;
+        if (__atomic_load_n(&PagesPending, __ATOMIC_SEQ_CST) == 0) return true;
 
         Elapsed = xTaskGetTickCount() - Start;
         if (Elapsed >= Timeout) return false;
@@ -161,7 +165,6 @@ void FlashWriterTask(void *pvParameters) {
 
         if (xQueueReceive(PageReadyQueue, &Page, portMAX_DELAY) != pdPASS) continue;
 
-        WriterBusy = true;
         W25Q_Lock();
 
         uint32_t Address = W25Q_GetWritePointer();
@@ -195,8 +198,8 @@ void FlashWriterTask(void *pvParameters) {
             if (Success) dbg_flash_pages_written++;
         }
 
+        __atomic_fetch_sub(&PagesPending, 1u, __ATOMIC_SEQ_CST);
         W25Q_Unlock();
-        WriterBusy = false;
         xSemaphoreGive(WriterIdleSemaphore);
     }
 }

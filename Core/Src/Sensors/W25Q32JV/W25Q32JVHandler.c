@@ -21,6 +21,7 @@ typedef struct {
 
 static FlashHeader_t Header;
 static bool W25Q_Initialized = false;
+static bool LastPageIsFlightMarker = false;
 static SemaphoreHandle_t W25QMutex;
 
 _Static_assert(sizeof(FlightSnapshot_t) <= W25Q_PAGE_SIZE, "snapshot must fit in one page");
@@ -83,13 +84,17 @@ static bool W25Q_IsSnapshotPage(const uint8_t *Page) {
 // The marker only occupies the first record of its page, so scanning must step by whole pages.
 static uint32_t W25Q_ScanForWritePointer(SPI_HandleTypeDef *Handle, uint32_t StartAddress) {
     uint8_t Byte;
+    uint8_t Page[W25Q_PAGE_SIZE];
     uint32_t Address = StartAddress & ~(uint32_t)(W25Q_PAGE_SIZE - 1);
 
     if (Address >= W25Q_LOG_END) return W25Q_LOG_END;
 
     while (Address < W25Q_LOG_END) {
-        if (W25Q_ReadData(Handle, Address, &Byte, 1) != HAL_OK) break;
-        if (Byte == 0xFF) return Address;
+        if (W25Q_ReadData(Handle, Address, &Byte, 1) != HAL_OK) return W25Q_LOG_END;
+        if (Byte == 0xFF) {
+            if (W25Q_ReadData(Handle, Address, Page, sizeof(Page)) != HAL_OK) return W25Q_LOG_END;
+            if (W25Q_PageIsFullyErased(Page)) return Address;
+        }
         Address += W25Q_PAGE_SIZE;
     }
 
@@ -148,6 +153,19 @@ bool W25Q_Init(void) {
         goto cleanup;
     }
 
+    LastPageIsFlightMarker = false;
+    if (Header.WritePointer > FLASH_DATA_START) {
+        FlashPage_t PreviousPage;
+        if (W25Q_ReadData(Handle,
+                          Header.WritePointer - W25Q_PAGE_SIZE,
+                          (uint8_t *)&PreviousPage,
+                          sizeof(PreviousPage)) != HAL_OK) {
+            SystemFaultSet(W25Q_INIT_FAILED);
+            goto cleanup;
+        }
+        LastPageIsFlightMarker = W25Q_IsFlightMarker(&PreviousPage.Records[0]);
+    }
+
     Success = true;
 
 cleanup:
@@ -159,6 +177,12 @@ bool W25Q_NewFlight(void) {
     bool Success = false;
 
     W25Q_Lock();
+
+    if (!W25Q_ShouldCreateFlightMarker(Header.WritePointer > FLASH_DATA_START,
+                                       LastPageIsFlightMarker)) {
+        Success = true;
+        goto cleanup;
+    }
 
     if (!W25Q_HasSpace(W25Q_PAGE_SIZE)) {
         SystemFaultSet(W25Q_LOG_FULL);
@@ -181,6 +205,7 @@ bool W25Q_NewFlight(void) {
         SystemFaultSet(W25Q_INIT_FAILED);
         goto cleanup;
     }
+    LastPageIsFlightMarker = true;
 
     Success = true;
 
@@ -194,7 +219,10 @@ uint32_t W25Q_GetWritePointer(void) {
 }
 
 void W25Q_AdvanceWritePointer(uint16_t Bytes) {
-    if (W25Q_LogHasSpaceAt(Header.WritePointer, Bytes)) Header.WritePointer += Bytes;
+    if (W25Q_LogHasSpaceAt(Header.WritePointer, Bytes)) {
+        Header.WritePointer += Bytes;
+        if (Bytes != 0) LastPageIsFlightMarker = false;
+    }
 }
 
 bool W25Q_HasSpace(uint16_t Bytes) {
@@ -216,19 +244,12 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
     if (!W25Q_VerifyJEDECID(Handle)) goto cleanup;
     if (W25Q_UnprotectAll(Handle) != HAL_OK) goto cleanup;
 
-    for (uint32_t Address = 0; Address < W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE; Address += W25Q_BLOCK_SIZE) {
-        if (W25Q_BlockErase64K(Handle, Address) != HAL_OK) goto cleanup;
-    }
-
-    for (uint32_t Address = W25Q_TOTAL_SIZE - W25Q_BLOCK_SIZE;
-         Address < W25Q_LOG_END;
-         Address += W25Q_SECTOR_SIZE) {
-        if (W25Q_SectorErase(Handle, Address) != HAL_OK) goto cleanup;
-    }
+    if (W25Q_EraseLogRegion(Handle) != HAL_OK) goto cleanup;
 
     Header.Magic = FLASH_HEADER_MAGIC;
     Header.FlightCount = 0;
     Header.WritePointer = FLASH_DATA_START;
+    LastPageIsFlightMarker = false;
 
     Result = W25Q_WriteHeader(Handle);
 
@@ -292,7 +313,7 @@ bool W25Q_DumpToSD(void) {
     }
 
     uint32_t Address = FLASH_DATA_START;
-    uint32_t End = Header.WritePointer;
+    uint32_t End = Header.WritePointer < W25Q_LOG_END ? Header.WritePointer : W25Q_LOG_END;
     uint16_t FlightNum = 0;
     bool FileOpen = false;
     FIL File;
