@@ -5,12 +5,10 @@
 #include <stdint.h>
 #include "shared.h"
 
-#define GAS_CONSTANT    287.0f 					// J/(kg*K)
-#define GRAV_CONSTANT   9.80665f 				// m/s^2
 #define PRESSURE_SCALE (1.0f / 64.0f)			// BMP581: 6 fractional bits
 #define TEMPERATURE_SCALE (1.0f / 65536.0f)		// BMP581: 16 fractional bits
 
-float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa, float Temperature);
+float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa);
 float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude);
 
 float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool Temperature);

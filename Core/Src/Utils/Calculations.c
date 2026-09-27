@@ -1,15 +1,29 @@
 #include <math.h>
 #include "Utils/shared.h"
 #include "Utils/Calculations.h"
+#include "KalmanLib.h"
 
-float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa, float Temperature) {
-    if (PressurePa <= 0.0f || SystemContext->ReferencePressurePa <= 0.0f || !(SystemContext->ReferencePressurePaValid)) {
-        return 0.0f;
+float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa) {
+    if (SystemContext == NULL || !isfinite(PressurePa) || PressurePa <= 0.0f ||
+        !isfinite(SystemContext->ReferencePressurePa) || SystemContext->ReferencePressurePa <= 0.0f ||
+        !SystemContext->ReferencePressurePaValid || !isfinite(SystemContext->ReferenceTemperatureC) ||
+        SystemContext->ReferenceTemperatureC < BARO_VALID_MIN_TEMP_C ||
+        SystemContext->ReferenceTemperatureC > BARO_VALID_MAX_TEMP_C) {
+        return NAN;
     }
 
-    float TemperatureK = CalculateKelvinFromCelsius(Temperature);
+    const float ReferencePressurePa = SystemContext->ReferencePressurePa;
+    const float ReferenceTemperatureK = CalculateKelvinFromCelsius(SystemContext->ReferenceTemperatureC);
+    const float PressureRatio = PressurePa / ReferencePressurePa;
+    const float AirGasConstant = (float)R_AIR;
+    const float AirLapseRate = (float)ALPHA_AIR;
+    const float Exponent = AirGasConstant * AirLapseRate / BARO_GRAVITY_MS2;
+    const float DownAltitude = (ReferenceTemperatureK / AirLapseRate) *
+                               (powf(PressureRatio, Exponent) - 1.0f);
 
-    return (GAS_CONSTANT * TemperatureK / GRAV_CONSTANT) * logf(SystemContext->ReferencePressurePa / PressurePa);
+    // Sanity: ratio 0.7 at 298.15 K is about 3008.5 m up, ratio 1.0 is 0 m,
+    // and the forward model round trip returns 0.7 within float precision.
+    return -DownAltitude;
 }
 
 float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude) {

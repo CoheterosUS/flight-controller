@@ -143,6 +143,7 @@
 // Apogee detection (see APOGEE_DETECTION_PLAN.md). Channel B: barometer drop from peak. Channel D: timer from BOOST entry.
 #define BARO_ODR_HZ                         50      // actual BMP581 output data rate in flight
 #define BARO_VELOCITY_WINDOW_MS             1000
+#define BARO_GRAVITY_MS2                    9.81f   // Must match the Kalman barometer model g[2]
 #define APOGEE_DROP_M                       15.0f
 #define APOGEE_CONFIRM_SAMPLES              5       // new valid barometer samples
 #define APOGEE_TIMER_MS                     28000   // launch (BOOST entry) to forced drogue. Must exceed the latest plausible apogee time

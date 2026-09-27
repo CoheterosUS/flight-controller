@@ -92,16 +92,21 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	}
 
 	FlightData.BaroSampleId = BMP581_FlightData.SampleId;
+	bool ReferenceValid = SystemContext->ReferencePressurePaValid &&
+		isfinite(SystemContext->ReferenceTemperatureC) &&
+		SystemContext->ReferenceTemperatureC >= BARO_VALID_MIN_TEMP_C &&
+		SystemContext->ReferenceTemperatureC <= BARO_VALID_MAX_TEMP_C;
+
 	FlightData.BaroValid = BaroSampleValid(
 		FlightData.PressurePa,
 		FlightData.TemperatureC,
 		SystemContext->ReferencePressurePa,
-		SystemContext->ReferencePressurePaValid,
+		ReferenceValid,
 		FlightData.BaroSampleId
 	);
 
 	if (FlightData.BaroValid) {
-		float DerivedAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa, FlightData.TemperatureC);
+		float DerivedAltitude = CalculateAltitude(SystemContext, FlightData.PressurePa);
 		if (isfinite(DerivedAltitude)) {
 			LastValidBarometricAltitude = DerivedAltitude;
 			HaveValidBarometricAltitude = true;
