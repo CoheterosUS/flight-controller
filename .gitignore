@@ -7,3 +7,7 @@
 
 /.settings
 /.claude
+
+# host test build output
+tests/host/*.exe
+tests/host/.build/
