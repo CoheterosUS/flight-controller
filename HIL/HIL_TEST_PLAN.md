@@ -101,4 +101,4 @@ Run exactly as written in `HIL/APOGEE_HIL.md`, after blocker B5 is resolved. Ord
 
 Per scenario: ID, seed, firmware hash, build defines, pass or fail, measured values against the criteria, the telemetry log file name, and for a failure the first telemetry sample where behaviour diverged. Put the results in `HIL/RESULTS_<date>.md` on a branch named `hil-results`, not on `kalman-filter`. Do not change firmware behaviour to make a scenario pass: report it. Any change to thresholds goes through the firmware owners.
 
-Run order for the first session: B1 to B4 (harness), then S1, S2, S3 (calibration on the target), then S4, S5, then R1 to R3, then S6, S7, then the R checks, then the apogee scenarios once B5 is in.
+Run order for the first session: the harness self test (`--port sim`), then S1, S2, S3 (calibration on the target), then S4, S5, then R1 to R3, then S6, S7, then the R checks, then the apogee scenarios once B5 is in.
