@@ -85,6 +85,21 @@ Consequences:
 - Long invalid data leaves only D. That is intended.
 - Not in scope: the Kalman filter also consumes `PressurePa` directly. It is not used for any trigger (A1). Noted in the backlog.
 
+### 4.2 Pressure to altitude conversion (decided, same model as the Kalman barometer block)
+
+The Kalman barometer measurement model (`KalmanLib.c`, `h_x[0]`) is `p = p_ref * powf(1 + ALPHA_AIR * h / T_ref, g / (R_AIR * ALPHA_AIR))`, with `h` the NED down position. The barometric altitude used by the state machine and the apogee detector must use the SAME model, inverted:
+
+```
+h_down = (T_ref / ALPHA_AIR) * (powf(p / p_ref, R_AIR * ALPHA_AIR / g) - 1)
+BarometricAltitude = -h_down        // metres above the pad, positive up
+```
+
+- `p_ref` = `SystemContext->ReferencePressurePa` and `T_ref` = `CalculateKelvinFromCelsius(SystemContext->ReferenceTemperatureC)`, both averaged on the ground during CALIBRATION (`Calibrations.c`, the rocket at rest on the pad). The in-flight temperature reading is NOT used for the altitude any more (the old isothermal formula used it). This is what the Kalman filter already receives.
+- Constants: `R_AIR` 287.05 and `ALPHA_AIR` 0.0065 from `KalmanLib.h`, and g = 9.81 (the Kalman `g[2]`). The old constants in `Calculations.h` (`GAS_CONSTANT` 287, `GRAV_CONSTANT` 9.80665) must not be used for this, and must be removed if unused. Define the single g in `configuration.h` and keep it consistent with the Kalman value (a comment, and a `_Static_assert` if practical).
+- Sanity: `p / p_ref = 0.7` gives about 3007 m at `T_ref = 298 K`. `p == p_ref` gives 0 m.
+- Validity: the reference temperature (Kelvin, from `ReferenceTemperatureC`) must be finite and within `[-40, 85] C` before the reference counts as valid (added to the `ReferenceValid` argument of `BaroSampleValid`, no signature change). `p / p_ref` must be > 0, which the pressure checks guarantee.
+- HIL: `hil.py` must build the pressure from the altitude with the forward formula and the same constants, `p_ref` = the pad pressure and `T_ref` = the ground temperature it sends during calibration, otherwise the firmware altitude differs from the profile by tens of metres at 3 km and the ground truth comparison is wrong. In flight the HIL temperature field can follow the standard atmosphere lapse rate (not used by the altitude formula).
+
 New sample detection: the BMP581 mailbox (`BMP581Mailbox.c`) has no sequence number today. Decided: the mailbox slot carries a 32-bit `SampleId`, incremented on every publish and every HIL inject, written into the slot together with the data (so the id and the data are always consistent). `FlightData.BaroSampleId` exposes it. A new sample is `id != last id`.
 
 ## 5. Configuration (`configuration.h`)

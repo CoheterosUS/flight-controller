@@ -29,6 +29,7 @@ Branch `baro-apogee-fix`. Read this first, then `APOGEE_HIL.md` (scenarios) and 
 
 ## Other firmware changes
 
+- Pressure to altitude uses the same model as the Kalman barometer block, inverted: `alt = -(T_ref/0.0065) * ((p/p_ref)^(R*0.0065/g) - 1)`, with `R = 287.05`, `g = 9.81`, and `p_ref`, `T_ref` measured on the ground in CALIBRATION. The in-flight temperature is not used. `hil.py` must generate pressure from altitude with the forward formula and the same constants (see plan section 4.2).
 - Barometer mailbox gets a 32-bit sample counter, so every consumer works on new samples only.
 - Landing check fixed: barometric velocity is computed on new valid samples only, over a 1 s window (a raw 50 Hz derivative is far too noisy). The landed confirmation counts new valid samples (about 1 s).
 - APOGEE to MAIN_PARACHUTE (450 m AGL) now needs 5 consecutive new valid samples (it had a single-sample check).

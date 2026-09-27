@@ -21,6 +21,8 @@ The detector runs whatever the state (`BOOST`, `COAST`, `ACTIVE_CONTROL`). `ACTI
 - Baro rate: the barometer is sent at 50 Hz on its own command (`COMMAND_HIL_BARO`, pressure and temperature), like the GPS. `COMMAND_HIL_DATA` keeps IMU and magnetometer at 100 Hz and no longer carries pressure or temperature. Update `PROTOCOL.md`. Each barometer packet is one sample (the firmware assigns the mailbox sample id), so the confirmation time in HIL equals the real one (5 samples = 100 ms).
 - Default profile timing: the timer channel is 28 s from BOOST entry, so the nominal profile must reach apogee well before that (target 25 s from launch, detection about 1.9 s later, so B at about 26.9 s and 1.1 s before the timer). Add `--apogee-time` (or derive thrust and burn for it) and keep `--apogee-alt`. The old default profile (about 27.5 s to apogee) would let the timer win and hide B.
 
+- Pressure model: build the pressure from the altitude with the same atmosphere model as the firmware (plan section 4.2): `p = p_ref * (1 - 0.0065 * alt / T_ref) ^ (9.81 / (287.05 * 0.0065))`, `p_ref` = the pad pressure sent during calibration (101325 Pa), `T_ref` = the ground temperature sent during calibration in Kelvin (298.15 for 25 C). The temperature field in flight may follow the lapse rate (not used by the altitude). Do not use the old isothermal or another ISA formula: the ground truth altitude comparison would be off by tens of metres.
+
 ## 3. Scenarios
 
 Profile numbers refer to the rescaled default profile (about 3000 m apogee, 25 s from launch to apogee). All scenarios use noise unless stated.
