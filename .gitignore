@@ -11,3 +11,6 @@
 # host test build output
 tests/host/*.exe
 tests/host/.build/
+
+# full link check output
+.linkcheck/
