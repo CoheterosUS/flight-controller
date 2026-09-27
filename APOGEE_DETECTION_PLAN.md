@@ -144,3 +144,15 @@ Also in the backlog: GPS velocity has the same per-loop derivative (unused, disa
 - Actual BMP581 ODR in performance mode (the `fw` brief asks to verify and report).
 - Whether the flash log record has room for the channel byte (else SD log only).
 - Accepted compromise (decided): `T_ref` is the BMP581 temperature averaged on the pad, so it includes board self-heating and is not the true air temperature. Same value the Kalman filter uses. Revisit only if the altitude error against a reference (the CATS Vega log) is too large.
+
+## 9. Audit (sol, 2026-09-27) and residual risks
+
+Findings fixed: flight build guard (`FLIGHT_BUILD`), barometer sample identity and main parachute backstop (branch `apogee-fix2`), manual drogue gated to BOOST, COAST and ACTIVE_CONTROL (`DROGUE_COMMAND_ANY_STATE 0`), pad calibration on unique validated samples, `SyncEnd` kept as the last byte of every record.
+
+Accepted or open, decided by the user:
+- A false BOOST detection on the armed rocket starts the 28 s timer and would fire the drogue on the pad (BOOST only ends on `RawAccelY > -5`, and the rocket at rest reads about -9.8). Accepted: nobody is at the pad when the rocket is armed. Cheap mitigation if wanted later: lengthen `PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES` from about 48 ms to about 250 ms.
+- `APOGEE_TIMER_MS` (28 s) must be checked against the worst case apogee time of the final simulation. Not verified yet.
+- `COMMAND_LANDED` and `COMMAND_RESET` are accepted in every state (a stray frame in flight would stop the sensors or reset to IDLE). Not changed.
+- The 5 s and 60 s main parachute barometer-loss backstop values are placeholders to tune with the descent simulation.
+- Records changed size: SD 188 bytes, flash 57 bytes. Ground software reading the SD log and any flash dump tool must be updated, and the flash must be erased before flight.
+- Pad calibration now counts unique barometer samples: about 6 s of averaging at the sensor rate. HIL must send the barometer during calibration for at least that long.
