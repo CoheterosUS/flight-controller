@@ -130,8 +130,13 @@
 #define STACK_SIZE_FLASH_LOGGING        768
 
 // Telemetry Configuration
+#if HIL_MODE
+#define TELEMETRY_DIVIDER                   (LOOP_RATE_HZ / 10)  // 10Hz in HIL, so hil.py can time events
+#define TELEMETRY_DIVIDER_IDLE              (LOOP_RATE_HZ / 10)
+#else
 #define TELEMETRY_DIVIDER                   LOOP_RATE_HZ  // 1Hz in active states
 #define TELEMETRY_DIVIDER_IDLE              LOOP_RATE_HZ  // 1Hz in IDLE
+#endif
 
 // SD Configuration
 #define SD_LOGGING_RECORDS_PER_BUFFER       500

@@ -46,7 +46,9 @@ void TelemetryTask(void *pvParameters) {
                 dbg_last_command_counter++;
 #if HIL_MODE
                 if (Command == COMMAND_HIL_DATA) {
-                    HandleHILPacket(Parser.Payload);
+                    HandleHILPacket(Parser.Payload, PayloadLength);
+                } else if (Command == COMMAND_HIL_BARO) {
+                    HandleHILBaroPacket(Parser.Payload, PayloadLength);
                 }
 #endif
                 if (Command == COMMAND_GPS_DATA && PayloadLength == ZOEM8Q_PAYLOAD_SIZE) {

@@ -14,3 +14,5 @@ tests/host/.build/
 
 # full link check output
 .linkcheck/
+HIL/logs/
+__pycache__/

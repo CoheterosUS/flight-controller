@@ -40,7 +40,7 @@ Branch `baro-apogee-fix`. Read this first, then `APOGEE_HIL.md` (scenarios) and 
 ## What changes for HIL
 
 - New command `COMMAND_HIL_BARO = 0x11`: two little endian floats (pressure Pa, temperature C), sent at **50 Hz**, one packet is one barometer sample.
-- `COMMAND_HIL_DATA` (0x10) no longer carries pressure or temperature: 9 floats (accel, gyro, mag) at 100 Hz. `PROTOCOL.md` is updated with this.
+- `COMMAND_HIL_DATA` (0x10) no longer carries pressure or temperature: 9 floats (accel, gyro, mag) at `IMU_ODR_HZ` (200 Hz). `PROTOCOL.md` is updated with this.
 - Default profile: apogee at **25 s** after launch, about 3000 m. B should fire at about 26.9 s, only 1.1 s before the 28 s timer. Add `--apogee-time`, `--apogee-alt`, `--scenario`, `--seed`, `--dry-run`.
 - 15 scenarios (H1 to H15) with pass criteria in `APOGEE_HIL.md`. The most important ones: no early fire (H1, H2, H3, H4, H9), invalid pressure including 0 Pa and NaN (H14, this is the regression test for the fatal failure), timer backstop with a frozen or missing barometer or a stuck IMU (H5, H6), apogee without ACTIVE_CONTROL (H7), main chute must not fire early on a bad sample (H15).
 

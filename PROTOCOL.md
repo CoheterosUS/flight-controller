@@ -45,6 +45,7 @@ Any agent that reads this file should not assume that any information is correct
 | `0x04` | COMMAND_DROGUE       |                           |
 | `0x05` | COMMAND_LANDED       |                           |
 | `0x10` | COMMAND_HIL_DATA     | Excluded From LastCommand |
+| `0x11` | COMMAND_HIL_BARO     | Excluded From LastCommand |
 | `0x20` | COMMAND_GPS_DATA     | Excluded From LastCommand |
 
 ## SystemFaultFlags (Bitmask)
@@ -196,9 +197,11 @@ Command `0x10` (COMMAND_HIL_DATA). Received over UART from external device (Lapt
 | 0      | 1    | uint8  | `0xFE` | Sync LSB             |
 | 1      | 1    | uint8  | `0xCA` | Sync MSB             |
 | 2      | 1    | uint8  | `0x10` | COMMAND_HIL_DATA     |
-| 3      | 1    | uint8  | `0x2C` | Payload Length (44)  |
-| 4-47   |      |        |        | HIL Payload          |
-| 48     | 1    | uint8  | `0xBE` | Footer               |
+| 3      | 1    | uint8  | `0x24` | Payload Length (36)  |
+| 4-39   |      |        |        | HIL Payload          |
+| 40     | 1    | uint8  | `0xBE` | Footer               |
+
+Sent at `IMU_ODR_HZ` (200 Hz). A frame with another payload length is ignored.
 
 ## HIL Payload (Structure, Packed)
 
@@ -213,8 +216,20 @@ Command `0x10` (COMMAND_HIL_DATA). Received over UART from external device (Lapt
 | 24     | 4    | float32 | MagX         | Milligauss |
 | 28     | 4    | float32 | MagY         | Milligauss |
 | 32     | 4    | float32 | MagZ         | Milligauss |
-| 36     | 4    | float32 | PressurePa   | Pascals    |
-| 40     | 4    | float32 | TemperatureC | Celsius    |
+
+## HIL Barometer Frame (Structure, Packed)
+
+Command `0x11` (COMMAND_HIL_BARO). One frame is one barometer sample (the firmware assigns the sample id), sent at the real sensor rate (about 50 Hz, `BARO_ODR_HZ` is 46), so the apogee confirmation time in HIL matches the hardware. A frame with another payload length is ignored.
+
+| Offset | Size | Type    | Value  | Description          |
+|--------|------|---------|--------|----------------------|
+| 0      | 1    | uint8   | `0xFE` | Sync LSB             |
+| 1      | 1    | uint8   | `0xCA` | Sync MSB             |
+| 2      | 1    | uint8   | `0x11` | COMMAND_HIL_BARO     |
+| 3      | 1    | uint8   | `0x08` | Payload Length (8)   |
+| 4      | 4    | float32 | PressurePa   | Pascals      |
+| 8      | 4    | float32 | TemperatureC | Celsius      |
+| 12     | 1    | uint8   | `0xBE` | Footer               |
 
 ## Wire Telemetry Packet (Structure, Packed)
 
