@@ -6,6 +6,7 @@
 
 void ResetCalibrationContext(SystemContext_t *ctx);
 void CalibrateGyroscope(FlightData_t FlightData, SystemContext_t *SystemContext);
+void CalibrateAccelBias(FlightData_t FlightData, SystemContext_t *SystemContext);
 void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext);
 
 #endif //CALIBRATIONS_H

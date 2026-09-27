@@ -18,6 +18,7 @@
 #endif
 #define EXTERNAL_COMMANDS           1
 #define AUTO_START_CALIBRATION		1
+#define CONFIG_VERSION                       1
 
 #define BUZZER_ENABLED				1
 #define PYRO_PULSE_MS				3000
@@ -44,17 +45,6 @@
 
 #define GYRO_CALIBRATION_DISCARD_SAMPLES        1000
 #define GYRO_CALIBRATION_SAMPLES                1000
-
-#define IMU_ROTATION_ENABLED              0
-#define IMU_ROT_XX  +1.00000000f
-#define IMU_ROT_XY  +0.00000000f
-#define IMU_ROT_XZ  +0.00000000f
-#define IMU_ROT_YX  +0.00000000f
-#define IMU_ROT_YY  +1.00000000f
-#define IMU_ROT_YZ  +0.00000000f
-#define IMU_ROT_ZX  +0.00000000f
-#define IMU_ROT_ZY  +0.00000000f
-#define IMU_ROT_ZZ  +1.00000000f
 
 // Deep calibration gesture (WP-D)
 #define DEEP_CAL_HOLD_MS                    10000
@@ -128,11 +118,11 @@
 // Transition Configuration
 
 // Prelaunch to Boost Acceleration Threshold
-#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	-20.0f // IMU Y-axis is inverted, so negative is upwards
+#define PRELAUNCH_BOOST_ACCEL_X_THRESHOLD      	+20.0f // body X, nose up positive
 #define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      (LOOP_RATE_HZ / 20)
 
 // Boost to Coast Acceleration Threshold
-#define BOOST_COAST_ACCEL_Y_THRESHOLD          -5.0f // IMU Y-axis is inverted, so negative is upwards
+#define BOOST_COAST_ACCEL_X_THRESHOLD          +5.0f // body X, nose up positive
 #define BOOST_COAST_CONSECUTIVE_SAMPLES        (LOOP_RATE_HZ / 20)
 
 // Coast to Active Control Altitude Threshold
