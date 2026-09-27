@@ -157,7 +157,7 @@
 #define COAST_ACTIVE_CONTROL_CONSECUTIVE_SAMPLES    (((BARO_ODR_HZ / 20) < 2) ? 2 : (BARO_ODR_HZ / 20))
 
 // Apogee detection (see APOGEE_DETECTION_PLAN.md). Channel B: barometer drop from peak. Channel D: timer from BOOST entry.
-#define BARO_ODR_HZ                         50      // actual BMP581 output data rate in flight
+#define BARO_ODR_HZ                         46      // BMP581 typical rate in continuous mode at pressure x32, temperature x2
 #define BARO_VELOCITY_WINDOW_MS             1000
 #define BARO_GRAVITY_MS2                    9.81f   // Must match the Kalman barometer model g[2]
 #define APOGEE_DROP_M                       15.0f
@@ -178,6 +178,9 @@
 #define APOGEE_MAIN_PARACHUTE_GPS_ALT_THRESHOLD		450.0f // WARN: ASL
 #define APOGEE_MAIN_PARACHUTE_DELAY_ENABLED			0
 #define APOGEE_MAIN_PARACHUTE_DELAY_MS				30000
+// Placeholders to tune with the descent simulation. This channel must never fire while the barometer is healthy.
+#define APOGEE_MAIN_BARO_LOSS_MS                    5000
+#define APOGEE_MAIN_BARO_LOSS_DELAY_MS              60000
 
 // Main Parachute to Landed
 #define MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD		100.0f
