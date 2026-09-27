@@ -17,11 +17,11 @@ The detector runs whatever the state (`BOOST`, `COAST`, `ACTIVE_CONTROL`). `ACTI
 - Pass or fail print per scenario, plus a non-zero exit code on failure.
 - Add the missing state names to `STATE_NAMES`: 11 `ASCENT_ABORT` and 12 `DEEP_CALIBRATION` (check `shared.h` for the current enum).
 - Baro rate: the barometer is sent at 50 Hz on its own command (`COMMAND_HIL_BARO`, pressure and temperature), like the GPS. `COMMAND_HIL_DATA` keeps IMU and magnetometer at 100 Hz and no longer carries pressure or temperature. Update `PROTOCOL.md`. Each barometer packet is one sample (the firmware assigns the mailbox sample id), so the confirmation time in HIL equals the real one (5 samples = 100 ms).
-- Default profile timing: the timer channel is 28 s from BOOST entry, so the nominal profile must reach apogee well before that (target about 20 s from launch, detection about 1.3 s later). Add `--apogee-time` (or derive thrust and burn for it) and keep `--apogee-alt`. The old default profile (about 27.5 s to apogee) would let the timer win and hide B.
+- Default profile timing: the timer channel is 28 s from BOOST entry, so the nominal profile must reach apogee well before that (target 25 s from launch, detection about 1.3 s later). Add `--apogee-time` (or derive thrust and burn for it) and keep `--apogee-alt`. The old default profile (about 27.5 s to apogee) would let the timer win and hide B.
 
 ## 3. Scenarios
 
-Profile numbers refer to the rescaled default profile (about 3000 m apogee, about 20 s from launch to apogee). All scenarios use noise unless stated.
+Profile numbers refer to the rescaled default profile (about 3000 m apogee, 25 s from launch to apogee). All scenarios use noise unless stated.
 
 | ID | Scenario | Injection | Pass criteria |
 |---|---|---|---|
@@ -36,7 +36,7 @@ Profile numbers refer to the rescaled default profile (about 3000 m apogee, abou
 | H9 | Transonic artefact in `BOOST` | Pressure jump equivalent to 100 m of altitude drop lasting 1 s during the burn | No trigger during `BOOST`. |
 | H10 | Transonic artefact in `COAST` | Same jump lasting less than the confirm time, then lasting more | Short: no trigger. Long: trigger allowed, record it (known limit of B, D and the margin choice are the mitigation). |
 | H11 | Timer as backstop only | Nominal rescaled profile, timer 28 s | D never fires before B in H1 to H4. If B fires first the run reports channel B. |
-| H12 | Slow apogee | Long flat top: near zero vertical velocity for 5 s around apogee, then descent | No trigger during the plateau if it does not drop 7 m. Trigger after the descent. |
+| H12 | Slow apogee | Flat top: near zero vertical velocity for 1 s around apogee (a longer plateau would let the 28 s timer win, which is the intended backstop, not a failure), then descent | No trigger during the plateau if it does not drop 7 m. Trigger after the descent. |
 | H13 | Hard descent | Overshoot: fast fall right after apogee (for example 60 m/s) | Trigger within 1 s of the drop exceeding the margin. |
 | H14 | Invalid pressure | Packets with NaN, +inf, 0 Pa, -1 Pa, 5 Pa, 200 kPa and a temperature of NaN or 500 C, single and in runs of 1 to 50 packets, during coast and again during the APOGEE state before 450 m | No drogue and no main chute caused by them. Detector still fires normally after the invalid run ends. In the APOGEE state the main chute must not fire at high altitude. |
 | H15 | After apogee | Continue the profile to landing | Sequence `APOGEE`, `MAIN_PARACHUTE` at 450 m AGL, `LANDED` (landed check uses the windowed velocity, about 1 s confirm). No second drogue event. Also a run with a single 0 Pa or +100 m sample while descending at 450 to 600 m: the main chute must not fire early. |

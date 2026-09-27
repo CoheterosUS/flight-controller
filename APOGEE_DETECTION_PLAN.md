@@ -93,7 +93,7 @@ New sample detection: the BMP581 mailbox (`BMP581Mailbox.c`) has no sequence num
 |---|---|---|
 | `APOGEE_DROP_M` | 7.0 | drop below peak |
 | `APOGEE_CONFIRM_SAMPLES` | 5 | new barometer samples, about 100 ms at 50 Hz |
-| `APOGEE_TIMER_MS` | 28000 | from BOOST entry. Decided by the user. WARNING: the old HIL profile apogee is at about 27.5 s, so D would beat B. The HIL default profile must be rescaled so the nominal apogee is well before 28 s (about 20 s), see `HIL/APOGEE_HIL.md`. |
+| `APOGEE_TIMER_MS` | 28000 | from BOOST entry. Decided by the user. WARNING: the old HIL profile apogee is at about 27.5 s, so D would beat B. The HIL default profile must be rescaled so the nominal apogee is well before 28 s (25 s), see `HIL/APOGEE_HIL.md`. |
 | `BARO_ODR_HZ` | 50 | real barometer rate. Confirm the configured BMP581 ODR in performance mode matches |
 | `APOGEE_BARO_MAX_SPEED_MPS`, `APOGEE_BARO_SLEW_MARGIN_M` | 400, 10 | slew gate |
 | `BARO_VALID_MIN_PA`, `BARO_VALID_MAX_PA`, `BARO_VALID_MIN_TEMP_C`, `BARO_VALID_MAX_TEMP_C` | 30000, 125000, -40, 85 | sample plausibility |
