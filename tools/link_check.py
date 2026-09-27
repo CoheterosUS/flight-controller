@@ -1,5 +1,5 @@
 """Full compile and link check of the CubeIDE project sources with arm-none-eabi-gcc.
-Usage: python link_check.py <repo_root>
+Usage: python link_check.py <repo_root> [-DNAME=VALUE ...]  (extra defines, e.g. the flight configuration)
 Reports compile errors and unresolved symbols at link time (build_check.ps1 is syntax only)."""
 import concurrent.futures as cf
 import glob
@@ -21,6 +21,7 @@ incs = ["Core/Inc", "Core/Src/Kalman", "Core/Src/Kalman/Libs", "FATFS/Target", "
         "Drivers/CMSIS/Device/ST/STM32H7xx/Include", "Drivers/CMSIS/Include"]
 flags = ["-mcpu=cortex-m7", "-mfpu=fpv5-d16", "-mfloat-abi=hard", "-mthumb", "-std=gnu11", "-Os",
          "-ffunction-sections", "-fdata-sections", "-DUSE_PWR_LDO_SUPPLY", "-DUSE_HAL_DRIVER", "-DSTM32H723xx"]
+flags += sys.argv[2:]
 flags += ["-I" + os.path.join(root, i) for i in incs]
 
 srcs = []
