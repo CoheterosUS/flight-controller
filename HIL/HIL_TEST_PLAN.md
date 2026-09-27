@@ -4,21 +4,44 @@ For the HIL agent. This is the single entry point. It covers what must be fixed 
 
 Status of the firmware: everything below has passed host tests, the ARM compile check and the full link. Nothing has run on the target yet. Expect real findings, and report each one with the run log.
 
-## 1. Blockers in the harness (do these first)
+## 1. Harness status
 
-`HIL/hil.py` on this branch is still the old single-profile script. It does not match the firmware:
+`HIL/hil.py` was rewritten for this branch (54 byte telemetry with `CalStatus`, states 11 and 12, raw hardware-axis inputs generated from an `M_true` preset, pose-driven tumble, scenario runner with pass or fail and exit codes, CSV logs in `HIL/logs/`). It was self tested only against its built-in mock board (`--port sim`), never against the target. Firmware change for HIL: telemetry runs at 10 Hz when `HIL_MODE 1` (1 Hz otherwise), so events can be timed.
 
-| # | Gap | What to do |
+| # | Item | Status |
 |---|---|---|
-| B1 | Telemetry packet is now 54 bytes (`hil.py` parses 52). Accel and gyro fields are calibrated body-frame values, and there are new tail fields (`CalStatus` at offset 51, uint16). See `PROTOCOL.md`, "Wire Telemetry Packet". | Update `TELEMETRY_PACKET_SIZE` and the parser. Expose `CalStatus` bits and the pose field (bits 8 to 10). |
-| B2 | `STATE_NAMES` stops at 10. | Add 11 `ASCENT_ABORT`, 12 `DEEP_CALIBRATION` (check `Core/Inc/Utils/shared.h`). |
-| B3 | Raw inputs. `COMMAND_HIL_DATA` carries raw hardware-axis accel, gyro and mag. The rotation to the body frame comes from `M`, not from any `IMU_ROT_*`. The old script assumes a rotated frame. | Generate all IMU data as raw = inverse of a chosen `M_true` applied to the body-frame truth (see S1). |
-| B4 | No scenario runner, no pass or fail, no exit code. | Implement `--scenario`, `--seed`, `--apogee-alt`, `--apogee-time`, pass or fail printing and a non-zero exit code on failure (see `APOGEE_HIL.md` section 2). |
-| B5 | `COMMAND_HIL_BARO = 0x11` (50 Hz, two little-endian floats, pressure Pa and temperature C) is specified in `APOGEE_SUMMARY.md`, but the firmware on this branch only knows `0x10` and `0x20` (`Core/Inc/Protocol/Protocol.h`). The implementation lives uncommitted in the worktree `C:\dev\fc-wt-apogee-hil` (files `HIL.h`, `HIL.c`, `Protocol.h`, `TelemetryTask.c`, `PROTOCOL.md`). | Land that change on this branch before the apogee scenarios (H1 to H15). It does not block S1 to S3 and S5 to S7, which can use the current `COMMAND_HIL_DATA` pressure field. Ask the owner of the apogee session to commit it, do not copy files out of their worktree. |
-| B6 | Sample rate. `IMU_ODR_HZ` is 200 (`configuration.h`), the old script sends at 100 Hz, `APOGEE_HIL.md` says 100 Hz for IMU. `DEEP_CAL_POSE_MIN_SAMPLES` is half of `POSE_SAMPLE_MS * IMU_ODR_HZ`, and the sequencer skips identical consecutive samples. | Send IMU data at `IMU_ODR_HZ`, with a fresh noisy sample every time. Confirm the rate against the firmware first. If 100 Hz is all the UART allows, a pose can never reach the minimum sample count: raise it with the firmware owner, do not work around it. |
-| B7 | The buzzer is not audible. | Drive the tumble from telemetry: state 12 and the pose field in `CalStatus` bits 8 to 10. |
+| B1 | 54 byte telemetry, `CalStatus`, pose field | Done in `hil.py`. |
+| B2 | State names 11 and 12 | Done. |
+| B3 | Raw inputs through `M_true` | Done. Presets `default`, `alt` (S7), `roll90` (S3), `identity`. |
+| B4 | Scenario runner, pass or fail, exit codes | Done. |
+| B5 | `COMMAND_HIL_BARO` (0x11, 50 Hz) | OPEN. Implemented only as uncommitted work in the apogee session worktree (`C:\devc-wt-apogee-hil`); the owner must commit it. Until then every `COMMAND_HIL_DATA` packet is one barometer sample at 200 Hz. Sample-based checks (spikes, dips, confirm count) keep their meaning, but time constants shrink by 4 (5 samples = 25 ms instead of 100 ms). Treat H1 to H15 results as provisional until B5 lands. |
+| B6 | Rate | `hil.py` sends at 200 Hz (`--rate`, must equal `IMU_ODR_HZ`). Measured host pacing: 200.0 Hz, 9800 B/s, 85 % of the 115200 baud link. Watch for lost packets: the firmware re-arms the receive DMA after each idle event, so bytes that arrive while the telemetry task is preempted are dropped. If a tumble pose keeps restarting with no motion, suspect this (a pose needs 3000 distinct samples in 30 s). |
+| B7 | Buzzer not audible | The tumble follows the pose field (CalStatus bits 8 to 10). |
 
-Do not use serial state commands to move the state machine: the flight configuration and the default `EXTERNAL_COMMANDS 0` ignore them. Everything is driven by injected sensor data. The only commands sent are the data frames.
+Do not use serial state commands to move the state machine: the flight configuration and the default `EXTERNAL_COMMANDS 0` ignore them. Everything is driven by injected sensor data.
+
+### 1.1 Commands
+
+Common: `python HIL/hil.py --port COM5 --scenario <name> [options]`. Add `--seed N`, `--repeat N`. Exit code 0 pass, 1 fail, 2 setup error (no telemetry, or not a HIL build).
+
+| Test | Command |
+|---|---|
+| Harness self test | `--port sim --scenario calibrate` (and any other scenario) |
+| S1 + S2 | `--scenario calibrate` (tumble, CalAccel check per pose, pad calibration, gyro axis check) |
+| S3 | `--scenario calibrate --mounting roll90` (90 deg about the nose, raw gyro offset 1, 2, 3 dps) |
+| S2 only | `--scenario pad` |
+| S4 | `--scenario flight` (runs the pad first if not in PRELAUNCH) |
+| S4b | `--scenario pad_wait --duration 600` |
+| S6b | `--scenario tumble --mirrored` (poses 3 and 4 swapped) |
+| S6c | `--scenario tumble --motion-pose 3` |
+| S6d | `--scenario tumble --wrong-pose 3` |
+| S6f | `--scenario tumble --restart-forever 2` |
+| S6h + S7 | `--scenario regesture --mounting alt` |
+| H1 to H15 | `--scenario flight --hid H1` (presets: H1, H2 (20 seeds), H3, H3up, H4, H4b, H5, H6, H7, H8, H9, H10, H10b, H12, H13, H14, H15). Change H14 with `--invalid-kind nan|inf|zero|neg|low|high|tnan|t500 --invalid-count N --invalid-at T`. |
+| R1 | `--scenario commands`, and in flight `--scenario flight --drogue-cmd-at 1.0` |
+| R8 | `--scenario flight --nan-imu-at 12 --nan-imu-count 20` and H14 variants |
+
+Negative tumble cases (S6b to S6f) must start from erased calibration sectors, otherwise an older valid `M` hides the failure (bit 0 stays set). S6a, S6e, S6g, S5 and the flash checks R4 to R7 and R9 need manual steps (sector erase, flash dump, fault provocation); they are not automated yet.
 
 ## 2. Setup
 
