@@ -14,8 +14,8 @@ Status of the firmware: everything below has passed host tests, the ARM compile 
 | B2 | State names 11 and 12 | Done. |
 | B3 | Raw inputs through `M_true` | Done. Presets `default`, `alt` (S7), `roll90` (S3), `identity`. |
 | B4 | Scenario runner, pass or fail, exit codes | Done. |
-| B5 | `COMMAND_HIL_BARO` (0x11, 50 Hz) | OPEN. Implemented only as uncommitted work in the apogee session worktree (`C:\dev\fc-wt-apogee-hil`); the owner must commit it. Until then every `COMMAND_HIL_DATA` packet is one barometer sample at 200 Hz. Sample-based checks (spikes, dips, confirm count) keep their meaning, but time constants shrink by 4 (5 samples = 25 ms instead of 100 ms). Treat H1 to H15 results as provisional until B5 lands. |
-| B6 | Rate | `hil.py` sends at 200 Hz (`--rate`, must equal `IMU_ODR_HZ`). Measured host pacing: 200.0 Hz, 9800 B/s, 85 % of the 115200 baud link. Watch for lost packets: the firmware re-arms the receive DMA after each idle event, so bytes that arrive while the telemetry task is preempted are dropped. If a tumble pose keeps restarting with no motion, suspect this (a pose needs 3000 distinct samples in 30 s). |
+| B5 | `COMMAND_HIL_BARO` (0x11, 50 Hz) | Done. `COMMAND_HIL_DATA` now carries IMU and magnetometer only (36 byte payload); pressure and temperature go in `COMMAND_HIL_BARO` (8 byte payload) at `--baro-rate` (default 50 Hz). One frame is one barometer sample, so the apogee confirmation time matches the hardware (5 samples = 100 ms). Barometer injections (`--dip-samples`, `--invalid-count`) count barometer samples. H5 stops sending barometer frames (H5b repeats the last value). |
+| B6 | Rate | `hil.py` sends at 200 Hz (`--rate`, must equal `IMU_ODR_HZ`). Link load: 200 x 41 B IMU frames plus 50 x 13 B barometer frames, 8850 B/s, 77 % of the 115200 baud link (host pacing measured at 200.0 Hz). Watch for lost packets: the firmware re-arms the receive DMA after each idle event, so bytes that arrive while the telemetry task is preempted are dropped. If a tumble pose keeps restarting with no motion, suspect this (a pose needs 3000 distinct samples in 30 s). |
 | B7 | Buzzer not audible | The tumble follows the pose field (CalStatus bits 8 to 10). |
 
 Do not use serial state commands to move the state machine: the flight configuration and the default `EXTERNAL_COMMANDS 0` ignore them. Everything is driven by injected sensor data.
@@ -37,7 +37,7 @@ Common: `python HIL/hil.py --port COM5 --scenario <name> [options]`. Add `--seed
 | S6d | `--scenario tumble --wrong-pose 3` |
 | S6f | `--scenario tumble --restart-forever 2` |
 | S6h + S7 | `--scenario regesture --mounting alt` |
-| H1 to H15 | `--scenario flight --hid H1` (presets: H1, H2 (20 seeds), H3, H3up, H4, H4b, H5, H6, H7, H8, H9, H10, H10b, H12, H13, H14, H15). Change H14 with `--invalid-kind nan|inf|zero|neg|low|high|tnan|t500 --invalid-count N --invalid-at T`. |
+| H1 to H15 | `--scenario flight --hid H1` (presets: H1, H2 (20 seeds), H3, H3up, H4, H4b, H5, H5b, H6, H7, H8, H9, H10, H10b, H12, H13, H14, H15). Change H14 with `--invalid-kind nan|inf|zero|neg|low|high|tnan|t500 --invalid-count N --invalid-at T`. |
 | R1 | `--scenario commands`, and in flight `--scenario flight --drogue-cmd-at 1.0` |
 | R8 | `--scenario flight --nan-imu-at 12 --nan-imu-count 20` and H14 variants |
 
@@ -80,7 +80,7 @@ After a good S1 and S2 (calibrated, PRELAUNCH).
 
 ## 5. Apogee scenarios (H1 to H15)
 
-Run exactly as written in `HIL/APOGEE_HIL.md`, after blocker B5 is resolved. Order: H1 and H11, then H3, H4, H14, then H5, H6, then H7, H8, then H2, H12, H13, H15, then H9 and H10. Use the atmosphere model from `APOGEE_HIL.md` section 2 for the pressure.
+Run exactly as written in `HIL/APOGEE_HIL.md`. Order: H1 and H11, then H3, H4, H14, then H5, H6, then H7, H8, then H2, H12, H13, H15, then H9 and H10. Use the atmosphere model from `APOGEE_HIL.md` section 2 for the pressure.
 
 ## 6. Audit regression checks (new, from the pre-flight audit)
 
@@ -101,4 +101,4 @@ Run exactly as written in `HIL/APOGEE_HIL.md`, after blocker B5 is resolved. Ord
 
 Per scenario: ID, seed, firmware hash, build defines, pass or fail, measured values against the criteria, the telemetry log file name, and for a failure the first telemetry sample where behaviour diverged. Put the results in `HIL/RESULTS_<date>.md` on a branch named `hil-results`, not on `kalman-filter`. Do not change firmware behaviour to make a scenario pass: report it. Any change to thresholds goes through the firmware owners.
 
-Run order for the first session: the harness self test (`--port sim`), then S1, S2, S3 (calibration on the target), then S4, S5, then R1 to R3, then S6, S7, then the R checks, then the apogee scenarios once B5 is in.
+Run order for the first session: the harness self test (`--port sim`), then S1, S2, S3 (calibration on the target), then S4, S5, then R1 to R3, then S6, S7, then the R checks, then the apogee scenarios.

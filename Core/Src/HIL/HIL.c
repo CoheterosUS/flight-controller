@@ -5,10 +5,11 @@
 #include <string.h>
 #include "Sensors/Sensors.h"
 
-void HandleHILPacket(const uint8_t *Payload) {
-    IIM42653_SensorData_t IMUData;
-    BMP581_SensorData_t BaroData;
-    IIS2MDCTR_SensorData_t MagData;
+void HandleHILPacket(const uint8_t *Payload, uint8_t PayloadLength) {
+    IIM42653_SensorData_t IMUData = {0};
+    IIS2MDCTR_SensorData_t MagData = {0};
+
+    if (PayloadLength != HIL_DATA_PAYLOAD_SIZE) return;
 
     memcpy(&IMUData.AccelX, &Payload[HIL_ACCEL_X], 4);
     memcpy(&IMUData.AccelY, &Payload[HIL_ACCEL_Y], 4);
@@ -19,12 +20,21 @@ void HandleHILPacket(const uint8_t *Payload) {
     memcpy(&MagData.MagX, &Payload[HIL_MAG_X], 4);
     memcpy(&MagData.MagY, &Payload[HIL_MAG_Y], 4);
     memcpy(&MagData.MagZ, &Payload[HIL_MAG_Z], 4);
-    memcpy(&BaroData.PressurePa, &Payload[HIL_PRESSURE], 4);
-    memcpy(&BaroData.TemperatureC, &Payload[HIL_TEMPERATURE], 4);
 
     IIM42653_Mailbox_Inject(&IMUData);
-    BMP581_Mailbox_Inject(&BaroData);
     IIS2MDCTR_Mailbox_Inject(&MagData);
+}
+
+// One packet is one barometer sample: the mailbox assigns a new sample id per inject.
+void HandleHILBaroPacket(const uint8_t *Payload, uint8_t PayloadLength) {
+    BMP581_SensorData_t BaroData = {0};
+
+    if (PayloadLength != HIL_BARO_PAYLOAD_SIZE) return;
+
+    memcpy(&BaroData.PressurePa, &Payload[HIL_BARO_PRESSURE], 4);
+    memcpy(&BaroData.TemperatureC, &Payload[HIL_BARO_TEMPERATURE], 4);
+
+    BMP581_Mailbox_Inject(&BaroData);
 }
 
 #endif

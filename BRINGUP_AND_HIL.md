@@ -49,7 +49,7 @@ To force a fresh bring-up, erase both calibration sectors (an 8 KB maintenance a
 
 ## 5. HIL
 
-Setup: `HIL_MODE 1`. `hil.py` sends raw accel, gyro, mag, pressure and temperature at the IMU output rate (`IMU_ODR_HZ`). HIL runs the real path: the same state machine, the same solve, the same 8 KB flash calibration sector pair.
+Setup: `HIL_MODE 1`. `hil.py` sends raw accel, gyro and mag at the IMU output rate (`IMU_ODR_HZ`, `COMMAND_HIL_DATA`) and pressure and temperature at the barometer rate (about 50 Hz, `COMMAND_HIL_BARO`). See `HIL/HIL_TEST_PLAN.md`. HIL runs the real path: the same state machine, the same solve, the same 8 KB flash calibration sector pair.
 
 The buzzer is not audible in HIL, so `hil.py` drives the tumble by watching the telemetry (state and the pose field inside `CalStatus`) instead of listening.
 

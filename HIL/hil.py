@@ -11,9 +11,9 @@ Frames:
   where M_true = Q_true U (QR, Q_true a rotation). The firmware must learn M_true in the tumble.
 - The default mounting matches the board: raw Y = -body X (nose up reads raw Y = -9.81).
 
-Transport: COMMAND_HIL_DATA (0x10, 44 byte payload: raw accel, raw gyro, mag, pressure, temperature) at
---rate Hz (default 200 = IMU_ODR_HZ). Every packet is a new barometer sample until COMMAND_HIL_BARO exists
-on this branch (see HIL_TEST_PLAN.md, blocker B5).
+Transport: COMMAND_HIL_DATA (0x10, 36 byte payload: raw accel, raw gyro, mag) at --rate Hz (default 200 =
+IMU_ODR_HZ), and COMMAND_HIL_BARO (0x11, 8 byte payload: pressure, temperature) at --baro-rate Hz (default 50).
+One barometer frame is one barometer sample, as on the hardware.
 
 Use --port sim to run any scenario against a crude built-in mock of the board (harness self test only).
 Exit code: 0 all pass, 1 any failure, 2 setup error.
@@ -38,8 +38,10 @@ COMMAND_CALIBRATION = 0x03
 COMMAND_DROGUE = 0x04
 COMMAND_LANDED = 0x05
 COMMAND_HIL_DATA = 0x10
+COMMAND_HIL_BARO = 0x11
 
-HIL_DATA_PAYLOAD_SIZE = 44
+HIL_DATA_PAYLOAD_SIZE = 36
+HIL_BARO_PAYLOAD_SIZE = 8
 
 TELEMETRY_FORMAT = "<HI6hhbiiiBiiIhBBBHB"
 TELEMETRY_PACKET_SIZE = struct.calcsize(TELEMETRY_FORMAT)
@@ -204,9 +206,12 @@ def build_packet(command, payload=b""):
     return bytes([PACKET_HEADER_LSB, PACKET_HEADER_MSB, command, len(payload)]) + payload + bytes([PACKET_FOOTER])
 
 
-def build_hil_packet(accel, gyro, mag, pressure, temperature):
-    payload = struct.pack("<11f", *accel, *gyro, *mag, pressure, temperature)
-    return build_packet(COMMAND_HIL_DATA, payload)
+def build_hil_packet(accel, gyro, mag):
+    return build_packet(COMMAND_HIL_DATA, struct.pack("<9f", *accel, *gyro, *mag))
+
+
+def build_baro_packet(pressure, temperature):
+    return build_packet(COMMAND_HIL_BARO, struct.pack("<2f", pressure, temperature))
 
 
 class TelemetryParser:
@@ -247,8 +252,9 @@ class TelemetryParser:
 class MockBoard:
     """Not the firmware. Just enough state logic to exercise every harness path with --port sim."""
 
-    def __init__(self, rate, mounting, start_valid=True):
+    def __init__(self, rate, mounting, start_valid=True, baro_rate=50):
         self.rate = rate
+        self.baro_rate = baro_rate
         self.m = make_mounting("default") if mounting is None else mounting
         self.rx = bytearray()
         self.tx = bytearray()
@@ -293,7 +299,9 @@ class MockBoard:
             cmd, payload = self.rx[2], bytes(self.rx[4:4 + length])
             del self.rx[:5 + length]
             if cmd == COMMAND_HIL_DATA and length == HIL_DATA_PAYLOAD_SIZE:
-                self.step(struct.unpack("<11f", payload))
+                self.step(struct.unpack("<9f", payload))
+            elif cmd == COMMAND_HIL_BARO and length == HIL_BARO_PAYLOAD_SIZE:
+                self.baro(struct.unpack("<2f", payload))
 
     def set_state(self, s):
         self.state = s
@@ -307,9 +315,6 @@ class MockBoard:
         self.gyro = mat_vec(self.m.Q, [v[3 + i] - self.m.gyro_bias_raw[i] for i in range(3)])
         bias = self.m.b if self.cal & CAL_ACCEL_BIAS else [0.0, 0.0, 0.0]
         self.body = [x - bias[i] for i, x in enumerate(mat_vec(self.m.M, self.raw))]
-        a = altitude_from_pressure(v[9])
-        if math.isfinite(a) and abs(a) < 20000:
-            self.last_alt, self.alt = self.alt, a
         still = math.sqrt(sum(g * g for g in v[3:6])) < 5.0
         s = self.state
         nose_down_raw = self.raw[1] > 8.8 and abs(self.raw[0]) < 2 and abs(self.raw[2]) < 2 and still
@@ -352,22 +357,28 @@ class MockBoard:
             self.fast = self.fast + 1 if self.body[0] < 5 else 0
             if self.fast >= 12:
                 self.set_state(STATE_COAST)
-        elif s in (STATE_COAST, STATE_ACTIVE_CONTROL):
-            if s == STATE_COAST and self.alt > ACTIVE_CONTROL_ALT:
-                self.set_state(STATE_ACTIVE_CONTROL)
-            self.peak = max(self.peak, self.alt)
-            self.below = self.below + 1 if self.alt < self.peak - 15 else 0
-            if self.below >= 5:
-                self.set_state(STATE_APOGEE)
+        elif s == STATE_COAST and self.alt > ACTIVE_CONTROL_ALT:
+            self.set_state(STATE_ACTIVE_CONTROL)
         elif s == STATE_APOGEE and self.alt < MAIN_DEPLOY_ALT:
             self.set_state(STATE_MAIN_PARACHUTE)
-        elif s == STATE_MAIN_PARACHUTE and self.alt < 100 and abs(self.alt - self.last_alt) * self.rate < 2:
+        elif s == STATE_MAIN_PARACHUTE and self.alt < 100 and abs(self.alt - self.last_alt) * self.baro_rate < 2:
             self.set_state(STATE_LANDED)
             self.cal &= ~CAL_KALMAN_STEPPING
         if s in (STATE_BOOST, STATE_COAST, STATE_ACTIVE_CONTROL) and now - self.boost_t >= APOGEE_TIMER_S:
             self.set_state(STATE_APOGEE)
         if self.n % max(1, self.rate // 10) == 0:
             self.emit()
+
+    def baro(self, v):
+        a = altitude_from_pressure(v[0])
+        if not (math.isfinite(a) and abs(a) < 20000):
+            return
+        self.last_alt, self.alt = self.alt, a
+        if self.state in (STATE_COAST, STATE_ACTIVE_CONTROL):
+            self.peak = max(self.peak, self.alt)
+            self.below = self.below + 1 if self.alt < self.peak - 15 else 0
+            if self.below >= 5:
+                self.set_state(STATE_APOGEE)
 
     def emit(self):
         cal = (self.cal & 0xFF) | (self.pose << 8)
@@ -384,9 +395,11 @@ class Runner:
         self.m = mounting
         self.rate = args.rate
         self.dt = 1.0 / self.rate
+        self.baro_every = max(1, round(self.rate / args.baro_rate))
         self.sim = args.port == "sim"
         if self.sim:
-            self.ser = MockBoard(self.rate, mounting, start_valid=args.scenario not in ("tumble", "calibrate"))
+            self.ser = MockBoard(self.rate, mounting, start_valid=args.scenario not in ("tumble", "calibrate"),
+                                 baro_rate=args.baro_rate)
         else:
             import serial  # pyserial
             self.ser = serial.Serial(args.port, args.baud, timeout=0, write_timeout=1)
@@ -457,12 +470,15 @@ class Runner:
         mag = [20.0 + random.gauss(0, NOISE_MAG), 5.0 + random.gauss(0, NOISE_MAG), -40.0 + random.gauss(0, NOISE_MAG)]
         if alt_sent is None:
             alt_sent = alt
-        if pressure is None:
+        send_baro = self.baro_due() and pressure != "skip"
+        if pressure is None or pressure == "skip":
             pressure = pressure_from_altitude(max(alt_sent, -100.0)) + random.gauss(0.0, self.args.baro_noise)
         if temperature is None:
             temperature = T_REF_C + random.gauss(0.0, NOISE_TEMPERATURE)
-        self.last_pressure = pressure
-        self.ser.write(build_hil_packet(raw_a, raw_g, mag, pressure, temperature))
+        self.ser.write(build_hil_packet(raw_a, raw_g, mag))
+        if send_baro:
+            self.last_pressure = pressure
+            self.ser.write(build_baro_packet(pressure, temperature))
         if self.n % max(1, self.rate // 20) == 0:
             self.truth_csv.writerow([f"{self.t:.3f}", phase, f"{alt:.2f}", f"{alt_sent:.2f}", *[f"{x:.3f}" for x in f_body],
                                      *[f"{x:.3f}" for x in w_body], *[f"{x:.4f}" for x in raw_a],
@@ -471,6 +487,10 @@ class Runner:
         self.t += self.dt
         self.pace()
         self.poll()
+
+    def baro_due(self):
+        """True when the IMU period about to be sent also carries a barometer sample."""
+        return self.n % self.baro_every == 0
 
     def send_command(self, command):
         self.ser.write(build_packet(command))
@@ -783,6 +803,9 @@ def scenario_flight(r, args):
     t_touch = None
     frozen_p = None
     inv_left = 0
+    inv_started = False
+    spike_done = False
+    dip_left = args.dip_samples
     nan_left = 0
     stuck = args.stuck_imu
     drogue_sent = False
@@ -837,19 +860,25 @@ def scenario_flight(r, args):
         alt_sent = h
         pressure = None
         temperature = None
-        if args.spike_at is not None and abs(t - args.spike_at) < r.dt / 2:
+        baro_now = r.baro_due()
+        if baro_now and args.spike_at is not None and t >= args.spike_at and not spike_done:
             alt_sent = h + args.spike_m
-        if args.dip_at is not None and args.dip_at <= t < args.dip_at + args.dip_samples * r.dt:
+            spike_done = True
+        if baro_now and args.dip_at is not None and t >= args.dip_at and dip_left > 0:
             alt_sent = h - args.dip_m
+            dip_left -= 1
         if args.jump_at is not None and args.jump_at <= t < args.jump_at + args.jump_s:
             alt_sent = h - args.jump_m
         if args.freeze_baro_at is not None and t >= args.freeze_baro_at:
-            if frozen_p is None:
-                frozen_p = r.last_pressure
-            pressure, temperature = frozen_p, T_REF_C
-        if args.invalid_at is not None and abs(t - args.invalid_at) < r.dt / 2:
-            inv_left = args.invalid_count
-        if inv_left > 0:
+            if args.freeze_mode == "stop":
+                pressure = "skip"
+            else:
+                if frozen_p is None:
+                    frozen_p = r.last_pressure
+                pressure, temperature = frozen_p, T_REF_C
+        if args.invalid_at is not None and t >= args.invalid_at and not inv_started:
+            inv_left, inv_started = args.invalid_count, True
+        if baro_now and inv_left > 0 and pressure != "skip":
             inv_left -= 1
             kind = args.invalid_kind
             values = {"nan": float("nan"), "inf": float("inf"), "zero": 0.0, "neg": -1.0, "low": 5.0,
@@ -947,12 +976,13 @@ H_PRESETS = {
     "H3up": dict(expect="baro", spike_at=15.0, spike_m=500.0),
     "H4": dict(expect="baro", dip_at=15.0, dip_samples=4, dip_m=25.0),
     "H4b": dict(expect="any", dip_at=15.0, dip_samples=5, dip_m=25.0),
-    "H5": dict(expect="timer", freeze_baro_at=12.0, stop_after_apogee=True),
+    "H5": dict(expect="timer", freeze_baro_at=12.0, freeze_mode="stop", stop_after_apogee=True),
+    "H5b": dict(expect="timer", freeze_baro_at=12.0, freeze_mode="repeat", stop_after_apogee=True),
     "H6": dict(expect="timer", stuck_imu=True, stop_after_apogee=True),
     "H7": dict(expect="baro", apogee_alt=1500.0, apogee_time=None),
     "H8": dict(expect="baro"),
     "H9": dict(expect="baro", jump_at=1.0, jump_s=1.0, jump_m=100.0),
-    "H10": dict(expect="baro", jump_at=15.0, jump_s=0.015, jump_m=100.0),
+    "H10": dict(expect="baro", jump_at=15.0, jump_s=0.06, jump_m=100.0),
     "H10b": dict(expect="any", jump_at=15.0, jump_s=0.5, jump_m=100.0),
     "H12": dict(expect="any", plateau=1.0),
     "H13": dict(expect="baro", drogue_rate=60.0),
@@ -978,6 +1008,7 @@ def main():
     p.add_argument("--port", required=True, help="serial port (COM3, /dev/ttyUSB0) or 'sim' for the mock board")
     p.add_argument("--baud", type=int, default=115200)
     p.add_argument("--rate", type=int, default=200, help="IMU packets per second, must match IMU_ODR_HZ (200)")
+    p.add_argument("--baro-rate", type=int, default=50, help="barometer packets per second (hardware about 46 to 50)")
     p.add_argument("--scenario", required=True, choices=sorted(SCENARIOS))
     p.add_argument("--hid", choices=sorted(H_PRESETS), help="apogee preset for --scenario flight")
     p.add_argument("--repeat", type=int, default=1, help="repeat the scenario with seeds seed, seed+1, ...")
@@ -1001,15 +1032,17 @@ def main():
     p.add_argument("--spike-at", type=float)
     p.add_argument("--spike-m", type=float, default=-40.0)
     p.add_argument("--dip-at", type=float)
-    p.add_argument("--dip-samples", type=int, default=4)
+    p.add_argument("--dip-samples", type=int, default=4, help="barometer samples")
     p.add_argument("--dip-m", type=float, default=25.0)
     p.add_argument("--jump-at", type=float)
     p.add_argument("--jump-s", type=float, default=1.0)
     p.add_argument("--jump-m", type=float, default=100.0)
     p.add_argument("--freeze-baro-at", type=float)
+    p.add_argument("--freeze-mode", choices=["stop", "repeat"], default="stop",
+                   help="H5: stop sending barometer frames, or repeat the last value")
     p.add_argument("--stuck-imu", action="store_true")
     p.add_argument("--invalid-at", type=float)
-    p.add_argument("--invalid-count", type=int, default=1)
+    p.add_argument("--invalid-count", type=int, default=1, help="barometer samples")
     p.add_argument("--invalid-kind", default="nan", choices=["nan", "inf", "zero", "neg", "low", "high", "tnan", "t500"])
     p.add_argument("--nan-imu-at", type=float)
     p.add_argument("--nan-imu-count", type=int, default=5)

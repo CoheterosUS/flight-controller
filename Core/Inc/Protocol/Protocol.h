@@ -15,6 +15,7 @@ typedef enum {
     COMMAND_DROGUE = 0x04,
     COMMAND_LANDED = 0x05,
     COMMAND_HIL_DATA = 0x10,
+    COMMAND_HIL_BARO = 0x11,
     COMMAND_GPS_DATA = 0x20
 } CommandType_t;
 
