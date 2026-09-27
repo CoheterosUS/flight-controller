@@ -57,6 +57,7 @@ void ImuTumble_Reset(ImuTumble_t *T);
 ImuTumblePoseStatus_t ImuTumble_CheckPose(const ImuTumble_t *T, uint8_t Pose, const float MeanRaw[3]);
 void ImuTumble_AddSample(ImuTumble_t *T, uint8_t Pose, const float RawAccel[3]);
 bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuality_t *Quality);
+bool ImuTumble_DeriveQ(const float M[9], float Q[9], float *DetQ);
 
 void ImuTumble_PoseBegin(ImuTumble_t *T, uint8_t Pose);
 bool ImuTumble_PoseCommit(ImuTumble_t *T, uint8_t Pose);

@@ -1,14 +1,14 @@
 #include "Utils/Calibrations.h"
 #include "Utils/Calculations.h"
+#include "Utils/ImuCal.h"
 
 static float PressureSumPa;
 static float TemperatureSumC;
 static uint16_t PressureSampleCount;
 static uint16_t PressureDiscardCount;
 
-static float GyroSumX, GyroSumY, GyroSumZ;
-static uint16_t GyroSampleCount;
-static uint16_t GyroDiscardCount;
+static ImuGyroBiasAccumulator_t GyroAccumulator;
+static ImuAccelBiasAccumulator_t AccelBiasAccumulator;
 
 void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->ReferencePressurePa = 0.0f;
@@ -24,6 +24,7 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->AccelBiasCalValid = false;
     ctx->AltitudeFilterInitialized = false;
     ctx->GPSFixValid = false;
+    ctx->KalmanInitialized = false;
 
     ResetBarometricVerticalVelocity();
     ResetGPSVerticalVelocity();
@@ -33,11 +34,8 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     PressureSampleCount = 0;
     PressureDiscardCount = 0;
 
-    GyroSumX = 0.0f;
-    GyroSumY = 0.0f;
-    GyroSumZ = 0.0f;
-    GyroSampleCount = 0;
-    GyroDiscardCount = 0;
+    ImuCal_GyroBiasReset(&GyroAccumulator);
+    ImuCal_AccelBiasReset(&AccelBiasAccumulator);
 }
 
 void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext) {
@@ -63,25 +61,43 @@ void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext) 
 }
 
 void CalibrateGyroscope(FlightData_t FlightData, SystemContext_t *SystemContext) {
+    const float RawGyro[3] = {FlightData.RawGyroX, FlightData.RawGyroY, FlightData.RawGyroZ};
+    float BiasRaw[3];
+
     if (SystemContext->GyroCalibrationValid) {
         return;
     }
 
-    if (GyroDiscardCount < GYRO_CALIBRATION_DISCARD_SAMPLES) {
-        GyroDiscardCount++;
-        return;
-    }
-
-    GyroSumX += FlightData.RawGyroX;
-    GyroSumY += FlightData.RawGyroY;
-    GyroSumZ += FlightData.RawGyroZ;
-    GyroSampleCount++;
-
-    if (GyroSampleCount >= GYRO_CALIBRATION_SAMPLES) {
-        const float InvCount = 1.0f / (float)GyroSampleCount;
-        SystemContext->GyroBiasRawX = GyroSumX * InvCount;
-        SystemContext->GyroBiasRawY = GyroSumY * InvCount;
-        SystemContext->GyroBiasRawZ = GyroSumZ * InvCount;
+    if (ImuCal_GyroBiasAdd(&GyroAccumulator, RawGyro, BiasRaw) == IMU_CAL_READY) {
+        SystemContext->GyroBiasRawX = BiasRaw[0];
+        SystemContext->GyroBiasRawY = BiasRaw[1];
+        SystemContext->GyroBiasRawZ = BiasRaw[2];
         SystemContext->GyroCalibrationValid = true;
+    }
+}
+
+void CalibrateAccelBias(FlightData_t FlightData, SystemContext_t *SystemContext) {
+    const float RawAccel[3] = {FlightData.RawAccelX, FlightData.RawAccelY, FlightData.RawAccelZ};
+    const float RawGyro[3] = {FlightData.RawGyroX, FlightData.RawGyroY, FlightData.RawGyroZ};
+    const float GyroBiasRaw[3] = {
+        SystemContext->GyroBiasRawX,
+        SystemContext->GyroBiasRawY,
+        SystemContext->GyroBiasRawZ
+    };
+    float BiasCal[3];
+
+    if (!SystemContext->ImuCal.Valid || SystemContext->AccelBiasCalValid) return;
+
+    if (ImuCal_AccelBiasAdd(&AccelBiasAccumulator,
+                            &SystemContext->ImuCal,
+                            SystemContext->GyroCalibrationValid,
+                            GyroBiasRaw,
+                            RawAccel,
+                            RawGyro,
+                            BiasCal) == IMU_CAL_READY) {
+        SystemContext->AccelBiasCalX = BiasCal[0];
+        SystemContext->AccelBiasCalY = BiasCal[1];
+        SystemContext->AccelBiasCalZ = BiasCal[2];
+        SystemContext->AccelBiasCalValid = true;
     }
 }

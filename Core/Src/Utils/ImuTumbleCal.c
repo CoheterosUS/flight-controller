@@ -408,6 +408,16 @@ static void ImuTumble_CopyAndNormalizeQR(const float M[9], float Q[9], float R[9
     *DetQ = ImuTumble_Determinant3(Q);
 }
 
+bool ImuTumble_DeriveQ(const float M[9], float Q[9], float *DetQ)
+{
+    float R[9];
+    arm_status Status;
+
+    if (M == NULL || Q == NULL || DetQ == NULL) return false;
+    ImuTumble_CopyAndNormalizeQR(M, Q, R, DetQ, &Status);
+    return Status == ARM_MATH_SUCCESS;
+}
+
 bool ImuTumble_Solve(const ImuTumble_t *T, ImuCalibration_t *Out, ImuTumbleQuality_t *Quality)
 {
     double A[4][4];

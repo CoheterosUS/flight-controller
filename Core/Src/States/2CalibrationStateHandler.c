@@ -1,6 +1,7 @@
 #include "States/StateHandlers.h"
 #include "Utils/Calibrations.h"
 #include "Utils/FlightData.h"
+#include "Utils/ImuCal.h"
 
 void CalibrationStateEntry(SystemContext_t *ctx) {
 #if SD_LOGGING_ENABLED
@@ -12,6 +13,7 @@ void CalibrationStateEntry(SystemContext_t *ctx) {
 SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
 	CalibratePressure(FlightData, Context);
 	CalibrateGyroscope(FlightData, Context);
+	CalibrateAccelBias(FlightData, Context);
 
 #if GPS_FIX_REQUIRED
 	if (FlightData.GPSAltitude != 0.0f && FlightData.UnixTime != 0 && FlightData.Latitude != 0 && FlightData.Longitude != 0 && FlightData.Satellites >= GPS_FIX_MIN_SATELLITES) {
@@ -21,12 +23,15 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
 	Context->GPSFixValid = true;
 #endif
 
-	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid && !Context->KalmanInitialized) {
+	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid &&
+	    Context->ImuCal.Valid && Context->AccelBiasCalValid && !Context->KalmanInitialized) {
 		KalmanFilter_Init(Context);
 		Context->KalmanInitialized = true;
 	}
 
-	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid && Context->GPSFixValid && Context->KalmanInitialized) {
+	if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid &&
+	    Context->ImuCal.Valid && Context->AccelBiasCalValid && Context->GPSFixValid &&
+	    Context->KalmanInitialized) {
 		return STATE_PRELAUNCH;
 	}
 
