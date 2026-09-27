@@ -7,6 +7,20 @@
 #include "Sensors/ZOEM8Q.h"
 #include "Utils/shared.h"
 
+typedef enum {
+    BUZZ_NONE = 0,
+    BUZZ_DEEPCAL_ENTERED,
+    BUZZ_POSE_1,
+    BUZZ_POSE_2,
+    BUZZ_POSE_3,
+    BUZZ_POSE_4,
+    BUZZ_POSE_5,
+    BUZZ_POSE_6,
+    BUZZ_DEEPCAL_OK,
+    BUZZ_DEEPCAL_FAIL,
+    BUZZ_STOP
+} BuzzerPattern_t;
+
 typedef struct {
     BMP581_SensorData_t Slot[2];
     volatile uint8_t WriteIndex;
@@ -29,6 +43,7 @@ typedef struct {
 
 void Buzzer_Beep(uint32_t Duration);
 void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t WaitDuration, bool UseHAL);
+void Buzzer_Play(BuzzerPattern_t Pattern);
 
 void BMP581_Mailbox_Publish(const uint8_t *RXBuffer);
 void BMP581_Mailbox_Inject(const BMP581_SensorData_t *Data);

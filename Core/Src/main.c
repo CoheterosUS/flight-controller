@@ -34,6 +34,7 @@
 #include <Tasks/SensorConfigTask.h>
 #include <Tasks/FlashLoggingTask.h>
 #include <Tasks/PyroTask.h>
+#include <Tasks/BuzzerTask.h>
 #include "Sensors/Sensors.h"
 #include "Sensors/W25Q32JV.h"
 #include "Protocol/Protocol.h"
@@ -208,6 +209,7 @@ int main(void)
   FlashLoggingQueue = xQueueCreate(FLASH_LOGGING_QUEUE_LENGTH, sizeof(FlashLogRecord_t));
   CommandQueue = xQueueCreate(QUEUE_LENGTH, sizeof(CommandType_t));
 
+  CreateBuzzerTask(tskIDLE_PRIORITY + 1, STACK_SIZE_BUZZER);
   CreatePyroTask(tskIDLE_PRIORITY + 5, STACK_SIZE_PYRO);
   CreateTelemetryTask(&huart1, tskIDLE_PRIORITY + 4, STACK_SIZE_TELEMETRY);
   CreateSensorConfigTask(&SystemContext, tskIDLE_PRIORITY + 3, STACK_SIZE_SENSOR_CONFIG);
