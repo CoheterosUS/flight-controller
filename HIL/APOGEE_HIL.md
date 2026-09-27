@@ -1,5 +1,7 @@
 # HIL profiles for apogee detection
 
+Start with `APOGEE_SUMMARY.md` (short overview of all changes).
+
 For the HIL worker. Read `APOGEE_DETECTION_PLAN.md` first (detector design, channels B and D, where it runs). This file defines the scenarios `hil.py` must be able to run and what each one must show. The firmware must be a `HIL_MODE 1` build. No serial commands are used to change state.
 
 ## 1. What is being tested
