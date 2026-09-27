@@ -143,3 +143,4 @@ Also in the backlog: GPS velocity has the same per-loop derivative (unused, disa
 - Confirm 28 s is later than the plausible apogee time in the flight simulation (D must never fire during the climb).
 - Actual BMP581 ODR in performance mode (the `fw` brief asks to verify and report).
 - Whether the flash log record has room for the channel byte (else SD log only).
+- Accepted compromise (decided): `T_ref` is the BMP581 temperature averaged on the pad, so it includes board self-heating and is not the true air temperature. Same value the Kalman filter uses. Revisit only if the altitude error against a reference (the CATS Vega log) is too large.
