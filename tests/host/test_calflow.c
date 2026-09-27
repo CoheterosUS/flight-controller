@@ -165,6 +165,66 @@ static void TestGyroStillness(void)
           Accumulator.SampleCount == 0u, "gyro disturbance restarts the window");
 }
 
+static void TestFiniteInputsAndSanitizer(void)
+{
+    ImuGyroBiasAccumulator_t GyroAccumulator;
+    ImuAccelBiasAccumulator_t AccelAccumulator;
+    ImuCalibration_t Cal = {0};
+    const float RawAccel[3] = {0.0f, 0.0f, 9.81f};
+    const float RawGyro[3] = {0.0f, 0.0f, 0.0f};
+    float Bias[3] = {0.0f, 0.0f, 0.0f};
+    float Value[3] = {1.0f, NAN, INFINITY};
+    float Last[3] = {4.0f, 5.0f, 6.0f};
+
+    ImuCal_GyroBiasReset(&GyroAccumulator);
+    const float BadGyro[3] = {NAN, 0.0f, 0.0f};
+    Check(ImuCal_GyroBiasAdd(&GyroAccumulator, BadGyro, Bias) == IMU_CAL_RESTARTED &&
+          GyroAccumulator.SampleCount == 0u, "non-finite gyro restarts the window");
+
+    Cal.Valid = true;
+    Cal.M[0] = 1.0f; Cal.M[4] = 1.0f; Cal.M[8] = 1.0f;
+    ImuCal_AccelBiasReset(&AccelAccumulator);
+    const float BadAccel[3] = {0.0f, INFINITY, 0.0f};
+    Check(ImuCal_AccelBiasAdd(&AccelAccumulator, &Cal, false, NULL,
+                              BadAccel, RawGyro, Bias) == IMU_CAL_RESTARTED &&
+          AccelAccumulator.SampleCount == 0u, "non-finite accel restarts the window");
+
+    ImuCal_SanitizeVec3(Value, Last);
+    Check(Value[0] == 1.0f && Value[1] == 5.0f && Value[2] == 6.0f &&
+          Last[0] == 1.0f && Last[1] == 5.0f && Last[2] == 6.0f,
+          "sanitizer replaces non-finite values and updates the last-good vector");
+
+    const float NormalBias[3] = {1.0f, 0.0f, 0.0f};
+    ImuCal_GyroBiasReset(&GyroAccumulator);
+    for (uint32_t I = 0u; I < GYRO_CALIBRATION_DISCARD_SAMPLES + GYRO_CALIBRATION_SAMPLES; I++) {
+        ImuCal_GyroBiasAdd(&GyroAccumulator, NormalBias, Bias);
+    }
+    Check(Near(Bias[0], 1.0f, 0.001f), "normal one dps gyro bias remains accepted");
+    (void)RawAccel;
+}
+
+static void TestGyroBiasLimit(void)
+{
+    ImuGyroBiasAccumulator_t GyroAccumulator;
+    ImuAccelBiasAccumulator_t AccelAccumulator;
+    ImuCalibration_t Cal = {0};
+    const float Rotation[3] = {20.0f, 0.0f, 0.0f};
+    const float Accel[3] = {0.0f, 0.0f, 9.81f};
+    const float ExistingBias[3] = {20.0f, 0.0f, 0.0f};
+    float Bias[3] = {0.0f, 0.0f, 0.0f};
+
+    ImuCal_GyroBiasReset(&GyroAccumulator);
+    Check(ImuCal_GyroBiasAdd(&GyroAccumulator, Rotation, Bias) == IMU_CAL_RESTARTED,
+          "constant twenty dps gyro rotation is rejected");
+
+    Cal.Valid = true;
+    Cal.M[0] = 1.0f; Cal.M[4] = 1.0f; Cal.M[8] = 1.0f;
+    ImuCal_AccelBiasReset(&AccelAccumulator);
+    Check(ImuCal_AccelBiasAdd(&AccelAccumulator, &Cal, true, ExistingBias,
+                              Accel, Rotation, Bias) == IMU_CAL_RESTARTED,
+          "constant twenty dps rotation is rejected during accel calibration");
+}
+
 static void TestStatusAndStates(void)
 {
     SystemContext_t Context = {0};
@@ -176,6 +236,7 @@ static void TestStatusAndStates(void)
     Context.KalmanInitialized = true;
     ImuCal_UpdateStatus(&Context, true);
     Check((Context.CalStatus & 0x3Fu) == 0x3Fu &&
+          (Context.CalStatus & CAL_STATUS_HIL_MODE) != 0u &&
           (Context.CalStatus & CAL_STATUS_HIL_PRESEED) != 0u &&
           ((Context.CalStatus >> 8) & 0x7u) == 3u, "status sets bits and preserves HIL and pose");
 
@@ -197,6 +258,8 @@ int main(void)
     TestGyroBias();
     TestAccelBias();
     TestGyroStillness();
+    TestFiniteInputsAndSanitizer();
+    TestGyroBiasLimit();
     TestStatusAndStates();
     Failures += TestImuTumbleDeriveQ();
 

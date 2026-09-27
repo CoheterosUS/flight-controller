@@ -20,7 +20,7 @@
 #define CAL_STATUS_KALMAN_INITIALIZED  BIT(4)
 #define CAL_STATUS_KALMAN_STEPPING     BIT(5)
 #define CAL_STATUS_HIL_PRESEED         BIT(6)
-#define CAL_STATUS_RESERVED            BIT(7)
+#define CAL_STATUS_HIL_MODE            BIT(7)
 #define CAL_STATUS_POSE_SHIFT          8U
 #define CAL_STATUS_POSE_MASK           (0x7U << CAL_STATUS_POSE_SHIFT)
 #define CAL_STATUS_GET_POSE(status) \

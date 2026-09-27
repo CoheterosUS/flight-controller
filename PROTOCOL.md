@@ -144,7 +144,7 @@ The W25Q32JV flash calibration sector and the per-flight calibration snapshot pa
 | 4            | KALMAN_INITIALIZED      | Kalman filter is initialized     |
 | 5            | KALMAN_STEPPING         | Kalman filter is stepping        |
 | 6            | HIL_PRESEED             | HIL pre-seed is active           |
-| 7            | Reserved                | Reserved                         |
+| 7            | HIL_MODE                | HIL_MODE is enabled in the build |
 | 8-10         | Tumble pose             | 0 = none, 1 to 6 = current pose  |
 | 11-15        | Reserved                | Reserved                         |
 

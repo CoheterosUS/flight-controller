@@ -73,8 +73,15 @@ For quick iteration on the flight logic alone, a compile flag `HIL_PRESEED_M` lo
 - It sets a flag in `CalStatus` and in the flight snapshot, so any log or telemetry from such a run is identifiable.
 - The full scenarios above must still pass without it before a release.
 
-## 6. Notes
+## 6. Flight build checklist
 
-- Serial commands are disabled in the flight configuration. `EXTERNAL_COMMANDS` is defined in `configuration.h` but is not used by the code today.
+- Set `FLIGHT_BUILD 1` and compile. The compile-time guard proves `HIL_MODE 0`, `HIL_PRESEED_M 0` and `EXTERNAL_COMMANDS 0`.
+- Confirm CalStatus bits 6 and 7 are clear in telemetry.
+- Confirm the calibration valid bits are set.
+- Confirm the state reaches PRELAUNCH.
+
+## 7. Notes
+
+- Serial commands are disabled in the flight configuration. `EXTERNAL_COMMANDS` defaults to 0 in `configuration.h`.
 - HIL inputs are raw hardware-axis values. The rotation to the body frame comes from `M`, not from `IMU_ROT_*`.
 - `hil.py` and the firmware share the packet layout in `Core/Inc/HIL/HIL.h`. Keep them in step.

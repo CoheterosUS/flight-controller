@@ -135,6 +135,7 @@ static int TestGesture(void)
 }
 
 static int RunSequence(bool Mirrored, bool ForceTimeout, bool ForceMotion, bool WrongPose,
+                       bool ConstantSample,
                        uint32_t *DoneMs, uint8_t *PromptCounts, ImuCalibration_t *Result)
 {
     DeepCalSeq_t Sequence;
@@ -148,7 +149,7 @@ static int RunSequence(bool Mirrored, bool ForceTimeout, bool ForceMotion, bool 
     bool MotionInjected = false;
     DeepCalSeq_Start(&Sequence, 0u);
 
-    for (uint32_t Iteration = 0u; Iteration < 6000u; Iteration++, Now += 100u) {
+    for (uint32_t Iteration = 0u; Iteration < 60000u; Iteration++, Now += 10u) {
         float RawAccel[3] = {123.0f, -456.0f, 789.0f};
         float RawGyro[3] = {0.0f, 0.0f, 0.0f};
         uint8_t PoseIndex = LastPose == 0u ? 0u : (uint8_t)(LastPose - 1u);
@@ -157,7 +158,11 @@ static int RunSequence(bool Mirrored, bool ForceTimeout, bool ForceMotion, bool 
             if (Mirrored && SourcePose >= 4u) {
                 SourcePose = (uint8_t)(SourcePose == 4u ? 5u : 4u);
             }
-            SampleForPose(SourcePose, SampleNumber++, RawAccel);
+            if (ConstantSample) {
+                RawForPose(SourcePose, RawAccel);
+            } else {
+                SampleForPose(SourcePose, SampleNumber++, RawAccel);
+            }
         }
 
         if (ForceTimeout) {
@@ -207,7 +212,7 @@ static int TestNominal(void)
     uint32_t DoneMs = 0u;
     uint8_t PromptCounts[6] = {0};
     ImuCalibration_t Result;
-    int SequenceResult = RunSequence(false, false, false, false, &DoneMs, PromptCounts, &Result);
+    int SequenceResult = RunSequence(false, false, false, false, false, &DoneMs, PromptCounts, &Result);
     if (Check(SequenceResult == 1, "nominal sequence succeeds") != 0
         || Check(DoneMs >= 240000u && DoneMs <= 270000u, "nominal sequence duration is bounded") != 0) {
         return 1;
@@ -228,7 +233,7 @@ static int TestNominal(void)
 static int TestRestarts(void)
 {
     uint8_t PromptCounts[6] = {0};
-    int MotionResult = RunSequence(false, false, true, false, NULL, PromptCounts, NULL);
+    int MotionResult = RunSequence(false, false, true, false, false, NULL, PromptCounts, NULL);
     if (Check(MotionResult == 1,
               "motion during sampling recovers with a restart") != 0
         || Check(PromptCounts[0] == 2u, "motion restart replays the prompt") != 0) {
@@ -236,16 +241,20 @@ static int TestRestarts(void)
     }
 
     memset(PromptCounts, 0, sizeof(PromptCounts));
-    if (Check(RunSequence(false, false, false, true, NULL, PromptCounts, NULL) == 1,
+    if (Check(RunSequence(false, false, false, true, false, NULL, PromptCounts, NULL) == 1,
               "wrong-way pose recovers with a restart") != 0
         || Check(PromptCounts[1] == 2u, "wrong-way restart replays the prompt") != 0) {
         return 1;
     }
 
-    if (Check(RunSequence(false, true, false, false, NULL, NULL, NULL) == 0,
+    if (Check(RunSequence(false, true, false, false, false, NULL, NULL, NULL) == 0,
               "overall timeout fails") != 0
-        || Check(RunSequence(true, false, false, false, NULL, NULL, NULL) == 0,
+        || Check(RunSequence(true, false, false, false, false, NULL, NULL, NULL) == 0,
                  "mirrored pose sequence fails") != 0) {
+        return 1;
+    }
+    if (Check(RunSequence(false, false, false, false, true, NULL, NULL, NULL) == 0,
+              "unchanged pose samples are rejected") != 0) {
         return 1;
     }
     return 0;
@@ -254,7 +263,7 @@ static int TestRestarts(void)
 static int TestMaximumRestarts(void)
 {
     uint8_t PromptCounts[6] = {0};
-    if (Check(RunSequence(false, false, true, false, NULL, PromptCounts, NULL) == 1,
+    if (Check(RunSequence(false, false, true, false, false, NULL, PromptCounts, NULL) == 1,
               "single motion restart remains recoverable") != 0) {
         return 1;
     }
@@ -265,7 +274,7 @@ static int TestMaximumRestarts(void)
     uint32_t PromptStart = 0u;
     uint8_t LastPose = 0u;
     DeepCalSeq_Start(&Sequence, 0u);
-    for (uint32_t Iteration = 0u; Iteration < 6000u; Iteration++, Now += 100u) {
+    for (uint32_t Iteration = 0u; Iteration < 60000u; Iteration++, Now += 10u) {
         float RawAccel[3] = {TEST_G, 0.0f, 0.0f};
         float RawGyro[3] = {0.0f, 0.0f, 0.0f};
         if (LastPose == 1u && (uint32_t)(Now - PromptStart) >= DEEP_CAL_POSE_SETTLE_MS) {

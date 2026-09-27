@@ -3,6 +3,7 @@
 #include "stm32h7xx_hal.h"
 
 TaskHandle_t BuzzerTaskHandle;
+static volatile bool BuzzerPatternActiveFlag;
 
 void CreateBuzzerTask(const UBaseType_t Priority, const uint16_t StackSize) {
     xTaskCreate(
@@ -16,6 +17,9 @@ void CreateBuzzerTask(const UBaseType_t Priority, const uint16_t StackSize) {
 }
 
 void Buzzer_Play(BuzzerPattern_t Pattern) {
+    if (Buzzer_PatternRequestsOwnership(Pattern)) {
+        BuzzerPatternActiveFlag = true;
+    }
 #if BUZZER_ENABLED
     if (BuzzerTaskHandle != NULL) {
         xTaskNotify(BuzzerTaskHandle, (uint32_t)Pattern, eSetValueWithOverwrite);
@@ -23,6 +27,10 @@ void Buzzer_Play(BuzzerPattern_t Pattern) {
 #else
     (void)Pattern;
 #endif
+}
+
+bool Buzzer_PatternActive(void) {
+    return BuzzerPatternActiveFlag;
 }
 
 static bool Buzzer_WaitForStep(uint32_t DurationMs, BuzzerPattern_t *NextPattern) {
@@ -58,6 +66,7 @@ void BuzzerTask(void *pvParameters) {
     BuzzerPattern_t Pattern;
 
     Buzzer_SetOff();
+    BuzzerPatternActiveFlag = false;
 
     for (;;) {
         uint32_t Notification = 0;
@@ -69,6 +78,7 @@ void BuzzerTask(void *pvParameters) {
 
             if (Pattern == BUZZ_NONE || Pattern == BUZZ_STOP) {
                 Buzzer_SetOff();
+                BuzzerPatternActiveFlag = false;
                 break;
             }
 
@@ -101,5 +111,6 @@ void BuzzerTask(void *pvParameters) {
         }
 
         Buzzer_SetOff();
+        BuzzerPatternActiveFlag = false;
     }
 }

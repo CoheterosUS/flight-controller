@@ -45,10 +45,14 @@ static void DeepCalSeq_Fail(DeepCalSeq_t *S, ImuTumbleFailureReason_t Failure)
 
 static bool DeepCalSeq_Motion(const float RawGyro[3])
 {
+    if (RawGyro == NULL || !isfinite(RawGyro[0]) || !isfinite(RawGyro[1]) ||
+        !isfinite(RawGyro[2])) {
+        return true;
+    }
     const float Norm = sqrtf(RawGyro[0] * RawGyro[0]
                            + RawGyro[1] * RawGyro[1]
                            + RawGyro[2] * RawGyro[2]);
-    return Norm > DEEP_CAL_GYRO_MOTION_MAX_DPS;
+    return !isfinite(Norm) || Norm > DEEP_CAL_GYRO_MOTION_MAX_DPS;
 }
 
 static void DeepCalSeq_Restart(DeepCalSeq_t *S, uint32_t NowMs, DeepCalSeqOut_t *Out)
@@ -189,6 +193,10 @@ void DeepCalSeq_Step(DeepCalSeq_t *S,
                 S->HasLastAccel = true;
             }
             if (DeepCalSeq_Elapsed(NowMs, S->SampleStartMs) >= DEEP_CAL_POSE_SAMPLE_MS) {
+                if (S->Tumble.Count[S->Pose] < DEEP_CAL_POSE_MIN_SAMPLES) {
+                    DeepCalSeq_Restart(S, NowMs, Out);
+                    break;
+                }
                 if (!ImuTumble_PoseCommit(&S->Tumble, S->Pose)) {
                     DeepCalSeq_Fail(S, IMU_TUMBLE_FAILURE_INSUFFICIENT_SAMPLES);
                     break;

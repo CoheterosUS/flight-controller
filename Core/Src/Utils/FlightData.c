@@ -8,6 +8,8 @@
 #include "Utils/Pyro.h"
 #include "KalmanLib.h"
 
+#include <math.h>
+
 #define MM_TO_METERS 0.001f
 #define KALMAN_DT (1.0f / IMU_ODR_HZ)
 
@@ -28,6 +30,13 @@ static float32_t KalmanZMAG[3] = {0};
 
 static float KalmanLastPressure = 0.0f;
 static float KalmanLastAccelX = 0.0f;
+static float LastGoodCalAccel[3] = {0.0f, 0.0f, 0.0f};
+static float LastGoodCalGyro[3] = {0.0f, 0.0f, 0.0f};
+
+static bool FlightData_FiniteVec3(const float V[3])
+{
+    return isfinite(V[0]) && isfinite(V[1]) && isfinite(V[2]);
+}
 
 void KalmanFilter_Init(SystemContext_t *SystemContext) {
 	float32_t EulDeg0[3] = {KALMAN_INITIAL_ROLL_DEG, KALMAN_INITIAL_PITCH_DEG, KALMAN_INITIAL_YAW_DEG};
@@ -40,6 +49,8 @@ void KalmanFilter_Init(SystemContext_t *SystemContext) {
 	memset(KalmanZMAG, 0, sizeof(KalmanZMAG));
 	KalmanLastPressure = 0.0f;
 	KalmanLastAccelX = 0.0f;
+	memset(LastGoodCalAccel, 0, sizeof(LastGoodCalAccel));
+	memset(LastGoodCalGyro, 0, sizeof(LastGoodCalGyro));
 
 	for (int i = 0; i < H_GPS_ROWS; i++) {
 		KalmanRGPSData[i + i * H_GPS_ROWS] = 1.0f;
@@ -101,6 +112,8 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 		SystemContext->AccelBiasCalValid, AccelBias,
 		SystemContext->GyroCalibrationValid, GyroBiasRaw,
 		RawAccel, RawGyro, CalAccel, CalGyro);
+	ImuCal_SanitizeVec3(CalAccel, LastGoodCalAccel);
+	ImuCal_SanitizeVec3(CalGyro, LastGoodCalGyro);
 	FlightData.CalAccelX = CalAccel[0];
 	FlightData.CalAccelY = CalAccel[1];
 	FlightData.CalAccelZ = CalAccel[2];
@@ -110,13 +123,17 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 
 	const bool KalmanStepping = SystemContext->KalmanInitialized && KalmanStateAllowsStepping(SystemState);
 	if (SystemContext->KalmanInitialized) {
-		bool IMU_Available = (FlightData.RawAccelX != KalmanLastAccelX);
+		bool IMU_Available = (FlightData.CalAccelX != KalmanLastAccelX);
 		bool BAR_Available = (FlightData.PressurePa != KalmanLastPressure);
-		KalmanLastAccelX = FlightData.RawAccelX;
+		KalmanLastAccelX = FlightData.CalAccelX;
 		KalmanLastPressure = FlightData.PressurePa;
 
 		float32_t ZBAR[1] = {FlightData.PressurePa};
-		if (KalmanStepping) {
+		const bool KalmanInputsFinite = FlightData_FiniteVec3(CalAccel) &&
+			FlightData_FiniteVec3(CalGyro) && isfinite(FlightData.PressurePa) &&
+			isfinite(SystemContext->ReferencePressurePa) &&
+			isfinite(SystemContext->ReferenceTemperatureC);
+		if (KalmanStepping && KalmanInputsFinite) {
 			kalman_filter(IMU_Available, false, false, BAR_Available,
 				&CalAccel, &CalGyro, &KalmanZGPS, &KalmanZMAG, &ZBAR,
 				&KalmanPos, &KalmanVel, &KalmanQuat,
