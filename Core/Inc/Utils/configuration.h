@@ -69,7 +69,7 @@
 // Transition Configuration
 
 // Prelaunch to Boost Acceleration Threshold
-#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	-20.0f // IMU Y-axis is inverted, so negative is upwards
+#define PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD      	-40.0f // IMU Y-axis is inverted, so negative is upwards
 #define PRELAUNCH_BOOST_CONSECUTIVE_SAMPLES      5
 
 // Boost to Coast Acceleration Threshold
