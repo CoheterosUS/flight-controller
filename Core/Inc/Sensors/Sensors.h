@@ -10,6 +10,7 @@
 typedef struct {
     BMP581_SensorData_t Slot[2];
     volatile uint8_t WriteIndex;
+    volatile uint32_t Sequence;
 } BMP581_Mailbox_t;
 
 typedef struct {
@@ -32,7 +33,7 @@ void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t Wai
 
 void BMP581_Mailbox_Publish(const uint8_t *RXBuffer);
 void BMP581_Mailbox_Inject(const BMP581_SensorData_t *Data);
-void BMP581_Mailbox_Read(BMP581_SensorData_t *Out);
+void BMP581_Mailbox_Read(BMP581_SensorData_t *Out, uint32_t *Sequence);
 void IIM42653_Mailbox_Publish(const uint8_t *RXBuffer);
 void IIM42653_Mailbox_Inject(const IIM42653_SensorData_t *Data);
 void IIM42653_Mailbox_Read(IIM42653_SensorData_t *Out);

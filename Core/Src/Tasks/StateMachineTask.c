@@ -43,11 +43,12 @@ void StateMachineTask(void *pvParameters) {
     for (;;) {
         // TODO: Revise timeout
         BMP581_SensorData_t BMP581_SensorData;
+        uint32_t BaroSequence;
         IIM42653_SensorData_t IIM42653_SensorData;
         IIS2MDCTR_SensorData_t IIS2MDCTR_SensorData;
         ZOEM8Q_SensorData_t ZOEM8Q_SensorData;
 
-        BMP581_Mailbox_Read(&BMP581_SensorData);
+        BMP581_Mailbox_Read(&BMP581_SensorData, &BaroSequence);
         IIM42653_Mailbox_Read(&IIM42653_SensorData);
         IIS2MDCTR_Mailbox_Read(&IIS2MDCTR_SensorData);
         ZOEM8Q_Mailbox_Read(&ZOEM8Q_SensorData);
@@ -55,7 +56,7 @@ void StateMachineTask(void *pvParameters) {
         BaseType_t CommandReceived = xQueueReceive(CommandQueue, &Command, 0);
         SystemState_t NextSystemState = HandleCommand(CurrentSystemState, Command, CommandReceived);
 
-        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, IIS2MDCTR_SensorData, ZOEM8Q_SensorData, Command);
+        FlightData = GetFlightData(CurrentSystemState, SystemContext, IIM42653_SensorData, BMP581_SensorData, BaroSequence, IIS2MDCTR_SensorData, ZOEM8Q_SensorData, Command);
         dbg_flight_data = FlightData;
 
         if (NextSystemState == CurrentSystemState) {

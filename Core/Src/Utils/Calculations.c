@@ -40,8 +40,14 @@ float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool 
 
 static float BarometricPreviousAltitude;
 static uint32_t BarometricPreviousTick;
+static uint32_t BarometricPreviousSequence;
+static float BarometricPreviousVelocity;
 
-float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick) {
+float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick, uint32_t Sequence) {
+
+    if (Sequence == BarometricPreviousSequence) {
+        return BarometricPreviousVelocity;
+    }
 
     uint32_t DeltaTick = Tick - BarometricPreviousTick;
     float Velocity = 0.0f;
@@ -53,6 +59,8 @@ float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick) {
 
     BarometricPreviousAltitude = Altitude;
     BarometricPreviousTick = Tick;
+    BarometricPreviousSequence = Sequence;
+    BarometricPreviousVelocity = Velocity;
 
     return Velocity;
 }
@@ -60,6 +68,8 @@ float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick) {
 void ResetBarometricVerticalVelocity(void) {
     BarometricPreviousAltitude = 0.0f;
     BarometricPreviousTick = 0;
+    BarometricPreviousSequence = 0;
+    BarometricPreviousVelocity = 0.0f;
 }
 
 static float GPSPreviousAltitude;

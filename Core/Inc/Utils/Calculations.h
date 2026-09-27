@@ -15,7 +15,7 @@ float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitud
 
 float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool Temperature);
 
-float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick);
+float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick, uint32_t Sequence);
 void ResetBarometricVerticalVelocity(void);
 
 float CalculateGPSVerticalVelocity(float Altitude, uint32_t Tick);
