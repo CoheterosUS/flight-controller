@@ -22,6 +22,8 @@ Do not use serial state commands to move the state machine: the flight configura
 
 ### 1.1 Commands
 
+Suite runner: `python HIL/run_all.py --port COM5 [--scenario S1 S4 APOGEE ...]` runs the entries below by ID (`--list` shows them). Individual runs:
+
 Common: `python HIL/hil.py --port COM5 --scenario <name> [options]`. Add `--seed N`, `--repeat N`. Exit code 0 pass, 1 fail, 2 setup error (no telemetry, or not a HIL build).
 
 | Test | Command |

@@ -73,6 +73,22 @@ For quick iteration on the flight logic alone, a compile flag `HIL_PRESEED_M` lo
 - It sets a flag in `CalStatus` and in the flight snapshot, so any log or telemetry from such a run is identifiable.
 - The full scenarios above must still pass without it before a release.
 
+### 5.3 Running the harness
+
+Suite runner: `HIL/run_all.py` (scenario IDs S1 to S7, R1, R8 and APOGEE). Scenario bodies: `HIL/hil.py`. Install the one dependency with `pip install -r HIL/requirements.txt`. The full command table and pass criteria are in `HIL/HIL_TEST_PLAN.md`.
+
+```
+cd HIL
+python run_all.py --port COM3                  # S1 to S7, R1, R8
+python run_all.py --port COM3 --scenario S4    # one
+python run_all.py --port COM3 --scenario APOGEE
+python run_all.py --port sim                   # harness self test against the mock board
+```
+
+- The wire layout (54 byte telemetry, CalStatus at offset 51, `COMMAND_HIL_DATA` 36 bytes, `COMMAND_HIL_BARO` 8 bytes) lives at the top of `hil.py` and in `PROTOCOL.md`. Keep them in step.
+- Serial state commands are disabled, so the harness never resets or aborts the board over the UART. Scenarios that need a fresh board (no calibration, S6) need the calibration sectors erased first; S5 and the flash checks need manual steps.
+- Some pass criteria cannot be read over telemetry: the exact `M` versus `M_true` match (S1) is a WP-A host test, and the fine 0.01 dps gyro bound (S3) is a WP-E host test. The HIL versions assert the coarser observable, and say so in the check text.
+
 ## 6. Flight build checklist
 
 - Set `FLIGHT_BUILD 1` and compile. The compile-time guard proves `HIL_MODE 0`, `HIL_PRESEED_M 0` and `EXTERNAL_COMMANDS 0`.
