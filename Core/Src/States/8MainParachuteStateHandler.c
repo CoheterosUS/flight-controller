@@ -7,7 +7,7 @@
 static ConfirmCounter_t LandedConfirm;
 
 void MainParachuteStateEntry(SystemContext_t *ctx) {
-    PyroFire(PYRO_CHANNEL_PARACHUTE);
+    // PyroFire(PYRO_CHANNEL_PARACHUTE);
     LandedConfirm = (ConfirmCounter_t){ .Required = MAIN_PARACHUTE_LANDED_CONSECUTIVE_SAMPLES };
 }
 
