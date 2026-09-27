@@ -30,7 +30,8 @@ typedef struct {
     float Window[3];                // last accepted RAW altitudes (median filter input), oldest overwritten first
     uint8_t WindowCount;            // number of samples in Window, saturates at 3
     uint8_t WindowIndex;
-    float Peak;                     // highest FILTERED altitude since Reset
+    float Peak;                     // highest FILTERED altitude since Reset (never seeded from a single raw sample)
+    bool PeakValid;                 // Peak holds a median value (set when the window first holds 3 samples)
     float LastAcceptedAltitude;
     uint32_t LastAcceptedTickMs;
     bool HaveAnchor;                // at least one accepted sample

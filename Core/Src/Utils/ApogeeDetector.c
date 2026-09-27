@@ -81,6 +81,7 @@ void ApogeeDetector_Reset(ApogeeDetector_t *Detector, uint32_t LaunchTickMs)
     Detector->WindowCount = 0u;
     Detector->WindowIndex = 0u;
     Detector->Peak = 0.0f;
+    Detector->PeakValid = false;
     Detector->LastAcceptedAltitude = 0.0f;
     Detector->LastAcceptedTickMs = 0u;
     Detector->HaveAnchor = false;
@@ -120,13 +121,14 @@ ApogeeTrigger_t ApogeeDetector_Update(ApogeeDetector_t *Detector, const ApogeeIn
                     Detector->WindowCount++;
                 }
 
-                if (!Detector->HaveAnchor) {
-                    Detector->HaveAnchor = true;
-                    Detector->Peak = Input->AltitudeM;
-                } else if (Detector->WindowCount == 3u) {
+                Detector->HaveAnchor = true;
+                if (Detector->WindowCount == 3u) {
+                    /* The peak is only ever taken from the median, never from a single raw sample,
+                       so one bad first sample cannot set an impossible peak. */
                     const float FilteredAltitude = Median3(Detector->Window);
-                    if (FilteredAltitude > Detector->Peak) {
+                    if (!Detector->PeakValid || FilteredAltitude > Detector->Peak) {
                         Detector->Peak = FilteredAltitude;
+                        Detector->PeakValid = true;
                     }
 
                     if (Input->BaroAllowed) {

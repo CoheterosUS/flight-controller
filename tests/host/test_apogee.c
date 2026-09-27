@@ -265,6 +265,27 @@ static bool TestZeroAfterHighRejected(void)
         && NearlyEqual(Detector.Peak, 3000.0f, 0.001f);
 }
 
+static bool TestBadFirstSampleDoesNotSetPeak(void)
+{
+    ApogeeDetector_t Detector;
+    uint32_t NowMs = 0u;
+    uint32_t SampleId = 0u;
+    ApogeeDetector_Reset(&Detector, 0u);
+    /* First accepted sample is an impossible +500 m (there is no anchor yet for the slew gate). */
+    AddAccepted(&Detector, &NowMs, &SampleId, true, 500.0f);
+    for (unsigned Sample = 0u; Sample < 1000u && Detector.Fired == APOGEE_TRIGGER_NONE; Sample++) {
+        const float Time = (float)Sample * 0.02f;
+        const float Altitude = 300.0f - 4.8f * (Time - 8.0f) * (Time - 8.0f);
+        AddAccepted(&Detector, &NowMs, &SampleId, true, Altitude);
+        if (Detector.Fired != APOGEE_TRIGGER_NONE && Time < 8.0f) {
+            return false; /* fired during the climb */
+        }
+    }
+    return Detector.Fired == APOGEE_TRIGGER_BARO
+        && NearlyEqual(Detector.Peak, 300.0f, 1.0f)
+        && NowMs > 8000u;
+}
+
 static bool TestTimerExactAndWrap(void)
 {
     ApogeeDetector_t Detector;
@@ -441,6 +462,7 @@ int main(void)
         {"invalid samples are ignored in coast and descent", TestInvalidSamplesIgnored},
         {"upward spike does not poison the peak", TestSpikeUpDoesNotPoisonPeak},
         {"zero altitude after a high sample is rejected", TestZeroAfterHighRejected},
+        {"bad first sample cannot set the peak", TestBadFirstSampleDoesNotSetPeak},
         {"timer exact boundary and tick wrap", TestTimerExactAndWrap},
         {"barometer wins when timer is simultaneous", TestBaroWinsTimer},
         {"firing is latched and reset clears state", TestLatchAndReset},
