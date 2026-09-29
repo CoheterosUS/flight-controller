@@ -8,7 +8,6 @@
 #define PACKET_HEADER_MSB  	((PACKET_HEADER >> 8) & 0xFF)
 #define PACKET_FOOTER		0xBE
 
-#define SD_LOGGING_ENABLED          1
 #define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
 #define AUTO_START_CALIBRATION		1
@@ -56,6 +55,7 @@
 #define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
 
 // SD Configuration
+#define SD_LOGGING_ENABLED          		0
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
 
 // Flash Configuration
