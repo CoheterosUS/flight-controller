@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="840" viewBox="0 0 1300 840">
+<rect width="100%" height="100%" fill="#F8FAFC"/>
+<text x="80.0" y="55.0" font-family="Arial, sans-serif" font-size="30px" font-weight="bold" fill="#17202A">W25Q32JV flash memory map</text>
+<text x="80.0" y="88.0" font-family="Arial, sans-serif" font-size="18px" font-weight="normal" fill="#17202A">Flight-controller external flash: 4 MiB total</text>
+<text x="80.0" y="125.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">Assumed current write pointer: 0x011000   |   flights: 1</text>
+<text x="80.0" y="150.0" font-family="Arial, sans-serif" font-size="14px" font-weight="bold" fill="#17202A">Address</text>
+<text x="80.0" y="275.0" font-family="Arial, sans-serif" font-size="14px" font-weight="normal" fill="#17202A">0x000000</text>
+<text x="1220.0" y="275.0" font-family="Arial, sans-serif" font-size="14px" font-weight="normal" fill="#17202A">0x400000</text>
+<rect x="80.0" y="175.0" width="18.0" height="76.0" fill="#F4B942" stroke="#263238"/>
+<rect x="98.0" y="175.0" width="17.5" height="76.0" fill="#4C9F70" stroke="#263238"/>
+<rect x="115.5" y="175.0" width="1104.5" height="76.0" fill="#D9E2EC" stroke="#263238"/>
+<text x="88.0" y="206.0" font-family="Arial, sans-serif" font-size="15px" font-weight="bold" fill="#17202A">Header
+</text>
+<text x="127.5" y="206.0" font-family="Arial, sans-serif" font-size="15px" font-weight="bold" fill="#17202A">Free</text>
+<text x="80.0" y="330.0" font-family="Arial, sans-serif" font-size="22px" font-weight="bold" fill="#17202A">Fixed regions</text>
+<text x="100.0" y="370.0" font-family="Arial, sans-serif" font-size="17px" font-weight="normal" fill="#17202A">Header sector: 0x000000–0x000FFF  (4,096 B / 4 KiB)</text>
+<text x="125.0" y="400.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">FlashHeader_t: 12 B at 0x000000</text>
+<text x="125.0" y="430.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">  Magic: 4 B   FlightCount: 4 B   WritePointer: 4 B</text>
+<text x="125.0" y="460.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">  Unused/reserved in header sector: 4,084 B</text>
+<text x="100.0" y="505.0" font-family="Arial, sans-serif" font-size="17px" font-weight="normal" fill="#17202A">Data region: 0x001000–0x3FFFFF  (4,190,208 B)</text>
+<text x="125.0" y="535.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">1,023 sectors × 4 KiB = 16,368 pages × 256 B</text>
+<text x="125.0" y="565.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">Each page: 8 × 32-byte FlashLogRecord_t</text>
+<text x="80.0" y="625.0" font-family="Arial, sans-serif" font-size="22px" font-weight="bold" fill="#17202A">One data-page detail</text>
+<text x="100.0" y="665.0" font-family="Arial, sans-serif" font-size="14px" font-weight="normal" fill="#17202A">0x001000</text>
+<text x="100.0" y="695.0" font-family="Arial, sans-serif" font-size="14px" font-weight="normal" fill="#17202A">page start</text>
+<rect x="255.0" y="650.0" width="220.0" height="58.0" fill="#E6A23C" stroke="#263238"/>
+<rect x="475.0" y="650.0" width="220.0" height="58.0" fill="#80CFA0" stroke="#263238"/>
+<rect x="695.0" y="650.0" width="220.0" height="58.0" fill="#80CFA0" stroke="#263238"/>
+<rect x="915.0" y="650.0" width="220.0" height="58.0" fill="#80CFA0" stroke="#263238"/>
+<text x="270.0" y="684.0" font-family="Arial, sans-serif" font-size="15px" font-weight="bold" fill="#17202A">record 0</text>
+<text x="490.0" y="684.0" font-family="Arial, sans-serif" font-size="15px" font-weight="bold" fill="#17202A">record 1</text>
+<text x="710.0" y="684.0" font-family="Arial, sans-serif" font-size="20px" font-weight="bold" fill="#17202A">…</text>
+<text x="930.0" y="684.0" font-family="Arial, sans-serif" font-size="15px" font-weight="bold" fill="#17202A">record 7</text>
+<text x="80.0" y="755.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">Marker pages consume a full 256-byte page; the marker itself occupies only the first 32 bytes.</text>
+<text x="80.0" y="782.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">Normal pages contain eight packed FlashLogRecord_t records (256 bytes total).</text>
+<text x="80.0" y="810.0" font-family="Arial, sans-serif" font-size="16px" font-weight="normal" fill="#17202A">Current view: 256 used data pages (65,536 B), 4,124,672 B free, 130,944 record slots total.</text>
+</svg>
