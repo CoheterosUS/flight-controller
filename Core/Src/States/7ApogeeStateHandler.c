@@ -4,7 +4,9 @@
 #include "stm32h7xx_hal.h"
 
 void ApogeeStateEntry(SystemContext_t *ctx) {
-    // PyroFire(PYRO_CHANNEL_DROGUE);
+#if PYROS_ENABLED
+    PyroFire(PYRO_CHANNEL_DROGUE);
+#endif
 }
 
 SystemState_t ApogeeStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

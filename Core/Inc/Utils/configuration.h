@@ -13,7 +13,10 @@
 #define AUTO_START_CALIBRATION		1
 
 #define BUZZER_ENABLED				1
-#define PYRO_PULSE_MS				3000
+
+// Pyro Configuration
+#define PYRO_PULSE_MS       3000
+#define PYROS_ENABLED       0
 
 // Altitude configuration
 #define ALTITUDE_IIR_FILTER_ALPHA    0.1f
