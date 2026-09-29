@@ -8,7 +8,7 @@
 #define PACKET_HEADER_MSB  	((PACKET_HEADER >> 8) & 0xFF)
 #define PACKET_FOOTER		0xBE
 
-#define SD_LOGGING_ENABLED          0
+#define SD_LOGGING_ENABLED          1
 #define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
 #define AUTO_START_CALIBRATION		1
@@ -40,7 +40,7 @@
 
 // GPS Configuration
 #define GPS_FIX_REQUIRED             1
-#define GPS_FIX_MIN_SATELLITES       1
+#define GPS_FIX_MIN_SATELLITES       4
 #define GPS_ALTITUDE_ASL_BASELINE    90.0f // Baseline to calculate AGL from ASL
 
 // Stack Sizes (words)
