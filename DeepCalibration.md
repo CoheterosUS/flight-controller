@@ -1,74 +1,84 @@
 # 6-Axis Accelerometer Deep Calibration
 
-Design for `Core/Src/States/13DeepCalibrationStateHandler.c`.
+Implementation notes for `Core/Src/States/13DeepCalibrationStateHandler.c`.
 
-## Existing pieces
+## Purpose
 
-- `AccelCalibration_t` (`W25Q32JV.h`) holds `BiasX/Y/Z`, `ScaleX/Y/Z` and `Valid`.
-- `FlashHeader_t` embeds `AccelCal`.
-- `SystemContext_t` (`shared.h`) holds `AccelBias*`, `AccelScale*`, `AccelCalibrationValid` and `DeepCalibrationComplete`.
-- `W25Q_LoadAccelCal(ctx)` copies flash values into the context (called from `1IdleStateHandler.c`).
-- `W25Q_WriteAccelCal(cal)` stores a calibration in the flash header.
-- `CalibrationStateHandler` enters `STATE_DEEP_CALIBRATION` when `AccelY >= DEEP_CALIBRATION_ACCEL_Y_THRESHOLD` is confirmed for `DEEP_CALIBRATION_CONFIRM_SAMPLES` samples.
-- Gyro bias is handled separately by `CalibrateGyroscope`, so it is out of scope here.
+Measure accelerometer bias and scale per axis so the Kalman filter receives corrected acceleration. Six-position static method: the board is held still on each of its six faces.
 
-## Method
+## Frame
 
-Six-position static calibration. Capture the mean accelerometer reading with each axis pointing up (+g) and down (-g).
+- IMU follows the right hand rule and is mounted inverted. Upright rocket: -Y points up (toward the nose), +Y toward the tail.
+- Looking along -Z toward the rocket, Y points down and X = Y cross Z.
+- Accel units are m/s^2. `IMU_ROTATION_ENABLED` is 0, so `FlightData.Accel*` is the raw sensor axis.
+- A resting accelerometer reads +g on the axis pointing up. The +Y face (`AccelY >= threshold`) is nose down, tail up.
 
-Per axis:
+## Entry
 
-- `bias = (pos + neg) / 2`
-- `scale = 2g / (pos - neg)`
+`CalibrationStateHandler` enters `STATE_DEEP_CALIBRATION` when, for `DEEP_CALIBRATION_CONFIRM_SAMPLES` consecutive samples:
 
-Correction applied to raw readings:
+- all three gyro axes are under `DEEP_CALIBRATION_GYRO_MAX_DPS` (`IsGyroscopeStill`), and
+- `AccelY >= DEEP_CALIBRATION_ACCEL_THRESHOLD`.
 
-`corrected = (raw - bias) * scale`
+This only happens while `WaitingDeepCalibration` is set, which is only when `DeepCalibrationComplete` is false and within `DEEP_CALIBRATION_DURATION_MS` of entering calibration.
 
-## Handler design
+## Capture
 
-Static state in the `.c` file, same style as `Calibrations.c`:
+Faces can be captured in any order. The `Faces[]` table maps each face index to an axis and sign:
 
-```c
-static float Sum[6][3];
-static uint16_t Count;
-static uint8_t Captured;
-static ConfirmCounter_t Hold;
-```
+| Index | Face |
+|-------|------|
+| 0 | +Y |
+| 1 | -Y |
+| 2 | +X |
+| 3 | -X |
+| 4 | +Z |
+| 5 | -Z |
 
-Orientation index: 0 = +X, 1 = -X, 2 = +Y, 3 = -Y, 4 = +Z, 5 = -Z.
+Each tick:
 
-Per tick in `DeepCalibrationStateHandler`:
+1. If the gyro is not still, the detected face is none.
+2. Otherwise `DetectFace` returns the face whose `axis * sign >= DEEP_CALIBRATION_ACCEL_THRESHOLD`, or none.
+3. If the detected face changes, the accumulator resets.
+4. A face already in `FacesCaptured` is ignored.
+5. The first `DEEP_CALIBRATION_DISCARD_SAMPLES` samples are discarded so the reading can settle.
+6. The next `DEEP_CALIBRATION_SAMPLES` samples are summed on all three axes.
+7. The mean is stored in `FaceMean[face][3]` and the face bit is set.
 
-1. Find the dominant axis and its sign. The dominant axis must satisfy `|a| >= DEEP_CALIBRATION_ACCEL_Y_THRESHOLD` and the other two axes must be small. This gives an orientation index 0..5.
-2. If that orientation's bit is already set in `Captured`, ignore it.
-3. Use `ConfirmCounterCheck` to require the orientation to stay steady for N samples. Reset the counter and the accumulator if the orientation changes or `|gyro|` exceeds a small motion limit.
-4. Discard the first samples for settling, then accumulate the mean, as `CalibrateGyroscope` does.
-5. When the sample target is reached, store the mean in `Sum[idx]` and set the bit in `Captured`.
-6. When `Captured == 0x3F`:
-   - compute bias and scale for each axis
-   - fill an `AccelCalibration_t`
-   - call `W25Q_WriteAccelCal`
-   - set `ctx->AccelBias*`, `ctx->AccelScale*`, `ctx->AccelCalibrationValid = true`
-   - set `ctx->DeepCalibrationComplete = true`
-   - return `STATE_CALIBRATION`
+There is no off-axis gate. Off-axis readings on X and Z are part of what is being measured.
 
-Orientation is auto-detected, so faces can be presented in any order. The Y+ entry orientation from `CalibrationStateHandler` can count as the first capture.
+## Computation and storage
 
-`DeepCalibrationStateEntry` resets `Sum`, `Count`, `Captured` and `Hold`.
+When `FacesCaptured == DEEP_CALIBRATION_ALL_FACES`, `SaveCalibration`:
 
-## Config constants to add (`configuration.h`)
+- computes, per axis, from the positive and negative face means, using `CalculateAccelerometerAxisCalibration` in `Calculations.c`:
+  - `bias = (positive + negative) / 2`
+  - `scale = 2g / (positive - negative)`
+- fills `AccelCalibration_t` and calls `W25Q_WriteAccelCal`, which erases and reprograms the flash header,
+- calls `W25Q_LoadAccelCal(ctx)` to copy the values into the context and set `AccelCalibrationValid`.
 
+`DeepCalibrationComplete` is set only if the flash write succeeded. The handler then returns `STATE_CALIBRATION`.
+
+## Configuration (`configuration.h`)
+
+- `DEEP_CALIBRATION_ENABLED`
+- `DEEP_CALIBRATION_DURATION_MS`
+- `DEEP_CALIBRATION_ACCEL_THRESHOLD`
+- `DEEP_CALIBRATION_CONFIRM_SAMPLES`
+- `DEEP_CALIBRATION_GYRO_MAX_DPS`
 - `DEEP_CALIBRATION_DISCARD_SAMPLES`
 - `DEEP_CALIBRATION_SAMPLES`
-- `DEEP_CALIBRATION_OFF_AXIS_MAX` (limit for the two non-dominant axes)
-- `DEEP_CALIBRATION_GYRO_MOTION_MAX`
-- `DEEP_CALIBRATION_TIMEOUT_MS`
+- `DEEP_CALIBRATION_FACE_COUNT`
+- `DEEP_CALIBRATION_ALL_FACES`
+- `DEEP_CALIBRATION_AXES`
 
 ## Open items
 
-- Units. The 8.0 threshold suggests m/s², so `g = 9.80665f`. Confirm the units of `FlightData.AccelX/Y/Z`.
-- `W25Q_WriteAccelCal` (`W25Q32JVHandler.c:210`) only assigns `Header.AccelCal` and sets `Valid`. Verify the header is actually programmed to flash afterwards.
-- Nothing currently applies `AccelBias*` and `AccelScale*` to sensor data. Only `W25Q_LoadAccelCal` sets them. Applying them is separate work.
-- Timeout behavior. Decide what happens if not all six faces are captured in time (likely return `STATE_CALIBRATION` without setting `DeepCalibrationComplete`, leaving old calibration untouched).
-- Sanity check on the result. Reject the calibration if any scale is far from 1.0 or any bias is implausibly large.
+- Apply the calibration: nothing yet computes `(raw - bias) * scale` on accel data. Gyro bias is applied in `FlightData.c`, accel is not.
+- Clear `AccelCalibrationValid` on entering deep calibration so a recalibration measures raw values, not corrected ones.
+- No exit from `STATE_DEEP_CALIBRATION` if the six faces are never completed.
+- A failed flash write returns to `STATE_CALIBRATION` with no fault flag.
+- `W25Q_LoadAccelCal` does not set `DeepCalibrationComplete`, so every boot offers deep calibration.
+- No sanity check on the computed bias and scale.
+- Cross-axis tilt matrix is not computed. `FaceMean` keeps all three axes per face so it can be added later: column j of M is `(mean_+j - mean_-j) / (2g)`, applied as `corrected = inverse(M) * (raw - b)`.
+- Tune `DEEP_CALIBRATION_GYRO_MAX_DPS` and the sample counts on hardware.

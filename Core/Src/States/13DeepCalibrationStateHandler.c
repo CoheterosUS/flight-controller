@@ -59,7 +59,7 @@ static bool SaveCalibration(SystemContext_t *ctx) {
 }
 
 void DeepCalibrationStateEntry(SystemContext_t *ctx) {
-    (void)ctx;
+    ctx->AccelCalibrationValid = false;
 
     FacesCaptured = 0;
     CurrentFace = -1;
@@ -67,6 +67,11 @@ void DeepCalibrationStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
+    if (GetStateElapsedMs(Context, STATE_DEEP_CALIBRATION) >= DEEP_CALIBRATION_TIMEOUT_MS) {
+        W25Q_LoadAccelCal(Context);
+        return STATE_CALIBRATION;
+    }
+
     const float Accel[DEEP_CALIBRATION_AXES] = {
         FlightData.AccelX,
         FlightData.AccelY,
