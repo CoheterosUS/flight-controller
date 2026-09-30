@@ -1,6 +1,7 @@
 #ifndef CALCULATIONS_H
 #define CALCULATIONS_H
 
+#include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include "shared.h"
@@ -39,6 +40,10 @@ static inline float CalculateAcceleration(uint8_t MSB, uint8_t LSB, float Factor
 
 static inline float CalculateBiasedGyroscope(SystemContext_t *SystemContext, float Value, float Bias) {
     return SystemContext->GyroCalibrationValid ? Value - Bias : Value;
+}
+
+static inline bool IsGyroscopeStill(FlightData_t FlightData, float MaxDps) {
+    return fabsf(FlightData.GyroX) < MaxDps && fabsf(FlightData.GyroY) < MaxDps && fabsf(FlightData.GyroZ) < MaxDps;
 }
 
 static inline void ApplyIMURotation(float InX, float InY, float InZ, float *OutX, float *OutY, float *OutZ) {
