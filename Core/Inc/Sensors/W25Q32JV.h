@@ -107,7 +107,7 @@ HAL_StatusTypeDef W25Q_EraseAll(void);
 bool W25Q_MaintenanceMode(void);
 bool W25Q_DumpToSD(void);
 
-bool W25Q_ReadAccelCal(AccelCalibration_t *Cal);
+void W25Q_LoadAccelCal(SystemContext_t *ctx);
 HAL_StatusTypeDef W25Q_WriteAccelCal(const AccelCalibration_t *Cal);
 
 #endif //W25Q32JV_H

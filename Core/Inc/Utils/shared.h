@@ -52,6 +52,9 @@ typedef struct {
     bool GPSFixValid;
     bool WaitingDeepCalibration;
     bool DeepCalibrationComplete;
+    float AccelBiasX, AccelBiasY, AccelBiasZ;
+    float AccelScaleX, AccelScaleY, AccelScaleZ;
+    bool AccelCalibrationValid;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;

@@ -12,6 +12,7 @@ void IdleStateEntry(SystemContext_t *ctx) {
     MountAndOpen();
 #endif
     W25Q_LoggingInit();
+    W25Q_LoadAccelCal(ctx);
 }
 
 SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData) {

@@ -195,10 +195,16 @@ bool W25Q_DumpToSD(void) {
     return FlightNum > 0;
 }
 
-bool W25Q_ReadAccelCal(AccelCalibration_t *Cal) {
-    if (!Cal || !Header.AccelCal.Valid) return false;
-    *Cal = Header.AccelCal;
-    return true;
+void W25Q_LoadAccelCal(SystemContext_t *ctx) {
+    if (!Header.AccelCal.Valid) return;
+
+    ctx->AccelBiasX = Header.AccelCal.BiasX;
+    ctx->AccelBiasY = Header.AccelCal.BiasY;
+    ctx->AccelBiasZ = Header.AccelCal.BiasZ;
+    ctx->AccelScaleX = Header.AccelCal.ScaleX;
+    ctx->AccelScaleY = Header.AccelCal.ScaleY;
+    ctx->AccelScaleZ = Header.AccelCal.ScaleZ;
+    ctx->AccelCalibrationValid = true;
 }
 
 HAL_StatusTypeDef W25Q_WriteAccelCal(const AccelCalibration_t *Cal) {
