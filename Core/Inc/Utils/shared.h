@@ -41,6 +41,8 @@ typedef enum {
 typedef struct {
     float ReferencePressurePa;
     bool ReferencePressurePaValid;
+    float ReferenceTemperatureC;
+    bool ReferenceTemperatureCValid;
     float GyroBiasX;
     float GyroBiasY;
     float GyroBiasZ;

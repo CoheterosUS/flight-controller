@@ -5,6 +5,10 @@ static float PressureSumPa;
 static uint16_t PressureSampleCount;
 static uint16_t PressureDiscardCount;
 
+static float TemperatureSumC;
+static uint16_t TemperatureSampleCount;
+static uint16_t TemperatureDiscardCount;
+
 static float GyroSumX, GyroSumY, GyroSumZ;
 static uint16_t GyroSampleCount;
 static uint16_t GyroDiscardCount;
@@ -12,6 +16,8 @@ static uint16_t GyroDiscardCount;
 void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->ReferencePressurePa = 0.0f;
     ctx->ReferencePressurePaValid = false;
+    ctx->ReferenceTemperatureC = 0.0f;
+    ctx->ReferenceTemperatureCValid = false;
     ctx->GyroBiasX = 0.0f;
     ctx->GyroBiasY = 0.0f;
     ctx->GyroBiasZ = 0.0f;
@@ -29,6 +35,10 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     PressureSumPa = 0.0f;
     PressureSampleCount = 0;
     PressureDiscardCount = 0;
+
+    TemperatureSumC = 0.0f;
+    TemperatureSampleCount = 0;
+    TemperatureDiscardCount = 0;
 
     GyroSumX = 0.0f;
     GyroSumY = 0.0f;
@@ -53,6 +63,25 @@ void CalibratePressure(FlightData_t FlightData, SystemContext_t *SystemContext) 
             SystemContext->ReferencePressurePa = PressureSumPa / (float)PressureSampleCount;
             SystemContext->ReferencePressurePaValid = true;
         }
+    }
+}
+
+void CalibrateTemperature(FlightData_t FlightData, SystemContext_t *SystemContext) {
+    if (SystemContext->ReferenceTemperatureCValid) {
+        return;
+    }
+
+    if (TemperatureDiscardCount < TEMPERATURE_CALIBRATION_DISCARD_SAMPLES) {
+        TemperatureDiscardCount++;
+        return;
+    }
+
+    TemperatureSumC += FlightData.TemperatureC;
+    TemperatureSampleCount++;
+
+    if (TemperatureSampleCount >= TEMPERATURE_CALIBRATION_SAMPLES) {
+        SystemContext->ReferenceTemperatureC = TemperatureSumC / (float)TemperatureSampleCount;
+        SystemContext->ReferenceTemperatureCValid = true;
     }
 }
 

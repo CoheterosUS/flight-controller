@@ -48,6 +48,7 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
 #endif
 
     CalibratePressure(FlightData, Context);
+    CalibrateTemperature(FlightData, Context);
     CalibrateGyroscope(FlightData, Context);
 
 #if GPS_FIX_REQUIRED
@@ -58,7 +59,7 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
     Context->GPSFixValid = true;
 #endif
 
-    if (Context->ReferencePressurePaValid && Context->GyroCalibrationValid && Context->GPSFixValid) {
+    if (Context->ReferencePressurePaValid && Context->ReferenceTemperatureCValid && Context->GyroCalibrationValid && Context->GPSFixValid) {
         return STATE_PRELAUNCH;
     }
 
