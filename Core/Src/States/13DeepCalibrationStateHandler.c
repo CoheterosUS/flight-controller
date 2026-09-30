@@ -104,6 +104,7 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
         }
 
         FacesCaptured |= (1u << DetectedFace);
+        Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
         ResetAccumulator();
 
         if (FacesCaptured == DEEP_CALIBRATION_ALL_FACES) {

@@ -59,6 +59,18 @@ When `FacesCaptured == DEEP_CALIBRATION_ALL_FACES`, `SaveCalibration`:
 
 `DeepCalibrationComplete` is set only if the flash write succeeded. The handler then returns `STATE_CALIBRATION`.
 
+## State entry and exit
+
+On entry, `DeepCalibrationStateEntry` clears `AccelCalibrationValid`, `FacesCaptured`, `CurrentFace` and the accumulator. Clearing the flag means the faces are measured raw. Once accel correction is applied to `FlightData`, leaving a stored calibration active would make a recalibration measure already-corrected values and save only the leftover error over the real calibration.
+
+Exits:
+
+- **Completion:** all six faces captured, calibration saved, returns `STATE_CALIBRATION`. The flag is set again by `W25Q_LoadAccelCal`.
+- **Timeout:** if `GetStateElapsedMs(Context, STATE_DEEP_CALIBRATION) >= DEEP_CALIBRATION_TIMEOUT_MS`, the handler calls `W25Q_LoadAccelCal(Context)` to restore the stored calibration and returns `STATE_CALIBRATION`. `OnStateEntry` sets the entry tick, and the handler resets `StateEntryTicks[STATE_DEEP_CALIBRATION]` after each captured face. So the timeout is the maximum time allowed per face (from entry or from the previous capture), not a total.
+- **Commands:** `HandleCommand` can force other states (reset, ground abort, drogue, landed). Reset goes through `IdleStateEntry`, which reloads the calibration. The others do not reload, so the flag stays false until the next IDLE.
+
+If the board is still on +Y after a timeout, `CalibrationStateEntry` re-arms the wait window (deep calibration is not complete) and the entry check can fire again.
+
 ## Configuration (`configuration.h`)
 
 - `DEEP_CALIBRATION_ENABLED`
@@ -68,6 +80,7 @@ When `FacesCaptured == DEEP_CALIBRATION_ALL_FACES`, `SaveCalibration`:
 - `DEEP_CALIBRATION_GYRO_MAX_DPS`
 - `DEEP_CALIBRATION_DISCARD_SAMPLES`
 - `DEEP_CALIBRATION_SAMPLES`
+- `DEEP_CALIBRATION_TIMEOUT_MS`
 - `DEEP_CALIBRATION_FACE_COUNT`
 - `DEEP_CALIBRATION_ALL_FACES`
 - `DEEP_CALIBRATION_AXES`
@@ -75,10 +88,10 @@ When `FacesCaptured == DEEP_CALIBRATION_ALL_FACES`, `SaveCalibration`:
 ## Open items
 
 - Apply the calibration: nothing yet computes `(raw - bias) * scale` on accel data. Gyro bias is applied in `FlightData.c`, accel is not.
-- Clear `AccelCalibrationValid` on entering deep calibration so a recalibration measures raw values, not corrected ones.
-- No exit from `STATE_DEEP_CALIBRATION` if the six faces are never completed.
-- A failed flash write returns to `STATE_CALIBRATION` with no fault flag.
+- A failed flash write returns to `STATE_CALIBRATION` with no fault flag, and accel stays uncorrected until the next reload. `W25Q_WriteAccelCal` sets `Header.AccelCal` in RAM before the flash write, so a later IDLE reload could load values that never reached flash.
+- `AccelCalibrationValid` is a plain `bool`, not `volatile`. This matters once another task reads it.
 - `W25Q_LoadAccelCal` does not set `DeepCalibrationComplete`, so every boot offers deep calibration.
 - No sanity check on the computed bias and scale.
 - Cross-axis tilt matrix is not computed. `FaceMean` keeps all three axes per face so it can be added later: column j of M is `(mean_+j - mean_-j) / (2g)`, applied as `corrected = inverse(M) * (raw - b)`.
-- Tune `DEEP_CALIBRATION_GYRO_MAX_DPS` and the sample counts on hardware.
+- Tune `DEEP_CALIBRATION_GYRO_MAX_DPS`, the sample counts and `DEEP_CALIBRATION_TIMEOUT_MS` on hardware.
+- Nothing has been compiled or tested on hardware yet.
