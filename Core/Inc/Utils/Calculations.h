@@ -22,6 +22,8 @@ void ResetBarometricVerticalVelocity(void);
 float CalculateGPSVerticalVelocity(float Altitude, uint32_t Tick);
 void ResetGPSVerticalVelocity(void);
 
+void CalculateAccelerometerAxisCalibration(float PositiveMean, float NegativeMean, float *Bias, float *Scale);
+
 static inline float CalculateGPSAltitudeAGL(float AltitudeASL) {
     return AltitudeASL - GPS_ALTITUDE_ASL_BASELINE;
 }

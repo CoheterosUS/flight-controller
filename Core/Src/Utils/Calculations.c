@@ -95,3 +95,8 @@ void ResetGPSVerticalVelocity(void) {
     GPSPreviousTick = 0;
 }
 
+void CalculateAccelerometerAxisCalibration(float PositiveMean, float NegativeMean, float *Bias, float *Scale) {
+    *Bias = (PositiveMean + NegativeMean) / 2.0f;
+    *Scale = 2.0f * GRAV_CONSTANT / (PositiveMean - NegativeMean);
+}
+
