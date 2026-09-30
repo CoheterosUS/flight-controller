@@ -19,6 +19,10 @@ void ResetCalibrationContext(SystemContext_t *ctx) {
     ctx->AltitudeFilterInitialized = false;
     ctx->GPSFixValid = false;
 
+#if DEEP_CALIBRATION_ENABLED
+    ctx->WaitingDeepCalibration = false;
+#endif
+
     ResetBarometricVerticalVelocity();
     ResetGPSVerticalVelocity();
 

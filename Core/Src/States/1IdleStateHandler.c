@@ -15,10 +15,12 @@ void IdleStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
+#if AUTO_START_CALIBRATION
     // TODO: URGENT: Test code, remove later
     if (Context->SensorsIdleFinished) {
     	return STATE_CALIBRATION;
     }
+#endif
 
     // TODO: Refine
     if (SystemFaultFlags != 0) {

@@ -31,6 +31,9 @@ void OnStateEntry(const SystemState_t CurrentSystemState, SystemContext_t *Syste
         case STATE_CALIBRATION:
             CalibrationStateEntry(SystemContext);
             break;
+        case STATE_DEEP_CALIBRATION:
+            DeepCalibrationStateEntry(SystemContext);
+            break;
         case STATE_PRELAUNCH:
             PrelaunchStateEntry(SystemContext);
             break;
@@ -83,9 +86,7 @@ void HandleSensors(SystemContext_t *SystemContext, SystemState_t CurrentSystemSt
 				SystemFaultFlags |= IIS2MDCTR_MODE_IDLE_FAILED;
 			}
 
-#if AUTO_START_CALIBRATION
 			SystemContext->SensorsIdleFinished = true;
-#endif
 			break;
 		case STATE_CALIBRATION:
 			if (BMP581_Mode_Performance(BMP581_HANDLE) != HAL_OK) {
@@ -152,6 +153,9 @@ SystemState_t HandleState(SystemState_t CurrentSystemState, SystemContext_t *Sys
 			break;
 		case STATE_CALIBRATION:
 			return CalibrationStateHandler(SystemContext, SensorData);
+			break;
+		case STATE_DEEP_CALIBRATION:
+			return DeepCalibrationStateHandler(SystemContext, SensorData);
 			break;
 		case STATE_PRELAUNCH:
 			return PrelaunchStateHandler(SystemContext, SensorData);
