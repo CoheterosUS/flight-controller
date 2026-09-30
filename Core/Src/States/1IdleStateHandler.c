@@ -6,7 +6,7 @@
 #include "Utils/Pyro.h"
 
 void IdleStateEntry(SystemContext_t *ctx) {
-	PyroSafeAll();
+    PyroSafeAll();
     ResetCalibrationContext(ctx);
 #if SD_LOGGING_ENABLED
     MountAndOpen();
@@ -18,7 +18,7 @@ SystemState_t IdleStateHandler(SystemContext_t *Context, FlightData_t FlightData
 #if AUTO_START_CALIBRATION
     // TODO: URGENT: Test code, remove later
     if (Context->SensorsIdleFinished) {
-    	return STATE_CALIBRATION;
+        return STATE_CALIBRATION;
     }
 #endif
 

@@ -8,9 +8,9 @@ void CoastStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t CoastStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (ConfirmCounterCheck(&ActiveControlConfirm, FlightData.BarometricAltitude > COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD)) {
-		return STATE_ACTIVE_CONTROL;
-	}
+    if (ConfirmCounterCheck(&ActiveControlConfirm, FlightData.BarometricAltitude > COAST_ACTIVE_CONTROL_BAROM_ALT_THRESHOLD)) {
+        return STATE_ACTIVE_CONTROL;
+    }
 
     return STATE_COAST;
 }

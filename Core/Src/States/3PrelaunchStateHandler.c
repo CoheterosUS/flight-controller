@@ -10,9 +10,9 @@ void PrelaunchStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t PrelaunchStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	if (ConfirmCounterCheck(&BoostConfirm, FlightData.AccelY < PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD)) {
-		return STATE_BOOST;
-	}
+    if (ConfirmCounterCheck(&BoostConfirm, FlightData.AccelY < PRELAUNCH_BOOST_ACCEL_Y_THRESHOLD)) {
+        return STATE_BOOST;
+    }
 
     if (SystemFaultFlags != 0) {
         return STATE_GROUND_ABORT;

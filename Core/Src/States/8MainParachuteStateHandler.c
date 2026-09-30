@@ -14,12 +14,12 @@ void MainParachuteStateEntry(SystemContext_t *ctx) {
 }
 
 SystemState_t MainParachuteStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
-	bool AltitudeLow = FlightData.BarometricAltitude <= MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD;
-	bool VelocityLow = fabsf(FlightData.BarometricVelocity) <= MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD;
+    bool AltitudeLow = FlightData.BarometricAltitude <= MAIN_PARACHUTE_LANDED_BAROM_ALT_THRESHOLD;
+    bool VelocityLow = fabsf(FlightData.BarometricVelocity) <= MAIN_PARACHUTE_LANDED_BAROM_VEL_Y_THRESHOLD;
 
-	if (ConfirmCounterCheck(&LandedConfirm, AltitudeLow && VelocityLow)) {
-		return STATE_LANDED;
-	}
+    if (ConfirmCounterCheck(&LandedConfirm, AltitudeLow && VelocityLow)) {
+        return STATE_LANDED;
+    }
 
     return STATE_MAIN_PARACHUTE;
 }
