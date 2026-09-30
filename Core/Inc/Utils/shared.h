@@ -32,6 +32,7 @@ typedef enum {
     STATE_GROUND_ABORT,
     STATE_DESCENT_ABORT,
     STATE_ASCENT_ABORT,
+    STATE_DEEP_CALIBRATION, // Calibration while the vehicle is facing downward
 
     STATE_MAX           // Table size
 } SystemState_t;
@@ -49,6 +50,8 @@ typedef struct {
     volatile bool FlashLoggingEnabled;
     volatile bool SensorsIdleFinished;
     bool GPSFixValid;
+    bool WaitingDeepCalibration;
+    bool DeepCalibrationComplete;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
