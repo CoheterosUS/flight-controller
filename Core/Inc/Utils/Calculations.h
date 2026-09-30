@@ -63,8 +63,8 @@ static inline uint32_t GetStateElapsedMs(SystemContext_t *SystemContext, SystemS
 }
 
 typedef struct {
-    uint8_t Count;
-    uint8_t Required;
+    uint16_t Count;
+    uint16_t Required;
 } ConfirmCounter_t;
 
 static inline bool ConfirmCounterCheck(ConfirmCounter_t *Counter, bool Condition) {
