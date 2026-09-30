@@ -68,7 +68,7 @@ void FlashProducerTask(void *pvParameters) {
 
         ActivePage->Records[ActiveCount++] = Record;
 
-        if (ActiveCount >= FLASH_PAGE_RECORDS) {
+        if (ActiveCount >= FLASH_RECORDS_PER_PAGE) {
             WritePage = ActivePage;
             ActivePage = (ActivePage == &PageA) ? &PageB : &PageA;
             ActiveCount = 0;

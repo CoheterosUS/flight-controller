@@ -8,13 +8,6 @@
 #define FLASH_HEADER_ADDRESS    0x00000000
 #define FLASH_DATA_START        W25Q_SECTOR_SIZE
 
-#pragma pack(push, 1)
-typedef struct {
-    uint32_t Magic;
-    uint32_t FlightCount;
-    uint32_t WritePointer;
-} FlashHeader_t;
-#pragma pack(pop)
 
 static FlashHeader_t Header;
 static bool W25Q_Initialized = false;
@@ -188,7 +181,7 @@ bool W25Q_DumpToSD(void) {
         }
 
         if (FileOpen) {
-            for (uint8_t i = 0; i < FLASH_PAGE_RECORDS; i++) {
+            for (uint8_t i = 0; i < FLASH_RECORDS_PER_PAGE; i++) {
                 if (Page.Records[i].Sync != PACKET_HEADER) break;
                 UINT BytesWritten;
                 f_write(&File, &Page.Records[i], sizeof(FlashLogRecord_t), &BytesWritten);
@@ -200,4 +193,16 @@ bool W25Q_DumpToSD(void) {
     if (FileOpen) f_close(&File);
     f_mount(NULL, SDPath, 1);
     return FlightNum > 0;
+}
+
+bool W25Q_ReadAccelCal(AccelCalibration_t *Cal) {
+    if (!Cal || !Header.AccelCal.Valid) return false;
+    *Cal = Header.AccelCal;
+    return true;
+}
+
+HAL_StatusTypeDef W25Q_WriteAccelCal(const AccelCalibration_t *Cal) {
+    Header.AccelCal = *Cal;
+    Header.AccelCal.Valid = 1;
+    return W25Q_WriteHeader(W25Q_HANDLE);
 }

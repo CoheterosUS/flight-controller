@@ -56,10 +56,23 @@
 #define W25Q_SR1_PROTECT_ALL            0x9C
 #define W25Q_SR1_PROTECT_NONE           0x00
 
-#define FLASH_PAGE_RECORDS              FLASH_RECORDS_PER_PAGE
+#pragma pack(push, 1)
+typedef struct {
+    float BiasX, BiasY, BiasZ;
+    float ScaleX, ScaleY, ScaleZ;
+    uint8_t Valid;
+} AccelCalibration_t;
 
 typedef struct {
-    FlashLogRecord_t Records[FLASH_PAGE_RECORDS];
+    uint32_t Magic;
+    uint32_t FlightCount;
+    uint32_t WritePointer;
+    AccelCalibration_t AccelCal;
+} FlashHeader_t;
+#pragma pack(pop)
+
+typedef struct {
+    FlashLogRecord_t Records[FLASH_RECORDS_PER_PAGE];
 } FlashPage_t;
 
 extern SemaphoreHandle_t FlashSPISemaphore;
@@ -93,5 +106,8 @@ bool W25Q_HasSpace(uint16_t Bytes);
 HAL_StatusTypeDef W25Q_EraseAll(void);
 bool W25Q_MaintenanceMode(void);
 bool W25Q_DumpToSD(void);
+
+bool W25Q_ReadAccelCal(AccelCalibration_t *Cal);
+HAL_StatusTypeDef W25Q_WriteAccelCal(const AccelCalibration_t *Cal);
 
 #endif //W25Q32JV_H
