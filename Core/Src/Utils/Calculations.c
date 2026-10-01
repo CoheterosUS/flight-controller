@@ -12,21 +12,29 @@ float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa, float 
     return (GAS_CONSTANT * TemperatureK / GRAV_CONSTANT) * logf(SystemContext->ReferencePressurePa / PressurePa);
 }
 
-float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude) {
+float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude, uint32_t Sequence) {
     static float FilteredAltitude = 0.0f;
+    static uint32_t PreviousSequence = 0;
 
     if (!SystemContext->ReferencePressurePaValid) {
         FilteredAltitude = 0.0f;
+        PreviousSequence = 0;
         SystemContext->AltitudeFilterInitialized = false;
         return 0.0f;
     }
 
     if (!SystemContext->AltitudeFilterInitialized) {
         FilteredAltitude = RawAltitude;
+        PreviousSequence = Sequence;
         SystemContext->AltitudeFilterInitialized = true;
         return FilteredAltitude;
     }
 
+    if (Sequence == PreviousSequence) {
+        return FilteredAltitude;
+    }
+
+    PreviousSequence = Sequence;
     FilteredAltitude = FilteredAltitude + ALTITUDE_IIR_FILTER_ALPHA * (RawAltitude - FilteredAltitude);
     return FilteredAltitude;
 }
@@ -44,7 +52,6 @@ static uint32_t BarometricPreviousSequence;
 static float BarometricPreviousVelocity;
 
 float CalculateBarometricVerticalVelocity(float Altitude, uint32_t Tick, uint32_t Sequence) {
-
     if (Sequence == BarometricPreviousSequence) {
         return BarometricPreviousVelocity;
     }

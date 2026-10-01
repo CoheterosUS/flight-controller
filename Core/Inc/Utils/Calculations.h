@@ -12,7 +12,7 @@
 #define TEMPERATURE_SCALE (1.0f / 65536.0f)		// BMP581: 16 fractional bits
 
 float CalculateAltitude(SystemContext_t *SystemContext, float PressurePa, float Temperature);
-float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude);
+float CalculateFilteredAltitude(SystemContext_t *SystemContext, float RawAltitude, uint32_t Sequence);
 
 float CalculatePressureTemperature(uint8_t MSB, uint8_t LSB, uint8_t XLSB, bool Temperature);
 
