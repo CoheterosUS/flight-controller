@@ -65,6 +65,7 @@ void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     FacesCaptured = 0;
     CurrentFace = -1;
     ResetAccumulator();
+    xTaskNotify(BuzzerTaskHandle, 3, eSetValueWithOverwrite);
 }
 
 SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
