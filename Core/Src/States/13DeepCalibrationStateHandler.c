@@ -1,4 +1,6 @@
 #include "States/StateHandlers.h"
+#include "Utils/Calculations.h"
+#include "Sensors/IIM42653.h"
 #include "Sensors/W25Q32JV.h"
 #include "Tasks/BuzzerTask.h"
 
@@ -7,7 +9,7 @@ typedef struct {
     float Sign;
 } Face_t;
 
-static float CalibrationMatrix[DEEP_CALIBRATION_FACE_COUNT][DEEP_CALIBRATION_SAMPLES][DEEP_CALIBRATION_AXES];
+static int16_t CalibrationMatrix[DEEP_CALIBRATION_FACE_COUNT][DEEP_CALIBRATION_SAMPLES][DEEP_CALIBRATION_AXES];
 static uint16_t FaceSampleCount[DEEP_CALIBRATION_FACE_COUNT];
 static uint16_t Discarded;
 static const Face_t Faces[DEEP_CALIBRATION_FACE_COUNT] = {
@@ -65,9 +67,9 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
     }
 
     uint16_t idx = FaceSampleCount[DetectedFace];
-    CalibrationMatrix[DetectedFace][idx][0] = Accel[0];
-    CalibrationMatrix[DetectedFace][idx][1] = Accel[1];
-    CalibrationMatrix[DetectedFace][idx][2] = Accel[2];
+    CalibrationMatrix[DetectedFace][idx][0] = CalculateAccelerationLSB(Accel[0], ACCEL_SCALE);
+    CalibrationMatrix[DetectedFace][idx][1] = CalculateAccelerationLSB(Accel[1], ACCEL_SCALE);
+    CalibrationMatrix[DetectedFace][idx][2] = CalculateAccelerationLSB(Accel[2], ACCEL_SCALE);
 
     if (++FaceSampleCount[DetectedFace] >= DEEP_CALIBRATION_SAMPLES) {
         Context->DeepCalFacesCaptured |= (1u << DetectedFace);

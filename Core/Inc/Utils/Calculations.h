@@ -40,12 +40,19 @@ static inline float CalculateAcceleration(uint8_t MSB, uint8_t LSB, float Factor
     return ((int16_t)((MSB << 8) | LSB)) * Factor;
 }
 
+static inline int16_t CalculateAccelerationLSB(float Acceleration, float Factor) {
+    return (int16_t)(Acceleration / Factor);
+}
+
 static inline float CalculateBiasedGyroscope(SystemContext_t *SystemContext, float Value, float Bias) {
     return SystemContext->GyroCalibrationValid ? Value - Bias : Value;
 }
 
 static inline bool IsGyroscopeStill(FlightData_t FlightData, float MaxDps) {
-    return fabsf(FlightData.GyroX) < MaxDps && fabsf(FlightData.GyroY) < MaxDps && fabsf(FlightData.GyroZ) < MaxDps;
+    float Mag2 = FlightData.GyroX * FlightData.GyroX
+               + FlightData.GyroY * FlightData.GyroY
+               + FlightData.GyroZ * FlightData.GyroZ;
+    return Mag2 < MaxDps * MaxDps;
 }
 
 static inline void ApplyIMURotation(float InX, float InY, float InZ, float *OutX, float *OutY, float *OutZ) {
