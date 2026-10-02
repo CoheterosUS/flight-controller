@@ -1,5 +1,4 @@
 #include "States/StateHandlers.h"
-#include "Utils/Calculations.h"
 #include "Sensors/W25Q32JV.h"
 #include "Tasks/BuzzerTask.h"
 
@@ -8,23 +7,14 @@ typedef struct {
     float Sign;
 } Face_t;
 
-typedef struct {
-    float Sum[DEEP_CALIBRATION_AXES];
-    uint16_t Samples;
-    uint16_t Discarded;
-} FaceAccumulator_t;
-
-static float FaceMean[DEEP_CALIBRATION_FACE_COUNT][DEEP_CALIBRATION_AXES];
-static FaceAccumulator_t Accumulator;
+static float CalibrationMatrix[DEEP_CALIBRATION_FACE_COUNT][DEEP_CALIBRATION_SAMPLES][DEEP_CALIBRATION_AXES];
+static uint16_t FaceSampleCount[DEEP_CALIBRATION_FACE_COUNT];
+static uint16_t Discarded;
 static const Face_t Faces[DEEP_CALIBRATION_FACE_COUNT] = {
-    { 1, +1.0f }, { 1, -1.0f },     // Y
-    { 0, +1.0f }, { 0, -1.0f },     // X
-    { 2, +1.0f }, { 2, -1.0f },     // Z
+    { 1, +1.0f }, { 1, -1.0f },
+    { 0, +1.0f }, { 0, -1.0f },
+    { 2, +1.0f }, { 2, -1.0f },
 };
-
-static void ResetAccumulator(void) {
-    Accumulator = (FaceAccumulator_t){0};
-}
 
 static int8_t DetectFace(const float Accel[DEEP_CALIBRATION_AXES]) {
     for (uint8_t face = 0; face < DEEP_CALIBRATION_FACE_COUNT; face++) {
@@ -35,34 +25,11 @@ static int8_t DetectFace(const float Accel[DEEP_CALIBRATION_AXES]) {
     return -1;
 }
 
-static bool SaveCalibration(SystemContext_t *ctx) {
-    float Bias[DEEP_CALIBRATION_AXES];
-    float Scale[DEEP_CALIBRATION_AXES];
-
-    for (uint8_t pair = 0; pair < DEEP_CALIBRATION_FACE_COUNT / 2; pair++) {
-        const uint8_t Axis = Faces[2 * pair].Axis;
-        CalculateAccelerometerAxisCalibration(FaceMean[2 * pair][Axis], FaceMean[2 * pair + 1][Axis], &Bias[Axis], &Scale[Axis]);
-    }
-
-    const AccelCalibration_t Cal = {
-        .BiasX = Bias[0], .BiasY = Bias[1], .BiasZ = Bias[2],
-        .ScaleX = Scale[0], .ScaleY = Scale[1], .ScaleZ = Scale[2],
-    };
-
-    if (W25Q_WriteAccelCal(&Cal) != HAL_OK) {
-        return false;
-    }
-
-    W25Q_LoadAccelCal(ctx);
-    return true;
-}
-
 void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     ctx->AccelCalibrationValid = false;
-
     ctx->DeepCalFacesCaptured = 0;
     ctx->DeepCalCurrentFace = -1;
-    ResetAccumulator();
+    Discarded = 0;
     xTaskNotify(BuzzerTaskHandle, 3, eSetValueWithOverwrite);
 }
 
@@ -82,35 +49,33 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
 
     if (DetectedFace != Context->DeepCalCurrentFace) {
         Context->DeepCalCurrentFace = DetectedFace;
-        ResetAccumulator();
+        Discarded = 0;
+        if (DetectedFace >= 0) {
+            FaceSampleCount[DetectedFace] = 0;
+        }
     }
 
     if (DetectedFace < 0 || (Context->DeepCalFacesCaptured & (1u << DetectedFace))) {
         return STATE_DEEP_CALIBRATION;
     }
 
-    if (Accumulator.Discarded < DEEP_CALIBRATION_DISCARD_SAMPLES) {
-        Accumulator.Discarded++;
+    if (Discarded < DEEP_CALIBRATION_DISCARD_SAMPLES) {
+        Discarded++;
         return STATE_DEEP_CALIBRATION;
     }
 
-    for (uint8_t i = 0; i < DEEP_CALIBRATION_AXES; i++) {
-        Accumulator.Sum[i] += Accel[i];
-    }
+    uint16_t idx = FaceSampleCount[DetectedFace];
+    CalibrationMatrix[DetectedFace][idx][0] = Accel[0];
+    CalibrationMatrix[DetectedFace][idx][1] = Accel[1];
+    CalibrationMatrix[DetectedFace][idx][2] = Accel[2];
 
-    if (++Accumulator.Samples >= DEEP_CALIBRATION_SAMPLES) {
-        for (uint8_t i = 0; i < DEEP_CALIBRATION_AXES; i++) {
-            FaceMean[DetectedFace][i] = Accumulator.Sum[i] / (float)Accumulator.Samples;
-        }
-
+    if (++FaceSampleCount[DetectedFace] >= DEEP_CALIBRATION_SAMPLES) {
         Context->DeepCalFacesCaptured |= (1u << DetectedFace);
         xTaskNotify(BuzzerTaskHandle, __builtin_popcount(Context->DeepCalFacesCaptured), eSetValueWithOverwrite);
         Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
-        ResetAccumulator();
 
         if (Context->DeepCalFacesCaptured == DEEP_CALIBRATION_ALL_FACES) {
-            Context->DeepCalibrationComplete = SaveCalibration(Context);
-            xTaskNotify(BuzzerTaskHandle, Context->DeepCalibrationComplete ? 0 : 10, eSetValueWithOverwrite);
+            Context->DeepCalibrationComplete = true;
             return STATE_CALIBRATION;
         }
     }
