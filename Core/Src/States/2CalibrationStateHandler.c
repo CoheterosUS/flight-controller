@@ -1,6 +1,7 @@
 #include "States/StateHandlers.h"
 #include "Utils/Calibrations.h"
 #include "Utils/Calculations.h"
+#include "Tasks/BuzzerTask.h"
 
 #if DEEP_CALIBRATION_ENABLED
 static ConfirmCounter_t DeepCalibrationConfirm;
@@ -14,6 +15,7 @@ static bool WaitForDeepCalibration(SystemContext_t *ctx, FlightData_t FlightData
 
     if (GetStateElapsedMs(ctx, STATE_CALIBRATION) >= DEEP_CALIBRATION_DURATION_MS) {
         ctx->WaitingDeepCalibration = false;
+        xTaskNotify(BuzzerTaskHandle, 0, eSetValueWithOverwrite);
     }
 
     return false;

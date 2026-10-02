@@ -52,6 +52,7 @@
 #define STACK_SIZE_SENSOR_CONFIG        512
 #define STACK_SIZE_STATE_MACHINE        1024
 #define STACK_SIZE_SD_LOGGING           1024
+#define STACK_SIZE_BUZZER               128
 #define STACK_SIZE_PYRO                 256
 #define STACK_SIZE_FLASH_LOGGING        768
 
@@ -120,7 +121,7 @@
 
 #define DEEP_CALIBRATION_ACCEL_THRESHOLD        8.0f
 #define DEEP_CALIBRATION_CONFIRM_SAMPLES        1000
-#define DEEP_CALIBRATION_GYRO_MAX_DPS           5.0f
+#define DEEP_CALIBRATION_GYRO_MAX_DPS           7.5f
 #define DEEP_CALIBRATION_DISCARD_SAMPLES        1000
 #define DEEP_CALIBRATION_SAMPLES                1000
 

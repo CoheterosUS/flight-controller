@@ -1,6 +1,7 @@
 #include "States/StateHandlers.h"
 #include "Utils/Calculations.h"
 #include "Sensors/W25Q32JV.h"
+#include "Tasks/BuzzerTask.h"
 
 typedef struct {
     uint8_t Axis;
@@ -104,6 +105,7 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
         }
 
         FacesCaptured |= (1u << DetectedFace);
+        xTaskNotify(BuzzerTaskHandle, __builtin_popcount(FacesCaptured), eSetValueWithOverwrite);
         Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
         ResetAccumulator();
 
