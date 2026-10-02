@@ -13,6 +13,7 @@ TaskHandle_t StateMachineTaskHandle;
 volatile SystemState_t dbg_current_state = STATE_IDLE;
 volatile uint32_t dbg_system_faults = {0};
 volatile FlightData_t dbg_flight_data;
+volatile SystemContext_t *dbg_ctx;
 
 void CreateStateMachineTask(SystemContext_t *xSystemContext, const UBaseType_t Priority, const uint16_t StackSize) {
     xTaskCreate(
@@ -27,6 +28,7 @@ void CreateStateMachineTask(SystemContext_t *xSystemContext, const UBaseType_t P
 
 void StateMachineTask(void *pvParameters) {
     SystemContext_t *SystemContext = pvParameters;
+    dbg_ctx = SystemContext;
 
     // TODO: Refine
     FlightData_t FlightData = {0};

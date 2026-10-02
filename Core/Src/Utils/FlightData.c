@@ -49,7 +49,9 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.VelY = 0;
 	FlightData.VelZ = 0;
 
-	FlightData.Flags = SystemFaultFlags;
+	FlightData.Flags = SystemFaultFlags
+		| ((uint32_t)SystemContext->DeepCalFacesCaptured << 16)
+		| ((uint32_t)(SystemContext->DeepCalCurrentFace + 1) << 22);
 	FlightData.BatteryVoltage = BatteryGetVoltage();
 	FlightData.State = SystemState;
 	FlightData.RelayState = PyroGetState();

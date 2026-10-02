@@ -15,8 +15,6 @@ typedef struct {
 } FaceAccumulator_t;
 
 static float FaceMean[DEEP_CALIBRATION_FACE_COUNT][DEEP_CALIBRATION_AXES];
-static uint8_t FacesCaptured;
-static int8_t CurrentFace;
 static FaceAccumulator_t Accumulator;
 static const Face_t Faces[DEEP_CALIBRATION_FACE_COUNT] = {
     { 1, +1.0f }, { 1, -1.0f },     // Y
@@ -62,8 +60,8 @@ static bool SaveCalibration(SystemContext_t *ctx) {
 void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     ctx->AccelCalibrationValid = false;
 
-    FacesCaptured = 0;
-    CurrentFace = -1;
+    ctx->DeepCalFacesCaptured = 0;
+    ctx->DeepCalCurrentFace = -1;
     ResetAccumulator();
     xTaskNotify(BuzzerTaskHandle, 3, eSetValueWithOverwrite);
 }
@@ -82,12 +80,12 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
 
     const int8_t DetectedFace = IsGyroscopeStill(FlightData, DEEP_CALIBRATION_GYRO_MAX_DPS) ? DetectFace(Accel) : -1;
 
-    if (DetectedFace != CurrentFace) {
-        CurrentFace = DetectedFace;
+    if (DetectedFace != Context->DeepCalCurrentFace) {
+        Context->DeepCalCurrentFace = DetectedFace;
         ResetAccumulator();
     }
 
-    if (DetectedFace < 0 || (FacesCaptured & (1u << DetectedFace))) {
+    if (DetectedFace < 0 || (Context->DeepCalFacesCaptured & (1u << DetectedFace))) {
         return STATE_DEEP_CALIBRATION;
     }
 
@@ -105,13 +103,14 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
             FaceMean[DetectedFace][i] = Accumulator.Sum[i] / (float)Accumulator.Samples;
         }
 
-        FacesCaptured |= (1u << DetectedFace);
-        xTaskNotify(BuzzerTaskHandle, __builtin_popcount(FacesCaptured), eSetValueWithOverwrite);
+        Context->DeepCalFacesCaptured |= (1u << DetectedFace);
+        xTaskNotify(BuzzerTaskHandle, __builtin_popcount(Context->DeepCalFacesCaptured), eSetValueWithOverwrite);
         Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
         ResetAccumulator();
 
-        if (FacesCaptured == DEEP_CALIBRATION_ALL_FACES) {
+        if (Context->DeepCalFacesCaptured == DEEP_CALIBRATION_ALL_FACES) {
             Context->DeepCalibrationComplete = SaveCalibration(Context);
+            xTaskNotify(BuzzerTaskHandle, Context->DeepCalibrationComplete ? 0 : 10, eSetValueWithOverwrite);
             return STATE_CALIBRATION;
         }
     }

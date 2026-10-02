@@ -54,6 +54,8 @@ typedef struct {
     bool GPSFixValid;
     bool WaitingDeepCalibration;
     bool DeepCalibrationComplete;
+    uint8_t DeepCalFacesCaptured;
+    int8_t DeepCalCurrentFace;
     float AccelBiasX, AccelBiasY, AccelBiasZ;
     float AccelScaleX, AccelScaleY, AccelScaleZ;
     bool AccelCalibrationValid;
