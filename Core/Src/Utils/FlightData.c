@@ -45,6 +45,26 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.BarometricVelocity = CalculateBarometricVerticalVelocity(FlightData.BarometricAltitude, FlightData.Tick, BaroSequence);
 	FlightData.GPSVelocity = CalculateGPSVerticalVelocity(FlightData.GPSAltitude, FlightData.Tick);
 
+	if (SystemContext->AccelCalibrationValid) {
+		const float *M = SystemContext->AccelM;
+		const float *b = SystemContext->AccelBias;
+		FlightData.BodyAccelX = M[0]*FlightData.AccelX + M[1]*FlightData.AccelY + M[2]*FlightData.AccelZ + b[0];
+		FlightData.BodyAccelY = M[3]*FlightData.AccelX + M[4]*FlightData.AccelY + M[5]*FlightData.AccelZ + b[1];
+		FlightData.BodyAccelZ = M[6]*FlightData.AccelX + M[7]*FlightData.AccelY + M[8]*FlightData.AccelZ + b[2];
+
+		const float *A = SystemContext->AccelA_m;
+		FlightData.BodyGyroX = A[0]*FlightData.GyroX + A[1]*FlightData.GyroY + A[2]*FlightData.GyroZ;
+		FlightData.BodyGyroY = A[3]*FlightData.GyroX + A[4]*FlightData.GyroY + A[5]*FlightData.GyroZ;
+		FlightData.BodyGyroZ = A[6]*FlightData.GyroX + A[7]*FlightData.GyroY + A[8]*FlightData.GyroZ;
+	} else {
+		FlightData.BodyAccelX = FlightData.AccelX;
+		FlightData.BodyAccelY = FlightData.AccelY;
+		FlightData.BodyAccelZ = FlightData.AccelZ;
+		FlightData.BodyGyroX = FlightData.GyroX;
+		FlightData.BodyGyroY = FlightData.GyroY;
+		FlightData.BodyGyroZ = FlightData.GyroZ;
+	}
+
 	FlightData.VelX = 0;
 	FlightData.VelY = 0;
 	FlightData.VelZ = 0;

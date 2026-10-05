@@ -108,6 +108,12 @@ typedef struct {
     float VelX;
     float VelY;
     float VelZ;
+    float BodyAccelX;
+    float BodyAccelY;
+    float BodyAccelZ;
+    float BodyGyroX;
+    float BodyGyroY;
+    float BodyGyroZ;
     uint32_t Flags;
     float BatteryVoltage;
     uint8_t State;
