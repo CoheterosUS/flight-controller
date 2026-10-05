@@ -10,7 +10,7 @@
 
 #define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
-#define AUTO_START_CALIBRATION		0
+#define AUTO_START_CALIBRATION		1
 
 #define BUZZER_ENABLED				1
 
@@ -31,16 +31,6 @@
 #define GYRO_CALIBRATION_DISCARD_SAMPLES        1000
 #define GYRO_CALIBRATION_SAMPLES                1000
 
-#define IMU_ROTATION_ENABLED              0
-#define IMU_ROT_XX  +1.00000000f
-#define IMU_ROT_XY  +0.00000000f
-#define IMU_ROT_XZ  +0.00000000f
-#define IMU_ROT_YX  +0.00000000f
-#define IMU_ROT_YY  +1.00000000f
-#define IMU_ROT_YZ  +0.00000000f
-#define IMU_ROT_ZX  +0.00000000f
-#define IMU_ROT_ZY  +0.00000000f
-#define IMU_ROT_ZZ  +1.00000000f
 
 // GPS Configuration
 #define GPS_FIX_REQUIRED             1
@@ -66,7 +56,7 @@
 
 // Flash Configuration
 #define FLASH_DUMP_TO_SD                    0
-#define FLASH_ERASE_ALL                     0
+#define FLASH_ERASE_ALL                     1
 #define FLASH_LOGGING_DIVIDER               10	// 10Hz with a 10 divider
 #define STACK_SIZE_FLASH_MAINTENANCE        1024
 #define FLASH_LOGGING_QUEUE_LENGTH          10

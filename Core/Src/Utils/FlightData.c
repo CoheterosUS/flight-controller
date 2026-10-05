@@ -21,17 +21,13 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	FlightData.MagY = IIS2MDCTR_FlightData.MagY;
 	FlightData.MagZ = IIS2MDCTR_FlightData.MagZ;
 
-	ApplyIMURotation(
-		IIM42653_FlightData.AccelX, IIM42653_FlightData.AccelY, IIM42653_FlightData.AccelZ,
-		&FlightData.AccelX, &FlightData.AccelY, &FlightData.AccelZ
-	);
+	FlightData.AccelX = IIM42653_FlightData.AccelX;
+	FlightData.AccelY = IIM42653_FlightData.AccelY;
+	FlightData.AccelZ = IIM42653_FlightData.AccelZ;
 
-	ApplyIMURotation(
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroX, SystemContext->GyroBiasX),
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroY, SystemContext->GyroBiasY),
-		CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroZ, SystemContext->GyroBiasZ),
-		&FlightData.GyroX, &FlightData.GyroY, &FlightData.GyroZ
-	);
+	FlightData.GyroX = CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroX, SystemContext->GyroBiasX);
+	FlightData.GyroY = CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroY, SystemContext->GyroBiasY);
+	FlightData.GyroZ = CalculateBiasedGyroscope(SystemContext, IIM42653_FlightData.GyroZ, SystemContext->GyroBiasZ);
 
 	FlightData.Latitude = ZOEM8Q_FlightData.Latitude;
 	FlightData.Longitude = ZOEM8Q_FlightData.Longitude;

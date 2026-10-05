@@ -55,18 +55,6 @@ static inline bool IsGyroscopeStill(FlightData_t FlightData, float MaxDps) {
     return Mag2 < MaxDps * MaxDps;
 }
 
-static inline void ApplyIMURotation(float InX, float InY, float InZ, float *OutX, float *OutY, float *OutZ) {
-#if IMU_ROTATION_ENABLED
-    *OutX = IMU_ROT_XX * InX + IMU_ROT_XY * InY + IMU_ROT_XZ * InZ;
-    *OutY = IMU_ROT_YX * InX + IMU_ROT_YY * InY + IMU_ROT_YZ * InZ;
-    *OutZ = IMU_ROT_ZX * InX + IMU_ROT_ZY * InY + IMU_ROT_ZZ * InZ;
-#else
-    *OutX = InX;
-    *OutY = InY;
-    *OutZ = InZ;
-#endif
-}
-
 static inline float CalculateMagneticField(uint8_t MSB, uint8_t LSB) {
     int16_t Raw = (int16_t)((MSB << 8) | LSB);
     return (float)Raw * 1.5f;
