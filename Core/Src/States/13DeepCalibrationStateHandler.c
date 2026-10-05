@@ -3,6 +3,7 @@
 #include "Sensors/IIM42653.h"
 #include "Sensors/W25Q32JV.h"
 #include "Tasks/BuzzerTask.h"
+#include "../Kalman/Cal.h"
 
 typedef enum {
     PHASE_SETTLING,
@@ -17,6 +18,31 @@ static uint16_t Discarded;
 static uint8_t CurrentStep;
 static DeepCalPhase_t Phase;
 
+static float32_t CalW[DEEP_CALIBRATION_FACE_COUNT * DEEP_CALIBRATION_SAMPLES * 4];
+static float32_t CalX[4 * 3];
+static float32_t CalM[3 * 3];
+static float32_t CalAm[3 * 3];
+
+static void RunSixPointCal(void) {
+    const int16_t *Raw = &CalibrationMatrix[0][0][0];
+    const uint32_t Rows = DEEP_CALIBRATION_FACE_COUNT * DEEP_CALIBRATION_SAMPLES;
+
+    for (uint32_t i = 0; i < Rows; i++) {
+        CalW[i * 4 + 0] = Raw[i * 3 + 0];
+        CalW[i * 4 + 1] = Raw[i * 3 + 1];
+        CalW[i * 4 + 2] = Raw[i * 3 + 2];
+        CalW[i * 4 + 3] = 1.0f;
+    }
+
+    arm_matrix_instance_f32 W, X, M, Am;
+    arm_mat_init_f32(&W, Rows, 4, CalW);
+    arm_mat_init_f32(&X, 4, 3, CalX);
+    arm_mat_init_f32(&M, 3, 3, CalM);
+    arm_mat_init_f32(&Am, 3, 3, CalAm);
+
+    six_point_cal(&W, &X, &Am, &M);
+}
+
 void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     ctx->AccelCalibrationValid = false;
     ctx->DeepCalFacesCaptured = 0;
@@ -24,7 +50,7 @@ void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     CurrentStep = 0;
     SampleCount = 0;
     Discarded = 0;
-    Phase = PHASE_SETTLING;
+    Phase = PHASE_WAITING_MOTION;
     xTaskNotify(BuzzerTaskHandle, 3, eSetValueWithOverwrite);
 }
 
@@ -78,6 +104,19 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
             Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
 
             if (++CurrentStep >= DEEP_CALIBRATION_FACE_COUNT) {
+                RunSixPointCal();
+
+                memcpy(Context->AccelA_m, CalAm, sizeof(CalAm));
+                memcpy(Context->AccelBias, &CalX[9], 3 * sizeof(float));
+                memcpy(Context->AccelM, CalM, sizeof(CalM));
+                Context->AccelCalibrationValid = true;
+
+                AccelCalibration_t FlashCal;
+                memcpy(FlashCal.A_m, CalAm, sizeof(CalAm));
+                memcpy(FlashCal.Bias, &CalX[9], 3 * sizeof(float));
+                memcpy(FlashCal.M, CalM, sizeof(CalM));
+                W25Q_WriteAccelCal(&FlashCal);
+
                 Context->DeepCalibrationComplete = true;
                 return STATE_CALIBRATION;
             }

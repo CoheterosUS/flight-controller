@@ -58,8 +58,9 @@
 
 #pragma pack(push, 1)
 typedef struct {
-    float BiasX, BiasY, BiasZ;
-    float ScaleX, ScaleY, ScaleZ;
+    float A_m[9];
+    float Bias[3];
+    float M[9];
     uint8_t Valid;
 } AccelCalibration_t;
 

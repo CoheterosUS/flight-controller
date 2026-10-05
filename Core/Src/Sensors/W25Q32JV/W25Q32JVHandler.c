@@ -3,6 +3,7 @@
 #include "Managers/StructManager.h"
 #include "fatfs.h"
 #include <stdio.h>
+#include <string.h>
 
 #define FLASH_HEADER_MAGIC      0x464C5348
 #define FLASH_HEADER_ADDRESS    0x00000000
@@ -124,6 +125,7 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
     Header.Magic = FLASH_HEADER_MAGIC;
     Header.FlightCount = 0;
     Header.WritePointer = FLASH_DATA_START;
+    memset(&Header.AccelCal, 0, sizeof(Header.AccelCal));
 
     return W25Q_WriteHeader(Handle);
 }
@@ -198,12 +200,9 @@ bool W25Q_DumpToSD(void) {
 void W25Q_LoadAccelCal(SystemContext_t *ctx) {
     if (!Header.AccelCal.Valid) return;
 
-    ctx->AccelBiasX = Header.AccelCal.BiasX;
-    ctx->AccelBiasY = Header.AccelCal.BiasY;
-    ctx->AccelBiasZ = Header.AccelCal.BiasZ;
-    ctx->AccelScaleX = Header.AccelCal.ScaleX;
-    ctx->AccelScaleY = Header.AccelCal.ScaleY;
-    ctx->AccelScaleZ = Header.AccelCal.ScaleZ;
+    memcpy(ctx->AccelA_m, Header.AccelCal.A_m, sizeof(ctx->AccelA_m));
+    memcpy(ctx->AccelBias, Header.AccelCal.Bias, sizeof(ctx->AccelBias));
+    memcpy(ctx->AccelM, Header.AccelCal.M, sizeof(ctx->AccelM));
     ctx->AccelCalibrationValid = true;
 }
 

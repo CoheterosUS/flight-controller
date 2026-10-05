@@ -32,7 +32,7 @@ typedef enum {
     STATE_GROUND_ABORT,
     STATE_DESCENT_ABORT,
     STATE_ASCENT_ABORT,
-    STATE_DEEP_CALIBRATION, // Calibration while the vehicle is facing downward
+    STATE_DEEP_CALIBRATION, // Calibration for calculations
 
     STATE_MAX           // Table size
 } SystemState_t;
@@ -56,8 +56,9 @@ typedef struct {
     bool DeepCalibrationComplete;
     uint8_t DeepCalFacesCaptured;
     int8_t DeepCalCurrentFace;
-    float AccelBiasX, AccelBiasY, AccelBiasZ;
-    float AccelScaleX, AccelScaleY, AccelScaleZ;
+    float AccelA_m[9];
+    float AccelBias[3];
+    float AccelM[9];
     bool AccelCalibrationValid;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
