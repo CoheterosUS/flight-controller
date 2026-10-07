@@ -6,6 +6,7 @@
 #include <Utils/Battery.h>
 #include "Managers/Managers.h"
 #include "Managers/StructManager.h"
+#include <Tasks/TelemetryTask.h>
 #include "queue.h"
 
 TaskHandle_t StateMachineTaskHandle;
@@ -85,8 +86,7 @@ void StateMachineTask(void *pvParameters) {
             xQueueSend(FlashLoggingQueue, &FlashRecord, 0);
         }
 
-        TelemetryPacket_t Packet = BuildTelemetryPacket(&FlightData);
-        SerialSendFlightData(&Packet, CurrentSystemState);
+        xQueueOverwrite(FlightDataQueue, &FlightData);
 
         dbg_current_state = CurrentSystemState;
         dbg_system_faults = SystemFaultFlags;

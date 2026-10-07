@@ -36,16 +36,17 @@ Any agent that reads this file should not assume that any information is correct
 
 ## CommandType (Enum)
 
-| Value  | Name                 | Notes                     |
-|--------|----------------------|---------------------------|
-| `0x00` | COMMAND_NONE         |                           |
-| `0x01` | COMMAND_RESET        |                           |
-| `0x02` | COMMAND_GROUND_ABORT |                           |
-| `0x03` | COMMAND_CALIBRATION  |                           |
-| `0x04` | COMMAND_DROGUE       |                           |
-| `0x05` | COMMAND_LANDED       |                           |
-| `0x10` | COMMAND_HIL_DATA     | Excluded From LastCommand |
-| `0x20` | COMMAND_GPS_DATA     | Excluded From LastCommand |
+| Value  | Name                  | Notes                     |
+|--------|-----------------------|---------------------------|
+| `0x00` | COMMAND_NONE          |                           |
+| `0x01` | COMMAND_RESET         |                           |
+| `0x02` | COMMAND_GROUND_ABORT  |                           |
+| `0x03` | COMMAND_CALIBRATION   |                           |
+| `0x04` | COMMAND_DROGUE        |                           |
+| `0x05` | COMMAND_LANDED        |                           |
+| `0x06` | COMMAND_REQUEST_TELEM |                           |
+| `0x10` | COMMAND_HIL_DATA      | Excluded From LastCommand |
+| `0x20` | COMMAND_GPS_DATA      | Excluded From LastCommand |
 
 ## SystemFaultFlags (Bitmask)
 

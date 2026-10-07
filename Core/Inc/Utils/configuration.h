@@ -10,7 +10,7 @@
 
 #define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
-#define AUTO_START_CALIBRATION		1
+#define AUTO_START_CALIBRATION		0
 
 #define BUZZER_ENABLED				1
 
@@ -47,8 +47,6 @@
 #define STACK_SIZE_FLASH_LOGGING        768
 
 // Telemetry Configuration (main loop at 100Hz)
-#define TELEMETRY_DIVIDER                   100  // 1Hz in active states
-#define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
 
 // SD Configuration
 #define SD_LOGGING_ENABLED          		1

@@ -8,21 +8,15 @@ static uint8_t SERIAL_TX_BUFFER[2][sizeof(TelemetryPacket_t)];
 
 static uint8_t ActiveTXIndex;
 static volatile bool TXBusy;
-static uint8_t TelemetryCounter;
 
 volatile uint8_t dbg_telem_sent = 0;
 
 void SerialInit(void) {
     ActiveTXIndex = 0;
     TXBusy = false;
-    TelemetryCounter = 0;
 }
 
-void SerialSendFlightData(const TelemetryPacket_t *Packet, SystemState_t State) {
-    uint8_t Divider = (State == STATE_IDLE) ? TELEMETRY_DIVIDER_IDLE : TELEMETRY_DIVIDER;
-    if (++TelemetryCounter < Divider) return;
-    TelemetryCounter = 0;
-
+void SerialSendFlightData(const TelemetryPacket_t *Packet) {
     if (TXBusy) return;
 
     uint8_t *Buf = SERIAL_TX_BUFFER[ActiveTXIndex];

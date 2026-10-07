@@ -28,8 +28,8 @@ void HAL_UARTEx_RxEventCallback(UART_HandleTypeDef *huart, uint16_t Size) {
     if (huart->Instance == USART1) {
         BaseType_t xHigherPriorityTaskWoken = pdFALSE;
 
-        if (TelemetryTaskHandle != NULL) {
-            xTaskNotifyFromISR(TelemetryTaskHandle, Size, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
+        if (TelemetryReceiveTaskHandle != NULL) {
+            xTaskNotifyFromISR(TelemetryReceiveTaskHandle, Size, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
         }
     }
