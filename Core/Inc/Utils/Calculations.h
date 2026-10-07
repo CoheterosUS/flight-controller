@@ -69,11 +69,11 @@ typedef struct {
     uint16_t Required;
 } ConfirmCounter_t;
 
-static inline void CalculateCalibratedAccel(const float *Raw, const float *M, const float *Bias, float Scale, float *Out) {
+static inline void CalculateCalibratedAccel(const float *Raw, const float *M, float Scale, float *Out) {
     float lsb[3] = { Raw[0] / Scale, Raw[1] / Scale, Raw[2] / Scale };
-    Out[0] = M[0]*lsb[0] + M[1]*lsb[1] + M[2]*lsb[2] + Bias[0];
-    Out[1] = M[3]*lsb[0] + M[4]*lsb[1] + M[5]*lsb[2] + Bias[1];
-    Out[2] = M[6]*lsb[0] + M[7]*lsb[1] + M[8]*lsb[2] + Bias[2];
+    Out[0] = M[0]*lsb[0] + M[1]*lsb[1] + M[2]*lsb[2];
+    Out[1] = M[3]*lsb[0] + M[4]*lsb[1] + M[5]*lsb[2];
+    Out[2] = M[6]*lsb[0] + M[7]*lsb[1] + M[8]*lsb[2];
 }
 
 static inline void CalculateRotatedVector(const float *M, const float *In, float *Out) {

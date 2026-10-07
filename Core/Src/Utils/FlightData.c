@@ -44,7 +44,7 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 	if (SystemContext->AccelCalibrationValid) {
 		float RawAccel[3] = { FlightData.AccelX, FlightData.AccelY, FlightData.AccelZ };
 		float BodyAccel[3];
-		CalculateCalibratedAccel(RawAccel, SystemContext->AccelM, SystemContext->AccelBias, ACCEL_SCALE, BodyAccel);
+		CalculateCalibratedAccel(RawAccel, SystemContext->AccelM, ACCEL_SCALE, BodyAccel);
 		FlightData.BodyAccelX = BodyAccel[0];
 		FlightData.BodyAccelY = BodyAccel[1];
 		FlightData.BodyAccelZ = BodyAccel[2];
