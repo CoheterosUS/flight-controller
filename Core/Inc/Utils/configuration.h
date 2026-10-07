@@ -51,7 +51,7 @@
 #define TELEMETRY_DIVIDER_IDLE              100  // 1Hz in IDLE
 
 // SD Configuration
-#define SD_LOGGING_ENABLED          		0
+#define SD_LOGGING_ENABLED          		1
 #define SD_LOGGING_RECORDS_PER_BUFFER       500
 
 // Flash Configuration
