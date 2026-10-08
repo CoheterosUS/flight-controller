@@ -2,8 +2,9 @@
 #define CAL_H
 
 #include "dsp/arm_math.h"
+#include "Utils/configuration.h"
 
-#define N 500
+#define N DEEP_CALIBRATION_SAMPLES
 
 /*  N número de medidas por cada orientación, define
     Y matriz de g normalizada, tamaño 6nx3

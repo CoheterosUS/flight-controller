@@ -4,7 +4,7 @@ Implementation notes for `Core/Src/States/13DeepCalibrationStateHandler.c`.
 
 ## Purpose
 
-Measure accelerometer bias and scale per axis so the Kalman filter receives corrected acceleration. Six-position static method: the board is held still on each of its six faces.
+Measure accelerometer bias, scale, and cross-axis coupling so the Kalman filter receives corrected acceleration. Six-position static method: the board is held still on each of its six faces in sequence.
 
 ## Frame
 
@@ -24,52 +24,92 @@ This only happens while `WaitingDeepCalibration` is set, which is only when `Dee
 
 ## Capture
 
-Faces can be captured in any order. The `Faces[]` table maps each face index to an axis and sign:
+Faces are captured in fixed sequential order (step 0 through 5). The user must rotate the board, hold still, let it sample, then rotate again. Between faces the state machine requires motion before it will accept stillness for the next face.
 
-| Index | Face |
-|-------|------|
-| 0 | +Y |
-| 1 | -Y |
-| 2 | +X |
-| 3 | -X |
-| 4 | +Z |
-| 5 | -Z |
+Phase machine per face:
 
-Each tick:
+1. `PHASE_WAITING_MOTION` -- waits for the board to move (gyro not still). Prevents re-sampling the same orientation.
+2. `PHASE_SETTLING` -- waits for stillness after motion.
+3. `PHASE_DISCARDING` -- discards `DEEP_CALIBRATION_DISCARD_SAMPLES` while still, letting the reading settle. Resets to SETTLING if motion detected.
+4. `PHASE_SAMPLING` -- collects `DEEP_CALIBRATION_SAMPLES` readings. Resets to SETTLING if motion detected.
 
-1. If the gyro is not still, the detected face is none.
-2. Otherwise `DetectFace` returns the face whose `axis * sign >= DEEP_CALIBRATION_ACCEL_THRESHOLD`, or none.
-3. If the detected face changes, the accumulator resets.
-4. A face already in `FacesCaptured` is ignored.
-5. The first `DEEP_CALIBRATION_DISCARD_SAMPLES` samples are discarded so the reading can settle.
-6. The next `DEEP_CALIBRATION_SAMPLES` samples are summed on all three axes.
-7. The mean is stored in `FaceMean[face][3]` and the face bit is set.
+Readings are converted from m/s^2 back to raw LSB via `CalculateAccelerationLSB` and stored as `int16_t` in `CalibrationMatrix[step][sample][axis]`.
 
-There is no off-axis gate. Off-axis readings on X and Z are part of what is being measured.
+After sampling completes for a face, the face bit is set in `DeepCalFacesCaptured`, the timeout resets, and a buzzer beep sequence indicates progress.
 
-## Computation and storage
+On entry, `DeepCalibrationStateEntry` clears `AccelCalibrationValid` so readings are raw during calibration.
 
-When `FacesCaptured == DEEP_CALIBRATION_ALL_FACES`, `SaveCalibration`:
+## Face order assumption
 
-- computes, per axis, from the positive and negative face means, using `CalculateAccelerometerAxisCalibration` in `Calculations.c`:
-  - `bias = (positive + negative) / 2`
-  - `scale = 2g / (positive - negative)`
-- fills `AccelCalibration_t` and calls `W25Q_WriteAccelCal`, which erases and reprograms the flash header,
-- calls `W25Q_LoadAccelCal(ctx)` to copy the values into the context and set `AccelCalibrationValid`.
+The Y vector in `six_point_cal` assumes this face order:
 
-`DeepCalibrationComplete` is set only if the flash write succeeded. The handler then returns `STATE_CALIBRATION`.
+| Step | Expected orientation |
+|------|---------------------|
+| 0 | +X up |
+| 1 | -X up |
+| 2 | +Y up |
+| 3 | -Y up |
+| 4 | +Z up |
+| 5 | -Z up |
+
+The code does not detect which face is up. The user must follow this order.
+
+## Math (`six_point_cal` in `Core/Src/Kalman/Cal.c`)
+
+Least-squares solve using CMSIS-DSP matrix operations.
+
+**Inputs:**
+- W = `[raw_x, raw_y, raw_z, 1]` for all 6*N samples (N = `DEEP_CALIBRATION_SAMPLES` = 500). Size 3000 x 4.
+- Y = known gravity reference vectors. Size 3000 x 3. Each block of N rows gets the expected gravity for that face: `[+9.8,0,0]`, `[-9.8,0,0]`, `[0,+9.8,0]`, `[0,-9.8,0]`, `[0,0,+9.8]`, `[0,0,-9.8]`.
+
+**Solve:**
+```
+X = (W^T W)^-1 W^T Y
+```
+
+X is 4 x 3. The top 3x3 rows encode scale, rotation, and cross-axis correction. Row 4 (index 9-11) is the bias vector.
+
+**Post-processing:**
+- M = transpose of top 3x3 of X. This is the full correction matrix (rotation + scale + cross-axis).
+- A_m = M with each column normalized to unit length. This is the pure rotation matrix (IMU frame to body frame).
+
+## Application (`FlightData.c`)
+
+When `AccelCalibrationValid` is true:
+
+**Accel** (`CalculateCalibratedAccel`):
+```
+lsb = raw_m_s2 / ACCEL_SCALE
+BodyAccel = M * lsb
+```
+Converts m/s^2 back to LSB, then applies M. Output goes to `BodyAccel{X,Y,Z}`.
+
+**Gyro** (`CalculateRotatedVector`):
+```
+BodyGyro = A_m * biased_gyro
+```
+Rotates bias-corrected gyro into body frame using the normalized rotation matrix.
+
+When invalid, `Body*` fields pass through raw sensor values.
+
+## Storage
+
+Three outputs saved to flash via `W25Q_WriteAccelCal` and loaded into context:
+- `AccelM` -- 3x3 correction matrix (M)
+- `AccelA_m` -- 3x3 rotation matrix (normalized M)
+- `AccelBias` -- 3-element bias from row 4 of X
 
 ## State entry and exit
 
-On entry, `DeepCalibrationStateEntry` clears `AccelCalibrationValid`, `FacesCaptured`, `CurrentFace` and the accumulator. Clearing the flag means the faces are measured raw. Once accel correction is applied to `FlightData`, leaving a stored calibration active would make a recalibration measure already-corrected values and save only the leftover error over the real calibration.
+On entry, `DeepCalibrationStateEntry` clears `AccelCalibrationValid`, `DeepCalFacesCaptured`, `DeepCalCurrentFace`, and all accumulators. Phase starts as `PHASE_WAITING_MOTION`. Clearing the calibration flag means faces are measured raw.
 
 Exits:
 
-- **Completion:** all six faces captured, calibration saved, returns `STATE_CALIBRATION`. The flag is set again by `W25Q_LoadAccelCal`.
-- **Timeout:** if `GetStateElapsedMs(Context, STATE_DEEP_CALIBRATION) >= DEEP_CALIBRATION_TIMEOUT_MS`, the handler calls `W25Q_LoadAccelCal(Context)` to restore the stored calibration and returns `STATE_CALIBRATION`. `OnStateEntry` sets the entry tick, and the handler resets `StateEntryTicks[STATE_DEEP_CALIBRATION]` after each captured face. So the timeout is the maximum time allowed per face (from entry or from the previous capture), not a total.
+- **Completion:** all six faces captured, `RunSixPointCal` computes calibration, values written to flash and context, returns `STATE_CALIBRATION`.
+- **Timeout:** if `GetStateElapsedMs(Context, STATE_DEEP_CALIBRATION) >= DEEP_CALIBRATION_TIMEOUT_MS`, calls `W25Q_LoadAccelCal(Context)` to restore stored calibration and returns `STATE_CALIBRATION`. Timeout resets after each captured face, so it is per-face, not total.
 - **Commands:** `HandleCommand` can force other states (reset, ground abort, drogue, landed). Reset goes through `IdleStateEntry`, which reloads the calibration. The others do not reload, so the flag stays false until the next IDLE.
 
-If the board is still on +Y after a timeout, `CalibrationStateEntry` re-arms the wait window (deep calibration is not complete) and the entry check can fire again.
+If the board is still on +Y after a timeout, `CalibrationStateEntry` re-arms the wait window and the entry check can fire again.
 
 ## Configuration (`configuration.h`)
 
@@ -87,11 +127,12 @@ If the board is still on +Y after a timeout, `CalibrationStateEntry` re-arms the
 
 ## Open items
 
-- Apply the calibration: nothing yet computes `(raw - bias) * scale` on accel data. Gyro bias is applied in `FlightData.c`, accel is not.
-- A failed flash write returns to `STATE_CALIBRATION` with no fault flag, and accel stays uncorrected until the next reload. `W25Q_WriteAccelCal` sets `Header.AccelCal` in RAM before the flash write, so a later IDLE reload could load values that never reached flash.
+- `AccelBias` is computed and stored but never applied. `CalculateCalibratedAccel` does `M * lsb` with no bias subtraction. Either bias needs to be subtracted before the matrix multiply, or M needs to be augmented to absorb it.
+- A failed flash write returns to `STATE_CALIBRATION` with no fault flag. `W25Q_WriteAccelCal` sets `Header.AccelCal` in RAM before the flash write, so a later IDLE reload could load values that never reached flash.
 - `AccelCalibrationValid` is a plain `bool`, not `volatile`. This matters once another task reads it.
 - `W25Q_LoadAccelCal` does not set `DeepCalibrationComplete`, so every boot offers deep calibration.
-- No sanity check on the computed bias and scale.
-- Cross-axis tilt matrix is not computed. `FaceMean` keeps all three axes per face so it can be added later: column j of M is `(mean_+j - mean_-j) / (2g)`, applied as `corrected = inverse(M) * (raw - b)`.
+- No sanity check on the computed bias, scale, or matrix condition.
+- `N` is hardcoded to 500 in `Cal.h`, must match `DEEP_CALIBRATION_SAMPLES` in `configuration.h`.
+- `six_point_cal` uses 9.8 instead of a defined constant for g.
+- `CalibrationMatrix` stores int16_t, so LSB values outside int16 range would overflow.
 - Tune `DEEP_CALIBRATION_GYRO_MAX_DPS`, the sample counts and `DEEP_CALIBRATION_TIMEOUT_MS` on hardware.
-- Nothing has been compiled or tested on hardware yet.
