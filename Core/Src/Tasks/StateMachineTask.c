@@ -42,7 +42,8 @@ void StateMachineTask(void *pvParameters) {
 
     BatteryInit();
     SerialInit();
-    Buzzer_Notify(2, 100, 100 * 200);
+    Buzzer_Notify(2, 150, 250);
+    Buzzer_Notify(1, 500, 250);
 
     for (;;) {
         // TODO: Revise timeout
@@ -73,7 +74,7 @@ void StateMachineTask(void *pvParameters) {
             CurrentSystemState = NextSystemState;
 
             // TODO: Remove debug code
-            Buzzer_Notify(1, 5, 5 * 200);
+            Buzzer_Notify(1, 5, 150);
         }
 
         if (SDLoggingQueue != NULL && !StateChanged) {

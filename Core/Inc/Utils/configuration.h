@@ -11,7 +11,7 @@
 
 #define HIL_MODE                    0
 #define EXTERNAL_COMMANDS           1
-#define AUTO_START_CALIBRATION		0
+#define AUTO_START_CALIBRATION		1
 
 #define BUZZER_ENABLED				1
 

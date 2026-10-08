@@ -95,6 +95,8 @@ const osThreadAttr_t defaultTask_attributes = {
 QueueHandle_t SDLoggingQueue;
 QueueHandle_t FlashLoggingQueue;
 QueueHandle_t CommandQueue;
+QueueHandle_t FlightDataQueue;
+QueueHandle_t BuzzerQueue;
 
 TimerHandle_t TimerIIM42653;
 TimerHandle_t TimerBMP581;
@@ -205,9 +207,11 @@ int main(void)
 #else
   HAL_TIM_Base_Start(&htim2);
 
-  SDLoggingQueue = xQueueCreate(QUEUE_LENGTH, sizeof(SDLogRecord_t));
+  SDLoggingQueue = xQueueCreate(DEFAULT_QUEUE_LENGTH, sizeof(SDLogRecord_t));
   FlashLoggingQueue = xQueueCreate(FLASH_LOGGING_QUEUE_LENGTH, sizeof(FlashLogRecord_t));
-  CommandQueue = xQueueCreate(QUEUE_LENGTH, sizeof(CommandType_t));
+  CommandQueue = xQueueCreate(DEFAULT_QUEUE_LENGTH, sizeof(CommandType_t));
+  FlightDataQueue = xQueueCreate(1, sizeof(FlightData_t));
+  BuzzerQueue = xQueueCreate(4, sizeof(BuzzerCommand_t));
 
   CreateBuzzerTask(tskIDLE_PRIORITY + 1, STACK_SIZE_BUZZER);
   CreatePyroTask(tskIDLE_PRIORITY + 5, STACK_SIZE_PYRO);
@@ -905,7 +909,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  Buzzer_Beep_Counter(100, 5, 200, true);
+  Buzzer_Beep_Counter(300, 5, 100, true);
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)

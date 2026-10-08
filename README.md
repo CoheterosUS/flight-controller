@@ -11,14 +11,14 @@ Calibrate GPS
 
 ## Buzzer Patterns
 
-| Pattern | Meaning |
-|---|---|
-| 5x 200ms (boot) | Error handler / boot error |
-| 2x 100ms | State machine started |
-| 1x 5ms | State change (debug) |
-| 3x 80ms | Deep cal entry |
-| 1-6x 80ms | Deep cal face captured (count = step+1) |
-| 1x 80ms | Deep cal timeout, skipped |
-| 3x 100ms | Flash erase success |
-| 2x 100ms | Flash dump success |
-| 5x 100ms | Flash operation failed |
+| Count | Duration | Gap | Meaning |
+|---|---|---|---|
+| 5x | 300ms | 100ms | Error handler / boot error |
+| 2x + 1x | 150ms + 500ms | 250ms | State machine started |
+| 1x | 5ms | - | State change (debug) |
+| 3x | 150ms | 150ms | Deep cal entry |
+| 1-6x | 150ms | 150ms | Deep cal face captured (count = step+1) |
+| 1x | 400ms | - | Deep cal timeout, skipped |
+| 3x | 100ms | 150ms | Flash erase success |
+| 2x | 100ms | 150ms | Flash dump success |
+| 5x | 300ms | 300ms | Flash operation failed |
