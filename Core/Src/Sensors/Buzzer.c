@@ -4,6 +4,7 @@
 #include "task.h"
 #include "stm32h7xx_hal.h"
 #include "Sensors/Sensors.h"
+#include "Tasks/BuzzerTask.h"
 #include "Utils/configuration.h"
 
 static void Buzzer_Delay(uint32_t Duration, bool UseHAL) {
@@ -30,5 +31,11 @@ void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t Wai
 		HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_4);
 		Buzzer_Delay(WaitDuration, UseHAL);
 	}
+#endif
+}
+
+void Buzzer_Notify(uint16_t Count, uint16_t DurationMs) {
+#if BUZZER_ENABLED
+	xTaskNotify(BuzzerTaskHandle, ((uint32_t)DurationMs << 16) | Count, eSetValueWithOverwrite);
 #endif
 }

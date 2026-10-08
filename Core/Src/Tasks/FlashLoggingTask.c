@@ -105,9 +105,9 @@ void FlashMaintenanceTask(void *pvParameters) {
     const bool Success = W25Q_MaintenanceMode();
 
 #if FLASH_ERASE_ALL
-    Buzzer_Beep_Counter(100, Success ? 3 : 5, 200, false);
+    Buzzer_Notify(Success ? 3 : 5, 100);
 #else
-    Buzzer_Beep_Counter(100, Success ? 2 : 5, 200, false);
+    Buzzer_Notify(Success ? 2 : 5, 100);
 #endif
 
     for (;;) vTaskDelay(portMAX_DELAY);

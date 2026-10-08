@@ -16,12 +16,11 @@ void CreateBuzzerTask(const UBaseType_t Priority, const uint16_t StackSize) {
 
 void BuzzerTask(void *pvParameters) {
     for (;;) {
-        uint32_t BeepCount = 0;
-        xTaskNotifyWait(0, UINT32_MAX, &BeepCount, portMAX_DELAY);
-        if (BeepCount == 0) {
-            Buzzer_Beep(500);
-        } else {
-            Buzzer_Beep_Counter(80, BeepCount, 150, false);
-        }
+        uint32_t Notify = 0;
+        xTaskNotifyWait(0, UINT32_MAX, &Notify, portMAX_DELAY);
+        uint16_t Count = Notify & 0xFFFF;
+        uint16_t Duration = (Notify >> 16) ? (Notify >> 16) : 80;
+
+        Buzzer_Beep_Counter(Duration, Count, Duration * 2, false);
     }
 }
