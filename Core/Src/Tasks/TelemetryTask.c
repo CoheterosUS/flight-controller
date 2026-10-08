@@ -12,7 +12,6 @@ uint8_t TELEMETRY_RX_BUFFER[TELEMETRY_RX_BUFFER_SIZE];
 
 TaskHandle_t TelemetryReceiveTaskHandle;
 TaskHandle_t TelemetrySendTaskHandle;
-QueueHandle_t FlightDataQueue;
 
 static ProtocolParser_t Parser;
 
@@ -21,8 +20,6 @@ volatile uint8_t dbg_last_command_counter = 0;
 volatile uint8_t dbg_gps_command_count = 0;
 
 void CreateTelemetryTask(UART_HandleTypeDef *huart, const UBaseType_t Priority, const uint16_t StackSize) {
-    FlightDataQueue = xQueueCreate(1, sizeof(FlightData_t));
-
     xTaskCreate(
         TelemetryReceiveTask,
         "TELEM_RX_TASK",

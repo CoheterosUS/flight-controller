@@ -15,12 +15,10 @@ void CreateBuzzerTask(const UBaseType_t Priority, const uint16_t StackSize) {
 }
 
 void BuzzerTask(void *pvParameters) {
+    BuzzerCommand_t Cmd;
     for (;;) {
-        uint32_t Notify = 0;
-        xTaskNotifyWait(0, UINT32_MAX, &Notify, portMAX_DELAY);
-        uint16_t Count = Notify & 0xFFFF;
-        uint16_t Duration = (Notify >> 16) ? (Notify >> 16) : 80;
-
-        Buzzer_Beep_Counter(Duration, Count, Duration * 2, false);
+        if (xQueueReceive(BuzzerQueue, &Cmd, portMAX_DELAY) == pdPASS) {
+            Buzzer_Beep_Counter(Cmd.DurationMs, Cmd.Count, Cmd.GapMs, false);
+        }
     }
 }

@@ -126,6 +126,8 @@ typedef struct {
 extern QueueHandle_t SDLoggingQueue;
 extern QueueHandle_t FlashLoggingQueue;
 extern QueueHandle_t CommandQueue;
+extern QueueHandle_t FlightDataQueue;
+extern QueueHandle_t BuzzerQueue;
 
 extern TimerHandle_t TimerIIM42653;
 extern TimerHandle_t TimerBMP581;

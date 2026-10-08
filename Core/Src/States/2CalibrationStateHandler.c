@@ -15,7 +15,7 @@ static bool WaitForDeepCalibration(SystemContext_t *ctx, FlightData_t FlightData
 
     if (GetStateElapsedMs(ctx, STATE_CALIBRATION) >= DEEP_CALIBRATION_DURATION_MS) {
         ctx->WaitingDeepCalibration = false;
-        Buzzer_Notify(1, 0);
+        Buzzer_Notify(1, 0, 0);
     }
 
     return false;

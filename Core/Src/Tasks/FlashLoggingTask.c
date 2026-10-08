@@ -1,6 +1,7 @@
 #include "Tasks/FlashLoggingTask.h"
 #include "Sensors/W25Q32JV.h"
 #include "Sensors/Sensors.h"
+#include "Tasks/BuzzerTask.h"
 #include "semphr.h"
 #include <string.h>
 
@@ -105,9 +106,9 @@ void FlashMaintenanceTask(void *pvParameters) {
     const bool Success = W25Q_MaintenanceMode();
 
 #if FLASH_ERASE_ALL
-    Buzzer_Notify(Success ? 3 : 5, 100);
+    Buzzer_Notify(Success ? 3 : 5, 100, 100 * 200);
 #else
-    Buzzer_Notify(Success ? 2 : 5, 100);
+    Buzzer_Notify(Success ? 2 : 5, 100, 100 * 200);
 #endif
 
     for (;;) vTaskDelay(portMAX_DELAY);

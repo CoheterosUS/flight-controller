@@ -8,6 +8,7 @@
 #include "Managers/StructManager.h"
 #include <Tasks/TelemetryTask.h>
 #include "queue.h"
+#include "Tasks/BuzzerTask.h"
 
 TaskHandle_t StateMachineTaskHandle;
 
@@ -41,7 +42,7 @@ void StateMachineTask(void *pvParameters) {
 
     BatteryInit();
     SerialInit();
-    Buzzer_Notify(2, 100);
+    Buzzer_Notify(2, 100, 100 * 200);
 
     for (;;) {
         // TODO: Revise timeout
@@ -72,7 +73,7 @@ void StateMachineTask(void *pvParameters) {
             CurrentSystemState = NextSystemState;
 
             // TODO: Remove debug code
-            Buzzer_Notify(1, 5);
+            Buzzer_Notify(1, 5, 5 * 200);
         }
 
         if (SDLoggingQueue != NULL && !StateChanged) {

@@ -34,8 +34,9 @@ void Buzzer_Beep_Counter(uint32_t BeepDuration, uint32_t BeepCount, uint32_t Wai
 #endif
 }
 
-void Buzzer_Notify(uint16_t Count, uint16_t DurationMs) {
+void Buzzer_Notify(uint16_t Count, uint16_t DurationMs, uint16_t GapMs) {
 #if BUZZER_ENABLED
-	xTaskNotify(BuzzerTaskHandle, ((uint32_t)DurationMs << 16) | Count, eSetValueWithOverwrite);
+	BuzzerCommand_t Cmd = { .Count = Count, .DurationMs = DurationMs, .GapMs = GapMs };
+	xQueueSend(BuzzerQueue, &Cmd, 0);
 #endif
 }

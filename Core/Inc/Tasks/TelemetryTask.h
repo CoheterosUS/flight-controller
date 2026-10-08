@@ -11,8 +11,6 @@
 extern uint8_t TELEMETRY_RX_BUFFER[TELEMETRY_RX_BUFFER_SIZE];
 extern TaskHandle_t TelemetryReceiveTaskHandle;
 extern TaskHandle_t TelemetrySendTaskHandle;
-extern QueueHandle_t FlightDataQueue;
-
 void CreateTelemetryTask(UART_HandleTypeDef *huart, UBaseType_t Priority, uint16_t StackSize);
 void TelemetryReceiveTask(void *pvParameters);
 void TelemetrySendTask(void *pvParameters);

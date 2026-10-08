@@ -51,7 +51,7 @@ void DeepCalibrationStateEntry(SystemContext_t *ctx) {
     SampleCount = 0;
     Discarded = 0;
     Phase = PHASE_WAITING_MOTION;
-    Buzzer_Notify(3, 0);
+    Buzzer_Notify(3, 0, 0);
 }
 
 SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t FlightData) {
@@ -100,7 +100,7 @@ SystemState_t DeepCalibrationStateHandler(SystemContext_t *Context, FlightData_t
         if (++SampleCount >= DEEP_CALIBRATION_SAMPLES) {
             Context->DeepCalFacesCaptured |= (1u << CurrentStep);
             Context->DeepCalCurrentFace = (int8_t)CurrentStep;
-            Buzzer_Notify(CurrentStep + 1, 0);
+            Buzzer_Notify(CurrentStep + 1, 0, 0);
             Context->StateEntryTicks[STATE_DEEP_CALIBRATION] = xTaskGetTickCount();
 
             if (++CurrentStep >= DEEP_CALIBRATION_FACE_COUNT) {
