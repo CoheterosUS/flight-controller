@@ -9,7 +9,7 @@ static ConfirmCounter_t DeepCalibrationConfirm;
 static bool WaitForDeepCalibration(SystemContext_t *ctx, FlightData_t FlightData) {
     if (!ctx->WaitingDeepCalibration) return false;
 
-    if (ConfirmCounterCheck(&DeepCalibrationConfirm, IsGyroscopeStill(FlightData, DEEP_CALIBRATION_GYRO_MAX_DPS) && FlightData.AccelY >= DEEP_CALIBRATION_ACCEL_THRESHOLD)) {
+    if (ConfirmCounterCheck(&DeepCalibrationConfirm, FlightData.AccelY >= DEEP_CALIBRATION_ACCEL_THRESHOLD)) {
         return true;
     }
 
