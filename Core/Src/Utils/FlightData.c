@@ -49,6 +49,12 @@ FlightData_t GetFlightData(SystemState_t SystemState, SystemContext_t *SystemCon
 		FlightData.BodyAccelY = BodyAccel[1];
 		FlightData.BodyAccelZ = BodyAccel[2];
 
+		if (SystemContext->AccelBiasBodyValid) {
+			FlightData.BodyAccelX -= SystemContext->AccelBiasBody[0];
+			FlightData.BodyAccelY -= SystemContext->AccelBiasBody[1];
+			FlightData.BodyAccelZ -= SystemContext->AccelBiasBody[2];
+		}
+
 		float RawGyro[3] = { FlightData.GyroX, FlightData.GyroY, FlightData.GyroZ };
 		float BodyGyro[3];
 		CalculateRotatedVector(SystemContext->AccelA_m, RawGyro, BodyGyro);

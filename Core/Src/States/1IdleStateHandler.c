@@ -7,6 +7,8 @@
 
 void IdleStateEntry(SystemContext_t *ctx) {
     PyroSafeAll();
+    ctx->PitchReceived = false;
+    ctx->PitchAngleRad = 0.0f;
     ResetCalibrationContext(ctx);
 #if SD_LOGGING_ENABLED
     MountAndOpen();

@@ -41,7 +41,7 @@ Any agent that reads this file should not assume that any information is correct
 | `0x00` | COMMAND_NONE          |                           |
 | `0x01` | COMMAND_RESET         |                           |
 | `0x02` | COMMAND_GROUND_ABORT  |                           |
-| `0x03` | COMMAND_CALIBRATION   |                           |
+| `0x03` | COMMAND_CALIBRATION   | Optional 4-byte payload: pitch angle (float, radians) |
 | `0x04` | COMMAND_DROGUE        |                           |
 | `0x05` | COMMAND_LANDED        |                           |
 | `0x06` | COMMAND_REQUEST_TELEM |                           |
@@ -125,8 +125,19 @@ Received over UART from external board (ESP32/Arduino).
 | 0      | 1    | uint8 | `0xFE` | Sync LSB            |
 | 1      | 1    | uint8 | `0xCA` | Sync MSB            |
 | 2      | 1    | uint8 | CMD    | CommandType         |
-| 3      | 1    | uint8 | `0x00` | Payload Length (0)  |
-| 4      | 1    | uint8 | `0xBE` | Footer              |
+| 3      | 1    | uint8 | LEN    | Payload Length      |
+| 4      | LEN  |       |        | Payload (optional)  |
+| 4+LEN  | 1    | uint8 | `0xBE` | Footer              |
+
+## Calibration Command Payload (Optional)
+
+Command `0x03` (COMMAND_CALIBRATION). When sent without payload (LEN=0), starts calibration without accel bias computation. When sent with a 4-byte payload, the payload is the launch rail pitch angle used for accel bias calibration.
+
+| Offset | Size | Type    | Field          | Unit    |
+|--------|------|---------|----------------|---------|
+| 0      | 4    | float32 | PitchAngleRad  | Radians |
+
+Pitch is the angle between the rocket's longitudinal axis and the horizontal plane. Vertical = pi/2.
 
 ## GPS Data Frame (Structure, Packed)
 

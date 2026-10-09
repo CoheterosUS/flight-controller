@@ -52,6 +52,7 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
     CalibratePressure(FlightData, Context);
     CalibrateTemperature(FlightData, Context);
     CalibrateGyroscope(FlightData, Context);
+    CalibrateAccelBias(FlightData, Context);
 
 #if GPS_FIX_REQUIRED
     if (FlightData.GPSAltitude != 0.0f && FlightData.UnixTime != 0 && FlightData.Latitude != 0 && FlightData.Longitude != 0 && FlightData.Satellites >= GPS_FIX_MIN_SATELLITES) {
@@ -61,7 +62,9 @@ SystemState_t CalibrationStateHandler(SystemContext_t *Context, FlightData_t Fli
     Context->GPSFixValid = true;
 #endif
 
-    if (Context->ReferencePressurePaValid && Context->ReferenceTemperatureCValid && Context->GyroCalibrationValid && Context->GPSFixValid) {
+    bool BiasReady = !Context->PitchReceived || Context->AccelBiasBodyValid;
+
+    if (Context->ReferencePressurePaValid && Context->ReferenceTemperatureCValid && Context->GyroCalibrationValid && Context->GPSFixValid && BiasReady) {
         return STATE_PRELAUNCH;
     }
 

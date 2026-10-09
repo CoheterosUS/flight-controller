@@ -1,5 +1,6 @@
 #include "Utils/shared.h"
 #include <stdint.h>
+#include <string.h>
 #include <Tasks/TelemetryTask.h>
 #include "Protocol/Protocol.h"
 #include "HIL/HIL.h"
@@ -19,12 +20,12 @@ volatile CommandType_t dbg_last_command = 0;
 volatile uint8_t dbg_last_command_counter = 0;
 volatile uint8_t dbg_gps_command_count = 0;
 
-void CreateTelemetryTask(UART_HandleTypeDef *huart, const UBaseType_t Priority, const uint16_t StackSize) {
+void CreateTelemetryTask(SystemContext_t *SystemContext, const UBaseType_t Priority, const uint16_t StackSize) {
     xTaskCreate(
         TelemetryReceiveTask,
         "TELEM_RX_TASK",
         StackSize,
-        huart,
+        SystemContext,
         Priority + 1,
         &TelemetryReceiveTaskHandle
     );
@@ -40,10 +41,10 @@ void CreateTelemetryTask(UART_HandleTypeDef *huart, const UBaseType_t Priority, 
 }
 
 void TelemetryReceiveTask(void *pvParameters) {
-    UART_HandleTypeDef *huart = pvParameters;
+    SystemContext_t *SystemContext = pvParameters;
 
     ProtocolInitParser(&Parser);
-    HAL_UARTEx_ReceiveToIdle_DMA(huart, TELEMETRY_RX_BUFFER, TELEMETRY_RX_BUFFER_SIZE);
+    HAL_UARTEx_ReceiveToIdle_DMA(USART1_HANDLE, TELEMETRY_RX_BUFFER, TELEMETRY_RX_BUFFER_SIZE);
 
     for (;;) {
         uint32_t Size = 0;
@@ -56,27 +57,43 @@ void TelemetryReceiveTask(void *pvParameters) {
                 CommandType_t Command = (CommandType_t)RawCommand;
                 dbg_last_command = Command;
                 dbg_last_command_counter++;
-#if HIL_MODE
-                if (Command == COMMAND_HIL_DATA) {
-                    HandleHILPacket(Parser.Payload);
-                }
-#endif
-                if (Command == COMMAND_GPS_DATA && PayloadLength == ZOEM8Q_PAYLOAD_SIZE) {
-                	dbg_gps_command_count++;
-                    ZOEM8Q_SensorData_t GPSData;
-                    ZOEM8Q_ParsePayload(Parser.Payload, &GPSData);
-                    ZOEM8Q_Mailbox_Inject(&GPSData);
-                }
 
-                if (Command == COMMAND_REQUEST_TELEM) {
-                    xTaskNotifyGive(TelemetrySendTaskHandle);
-                } else if (Command >= COMMAND_RESET && Command < COMMAND_HIL_DATA) {
+                switch (Command) {
+#if HIL_MODE
+                case COMMAND_HIL_DATA:
+                    HandleHILPacket(Parser.Payload);
+                    break;
+#endif
+                case COMMAND_GPS_DATA:
+                    if (PayloadLength == ZOEM8Q_PAYLOAD_SIZE) {
+                        dbg_gps_command_count++;
+                        ZOEM8Q_SensorData_t GPSData;
+                        ZOEM8Q_ParsePayload(Parser.Payload, &GPSData);
+                        ZOEM8Q_Mailbox_Inject(&GPSData);
+                    }
+                    break;
+                case COMMAND_CALIBRATION:
+                    if (PayloadLength >= sizeof(float)) {
+                        float Pitch;
+                        memcpy(&Pitch, Parser.Payload, sizeof(float));
+                        SystemContext->PitchAngleRad = Pitch;
+                        SystemContext->PitchReceived = true;
+                    }
                     xQueueSend(CommandQueue, &Command, 0);
+                    break;
+                case COMMAND_REQUEST_TELEM:
+                    xTaskNotifyGive(TelemetrySendTaskHandle);
+                    break;
+                default:
+                    if (Command >= COMMAND_RESET && Command < COMMAND_HIL_DATA) {
+                        xQueueSend(CommandQueue, &Command, 0);
+                    }
+                    break;
                 }
             }
         }
 
-        HAL_UARTEx_ReceiveToIdle_DMA(huart, TELEMETRY_RX_BUFFER, TELEMETRY_RX_BUFFER_SIZE);
+        HAL_UARTEx_ReceiveToIdle_DMA(USART1_HANDLE, TELEMETRY_RX_BUFFER, TELEMETRY_RX_BUFFER_SIZE);
     }
 }
 

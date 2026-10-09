@@ -60,6 +60,10 @@ typedef struct {
     float AccelBias[3];
     float AccelM[9];
     volatile bool AccelCalibrationValid;
+    volatile float PitchAngleRad;
+    volatile bool PitchReceived;
+    float AccelBiasBody[3];
+    bool AccelBiasBodyValid;
     uint32_t StateEntryTick;
     uint32_t StateEntryTicks[STATE_MAX];
 } SystemContext_t;
