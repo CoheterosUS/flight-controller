@@ -8,9 +8,11 @@
 #define FLASH_HEADER_MAGIC      0x464C5348
 #define FLASH_HEADER_ADDRESS    0x00000000
 #define FLASH_DATA_START        W25Q_SECTOR_SIZE
+#define FLASH_ACCEL_CAL_ADDRESS (W25Q_TOTAL_SIZE - W25Q_SECTOR_SIZE)
 
 
 static FlashHeader_t Header;
+static AccelCalibration_t StoredAccelCal;
 static bool W25Q_Initialized = false;
 
 static bool W25Q_VerifyJEDECID(SPI_HandleTypeDef *Handle) {
@@ -84,6 +86,11 @@ bool W25Q_Init(void) {
         return false;
     }
 
+    if (W25Q_ReadData(Handle, FLASH_ACCEL_CAL_ADDRESS, (uint8_t *)&StoredAccelCal, sizeof(StoredAccelCal)) != HAL_OK) {
+        SystemFaultFlags |= W25Q_INIT_FAILED;
+        return false;
+    }
+
     return true;
 }
 
@@ -125,7 +132,7 @@ HAL_StatusTypeDef W25Q_EraseAll(void) {
     Header.Magic = FLASH_HEADER_MAGIC;
     Header.FlightCount = 0;
     Header.WritePointer = FLASH_DATA_START;
-    memset(&Header.AccelCal, 0, sizeof(Header.AccelCal));
+    memset(&StoredAccelCal, 0, sizeof(StoredAccelCal));
 
     return W25Q_WriteHeader(Handle);
 }
@@ -198,16 +205,32 @@ bool W25Q_DumpToSD(void) {
 }
 
 void W25Q_LoadAccelCal(SystemContext_t *ctx) {
-    if (!Header.AccelCal.Valid) return;
+    if (!StoredAccelCal.Valid) return;
 
-    memcpy(ctx->AccelA_m, Header.AccelCal.A_m, sizeof(ctx->AccelA_m));
-    memcpy(ctx->AccelBias, Header.AccelCal.Bias, sizeof(ctx->AccelBias));
-    memcpy(ctx->AccelM, Header.AccelCal.M, sizeof(ctx->AccelM));
+    memcpy(ctx->AccelA_m, StoredAccelCal.A_m, sizeof(ctx->AccelA_m));
+    memcpy(ctx->AccelBias, StoredAccelCal.Bias, sizeof(ctx->AccelBias));
+    memcpy(ctx->AccelM, StoredAccelCal.M, sizeof(ctx->AccelM));
     ctx->AccelCalibrationValid = true;
 }
 
 HAL_StatusTypeDef W25Q_WriteAccelCal(const AccelCalibration_t *Cal) {
-    Header.AccelCal = *Cal;
-    Header.AccelCal.Valid = 1;
-    return W25Q_WriteHeader(W25Q_HANDLE);
+    AccelCalibration_t NewCal = *Cal;
+    NewCal.Valid = 1;
+
+    if (W25Q_SectorErase(W25Q_HANDLE, FLASH_ACCEL_CAL_ADDRESS) != HAL_OK) {
+        return HAL_ERROR;
+    }
+
+    HAL_StatusTypeDef Status = W25Q_PageProgram(
+        W25Q_HANDLE,
+        FLASH_ACCEL_CAL_ADDRESS,
+        (const uint8_t *)&NewCal,
+        sizeof(NewCal)
+    );
+
+    if (Status == HAL_OK) {
+        StoredAccelCal = NewCal;
+    }
+
+    return Status;
 }

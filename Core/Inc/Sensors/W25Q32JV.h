@@ -68,7 +68,6 @@ typedef struct {
     uint32_t Magic;
     uint32_t FlightCount;
     uint32_t WritePointer;
-    AccelCalibration_t AccelCal;
 } FlashHeader_t;
 #pragma pack(pop)
 
