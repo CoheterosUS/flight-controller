@@ -1,8 +1,11 @@
 #include "cal.h"
 
-#include "dsp/arm_math.h"
+six_point_cal_ErrorCode six_point_cal(arm_matrix_instance_f32 *w, arm_matrix_instance_f32 *X, arm_matrix_instance_f32 *DCM_bIMU, arm_matrix_instance_f32 *M) {
 
-void six_point_cal(arm_matrix_instance_f32 *w, arm_matrix_instance_f32 *X, arm_matrix_instance_f32 *A_m, arm_matrix_instance_f32 *M) {
+    if (DCM_bIMU->numCols != 3 || DCM_bIMU->numRows != 3) return DCM_bIMU_INVALID_SIZE_SIX_POINT_CAL;
+    if (M->numCols != 3 || M->numRows != 3) return M_INVALID_SIZE_SIX_POINT_CAL;
+
+    arm_status arm_error;
 
     arm_matrix_instance_f32 Y;
     static float32_t Y_data[6*N * 3];
@@ -64,11 +67,14 @@ void six_point_cal(arm_matrix_instance_f32 *w, arm_matrix_instance_f32 *X, arm_m
     }
 
 
-    arm_mat_trans_f32(w, &w_trans);
+    arm_error = arm_mat_trans_f32(w, &w_trans);
+    if (arm_error == ARM_MATH_SIZE_MISMATCH) return W_INVALID_SIZE_SIX_POINT_CAL;
     arm_mat_mult_f32(&w_trans, w, &w_trans_w);
-    arm_mat_inverse_f32(&w_trans_w, &w_trans_w_inv);
+    arm_error = arm_mat_inverse_f32(&w_trans_w, &w_trans_w_inv);
+    if (arm_error == ARM_MATH_SINGULAR) return SINGULAR_MATRIX_SIX_POINT_CAL;
     arm_mat_mult_f32(&w_trans, &Y, &w_trans_Y);
-    arm_mat_mult_f32(&w_trans_w_inv, &w_trans_Y, X);
+    arm_error = arm_mat_mult_f32(&w_trans_w_inv, &w_trans_Y, X);
+    if (arm_error == ARM_MATH_SIZE_MISMATCH) return X_INVALID_SIZE_SIX_POINT_CAL;
 
     arm_matrix_instance_f32 M_trans;
     float32_t M_trans_data[3 * 3];
@@ -78,26 +84,44 @@ void six_point_cal(arm_matrix_instance_f32 *w, arm_matrix_instance_f32 *X, arm_m
 
     arm_mat_trans_f32(&M_trans, M);
 
-    float32_t norm_M_col[3] = {0};
+    arm_matrix_instance_f32 R;
+    float32_t R_data[3 * 3];
+    arm_mat_init_f32(&R, 3, 3, R_data);
 
-    for (int i = 0; i < 3; i++) {
+    float32_t tau[3];
+    float32_t tmpA[3];
+    float32_t tmpB[3];
 
-        for (int j = 0; j < 3; j++) {
+    arm_matrix_instance_f32 M_copy;
+    float32_t M_copy_data[3 * 3];
+    memcpy(M_copy_data, M->pData, sizeof(M_copy_data));
+    arm_mat_init_f32(&M_copy, 3, 3, M_copy_data);
 
-            norm_M_col[i] += M->pData[j*3 + i] * M->pData[j*3 + i];
+    arm_mat_qr_f32(&M_copy, DEFAULT_HOUSEHOLDER_THRESHOLD_F32, &R, DCM_bIMU, tau, tmpA, tmpB);
 
-        }
+    // Imponer signos positivos en la diagonal de R y ajustar DCM_bIMU en consecuencia
 
-        norm_M_col[i] = sqrtf(norm_M_col[i]);
+    float32_t r00 = R_data[0]; 
+    float32_t r11 = R_data[4]; 
+    float32_t r22 = R_data[8];
 
+    if (r00 < 0.0f) {
+        DCM_bIMU->pData[0] = -DCM_bIMU->pData[0]; // Fila 0, Col 0
+        DCM_bIMU->pData[3] = -DCM_bIMU->pData[3]; // Fila 1, Col 0
+        DCM_bIMU->pData[6] = -DCM_bIMU->pData[6]; // Fila 2, Col 0
     }
 
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-
-            A_m->pData[j*3 + i] = M->pData[j*3 + i] / norm_M_col[i];
-
-        }
+    if (r11 < 0.0f) {
+        DCM_bIMU->pData[1] = -DCM_bIMU->pData[1]; // Fila 0, Col 1
+        DCM_bIMU->pData[4] = -DCM_bIMU->pData[4]; // Fila 1, Col 1
+        DCM_bIMU->pData[7] = -DCM_bIMU->pData[7]; // Fila 2, Col 1
     }
 
+    if (r22 < 0.0f) {
+        DCM_bIMU->pData[2] = -DCM_bIMU->pData[2]; // Fila 0, Col 2
+        DCM_bIMU->pData[5] = -DCM_bIMU->pData[5]; // Fila 1, Col 2
+        DCM_bIMU->pData[8] = -DCM_bIMU->pData[8]; // Fila 2, Col 2
+    }
+
+    return SUCCESS_SIX_POINT_CAL;
 }
