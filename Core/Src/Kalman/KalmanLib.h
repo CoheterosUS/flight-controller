@@ -5,8 +5,7 @@
     Este filtro fusiona datos de IMU, GPS, magnetómetro y barómetro para determinar la
     posición, velocidad y actitud del vehículo.
 
-    Esta librería utiliza la librería DSP de CMSIS, por lo que requiere un microcontrolador con
-    soporte para FPU y la librería DSP de CMSIS. Se recomienda asignar 4 KB o más de memoria de stack para su ejecución.
+    Esta librería utiliza la librería DSP de CMSIS. Se recomienda asignar 4 KB o más de memoria de stack para su ejecución.
 */
 
 #ifndef KALMAN_LIB_H_
@@ -20,7 +19,6 @@
 #define M_PI 3.1415926535897932384626433832
 #endif
 
-#define T_REF_AIR 288.15
 #define R_AIR 287.05
 #define ALPHA_AIR 0.0065
 
@@ -43,7 +41,7 @@
 
 typedef enum kalman_ErrorCode {
 
-    SUCCESS = 0,
+    SUCCESS_KALMAN = 0,
     INVALID_MATRIX_SIZE_SKEW = -1,
     P_INVALID_SIZE_PROPAGATE = -2,
     A_INVALID_SIZE_PROPAGATE = -3,
@@ -107,7 +105,7 @@ void kalman_delta_sum(float32_t (*pos)[3], float32_t(*vel)[3], float32_t(*quat)[
 kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_available, bool BAR_available, float32_t (*accel_IMU)[3],
     float32_t (*omega_IMU)[3], float32_t (*z_GPS)[6], float32_t (*z_MAG)[3], float32_t (*z_BAR)[1], float32_t (*pos)[3], float32_t(*vel)[3],
     float32_t(*quat)[4], float32_t (*B_e)[3], arm_matrix_instance_f32 *P, arm_matrix_instance_f32 *Q, arm_matrix_instance_f32 *R_GPS,
-    arm_matrix_instance_f32 *R_MAG, arm_matrix_instance_f32 *R_BAR, float32_t p_ref_BAR,float32_t h);
+    arm_matrix_instance_f32 *R_MAG, arm_matrix_instance_f32 *R_BAR, float32_t p_ref_BAR, float32_t t_ref_BAR, float32_t h);
 
 /*  Inputs: P (solo declarada, sin inicializar), Q (solo declarada, sin inicializar), R_GPS (SÍ INICIALIZADA, con el valor asociado a la posición y velocidad inicial),
     R_MAG (solo declarada, sin inicializar), R_BAR (solo declarada, sin inicializar), P_data (solo declarada, sin inicializar)

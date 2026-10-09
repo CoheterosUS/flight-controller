@@ -23,7 +23,7 @@ kalman_ErrorCode kalman_skew(float32_t (*v)[3], arm_matrix_instance_f32 *M) {
     M->pData[3] = (*v)[2];      M->pData[4] = 0.0f;         M->pData[5] = -(*v)[0];
     M->pData[6] = -(*v)[1];     M->pData[7] = (*v)[0];      M->pData[8] = 0.0f;
 
-    return SUCCESS;
+    return SUCCESS_KALMAN;
 
 }
 
@@ -75,7 +75,7 @@ kalman_ErrorCode kalman_propagate(arm_matrix_instance_f32 *P, arm_matrix_instanc
     arm_mat_mult_f32(&Mtemp2, &Mtemp3, &Mtemp1);    /* Mtemp1 = STM*P*STM' */   /* esta operación fuerza a usar 3 matrices de buffer */
     arm_mat_add_f32(&Mtemp1, Q, P);
 
-    return SUCCESS;
+    return SUCCESS_KALMAN;
     
 }
 
@@ -129,7 +129,7 @@ kalman_ErrorCode kalman_update(float32_t *z, arm_matrix_instance_f32 *H,
 
     memcpy(P->pData, P_temp_data, P->numCols * P->numRows * sizeof(P->pData[0]));
 
-    return SUCCESS;
+    return SUCCESS_KALMAN;
 
 }
 
@@ -153,7 +153,7 @@ void kalman_delta_sum(float32_t (*pos)[3], float32_t(*vel)[3], float32_t(*quat)[
 kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_available, bool BAR_available, float32_t (*accel_IMU)[3],
     float32_t (*omega_IMU)[3], float32_t (*z_GPS)[6], float32_t (*z_MAG)[3], float32_t (*z_BAR)[1], float32_t (*pos)[3], float32_t(*vel)[3],
     float32_t(*quat)[4], float32_t (*B_e)[3], arm_matrix_instance_f32 *P, arm_matrix_instance_f32 *Q, arm_matrix_instance_f32 *R_GPS,
-    arm_matrix_instance_f32 *R_MAG, arm_matrix_instance_f32 *R_BAR, float32_t p_ref_BAR,float32_t h) {
+    arm_matrix_instance_f32 *R_MAG, arm_matrix_instance_f32 *R_BAR, float32_t p_ref_BAR, float32_t t_ref_BAR,float32_t h) {
 
     if (P->numCols != H_P_A_Q_COLS || P->numRows != H_P_A_Q_COLS) return P_INVALID_SIZE_FILTER;
     if (Q->numCols != H_P_A_Q_COLS || Q->numRows != H_P_A_Q_COLS) return Q_INVALID_SIZE_FILTER;
@@ -171,7 +171,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
 
         float32_t delta_x[9];
         error = kalman_update((float32_t *)z_GPS, &H_GPS, P, R_GPS, h_x, delta_x);
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
         kalman_delta_sum(pos, vel, quat, &delta_x);
 
     }
@@ -193,7 +193,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
         arm_mat_trans_f32(&Mtemp1, &Mtemp2);                                /* Mtemp2 = DCM_be */   /* esta operación obliga a usar dos Mtemp */
         arm_mat_vec_mult_f32(&Mtemp2, (float32_t *)B_e, B_b);
         error = kalman_skew(&B_b, &Mtemp1);                                 /* Mtemp1 = skew(B_b) */
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
         arm_mat_mult_f32(&DCM_MAGb, &Mtemp1, &Mtemp2);                      /* Mtemp2 = DCM_MAGb * skew(B_b) */
 
         for (int i = 0; i < 3; i++) {
@@ -209,7 +209,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
 
         float32_t delta_x[9];
         error = kalman_update((float32_t *)z_MAG, &H, P, R_MAG, B_MAG, delta_x);
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
         kalman_delta_sum(pos, vel, quat, &delta_x);
 
     }
@@ -221,13 +221,13 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
         arm_mat_init_f32(&H, H_BAR_ROWS, H_P_A_Q_COLS, H_data);
 
         float32_t h_x[H_BAR_ROWS];
-        h_x[0] = p_ref_BAR * powf(1.0f + ALPHA_AIR * (*pos)[2] / T_REF_AIR, (g[2] / (R_AIR * ALPHA_AIR)));
+        h_x[0] = p_ref_BAR * powf(1.0f + ALPHA_AIR * (*pos)[2] / t_ref_BAR, (g[2] / (R_AIR * ALPHA_AIR)));
 
-        H_data[2] = p_ref_BAR * (g[2] / (R_AIR * T_REF_AIR)) * powf(1.0f + ALPHA_AIR * (*pos)[2] / T_REF_AIR, (g[2] / (R_AIR * ALPHA_AIR) - 1.0f));
+        H_data[2] = p_ref_BAR * (g[2] / (R_AIR * t_ref_BAR)) * powf(1.0f + ALPHA_AIR * (*pos)[2] / t_ref_BAR, (g[2] / (R_AIR * ALPHA_AIR) - 1.0f));
 
         float32_t delta_x[9];
         error = kalman_update((float32_t *)z_BAR, &H, P, R_BAR, h_x, delta_x);
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
         kalman_delta_sum(pos, vel, quat, &delta_x);
 
     }
@@ -253,7 +253,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
         arm_mat_init_f32(&minusDCM_ebSkewAccel_b, 3, 3, minusDCM_ebSkewAccel_b_data);
 
         error = kalman_skew(&temp, &skewAccel_b);                               /* temp = accel_b */
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
         
 
         float32_t accel_e[3];
@@ -268,7 +268,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
 
         arm_mat_vec_mult_f32(&DCM_bIMU, (float32_t *)omega_IMU, temp);          /* temp = omega_b */
         error = kalman_skew(&temp, &Mtemp1);                                    /* temp = omega_b */ /* Mtemp1 = skew(omega_b) */
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
 
         arm_mat_scale_f32(&Mtemp1, -1.0f, &Mtemp1);                             /* Mtemp1 = -skew(omega_b) */
         
@@ -286,14 +286,14 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
         }
 
         error = kalman_propagate(P, &A, Q, h);
-        if (error != SUCCESS) return error;
+        if (error != SUCCESS_KALMAN) return error;
 
         
 
         float32_t omega_bSquared, normOmega_b, delta_quat[4];
 
         arm_dot_prod_f32(temp, temp, 3, &omega_bSquared);
-        normOmega_b = sqrt(omega_bSquared);
+        normOmega_b = sqrtf(omega_bSquared);
 
         if (normOmega_b > EPSILON) {
 
@@ -331,7 +331,7 @@ kalman_ErrorCode kalman_filter(bool IMU_available, bool GPS_available, bool MAG_
     arm_mat_add_f32(P, &P_trans, P);    /* P = P + P' */ /* add, sub, scale soportan in-place */
     arm_mat_scale_f32(P, 0.5f, P);      /* P = 0.5*P */
 
-    return SUCCESS;
+    return SUCCESS_KALMAN;
     
 }
 
