@@ -136,3 +136,9 @@ If the board is still on +Y after a timeout, `CalibrationStateEntry` re-arms the
 - `six_point_cal` uses 9.8 instead of a defined constant for g.
 - `CalibrationMatrix` stores int16_t, so LSB values outside int16 range would overflow.
 - Tune `DEEP_CALIBRATION_GYRO_MAX_DPS`, the sample counts and `DEEP_CALIBRATION_TIMEOUT_MS` on hardware.
+
+# GNC DEPARTMENT NOTES (IMPORANT TO IMPLEMENT)
+
+DEEP CALIBRATION: Estado opcional, solo entramos si se pone el cohete boca abajo. M se aplica a las medidas de acelerómetro para calibrar factores de escala y rotar a body, A_m se aplica a giroscopio para rotar a body. Estas matrices las guardamos en la flash porque no varían mucho con el tiempo. Si no están guardadas en la flash, el firmware no debería permitir transicionar a otro estado sin hacer primero la deep calibration.
+
+BIAS CALIBRATION: Giroscopio se pone a 0, en acelerómetro calculamos bias como lo que se mide menos lo que se debería medir (eje X body: sin(pitch)*9.8m/s2, eje Z body: -cos(pitch)*9.8m/s2, eje Y body: 0). Una vez calculado el sesgo, se sustrae de las medidas de acelerómetro posteriores. El pitch es el ángulo que forma el eje longitudinal que forma el cohete con la horizontal, se debe medir una vez el cohete esté montado en la plataforma y se envía vía comando al cohete. El comando con el pitch se debería enviar justo antes de despegar (~1-2 min) porque el bias varía con el tiempo. Tan pronto como se reciba el comando para establecer el pitch, se hace el bias calibration. Justo después, se inicializa el filtro de Kalman y se empieza a enviar telem de alta frecuencia.
